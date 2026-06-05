@@ -76,11 +76,15 @@ function calculatePairingChemistry(p1, p2, format, venue = null) {
     const pressure      = (s1.pressure_index + s2.pressure_index) / 2;
     base = accuracyFloor * 0.40 + pressure * 0.25 + powerBonus - conPenalty * 0.30 + 15;
   } else if (format === 'fourball') {
-    // Both players hunt independently — avg aggression matters, not just the peak
+    // Both players hunt independently — avg aggression matters, not just the peak.
+    // Normalize effective range 60-95 → 0-1 so elite stats compress at top-end.
     const avgAgg  = (st1.aggression + st2.aggression) / 2;
     const avgBird = (s1.birdie_rate + s2.birdie_rate) / 2;
     const pressure = (s1.pressure_index + s2.pressure_index) / 2;
-    base = avgAgg * 0.40 + avgBird * 0.35 + pressure * 0.25;
+    const normAgg  = Math.min(1, Math.max(0, (avgAgg  - 60) / 35));
+    const normBird = Math.min(1, Math.max(0, (avgBird - 60) / 35));
+    const normPres = Math.min(1, Math.max(0, (pressure - 60) / 35));
+    base = 40 + normAgg * 22 + normBird * 18 + normPres * 10;
   } else {
     base = (s1.pressure_index + s2.pressure_index) / 2;
   }

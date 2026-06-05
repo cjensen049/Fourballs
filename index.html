@@ -245,7 +245,8 @@
     /* ── TEAM BOARD (top of draft screen) ── */
     .picks-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; padding: 6px 10px 8px; }
     /* Square filled card */
-    .player-picked { background: color-mix(in srgb, var(--tc, #444) 18%, var(--surface2)); border-radius: 6px; border-left: 3px solid var(--tc, #444); padding: 6px 7px; aspect-ratio: 1 / 1; display: flex; flex-direction: column; overflow: hidden; }
+    .player-picked { background: color-mix(in srgb, var(--tc, #444) 18%, var(--surface2)); border-radius: 6px; border-left: 3px solid var(--tc, #444); padding: 6px 7px; aspect-ratio: 1 / 1; display: flex; flex-direction: column; overflow: hidden; position: relative; }
+    .pp-chem-dot { position: absolute; top: 5px; right: 5px; width: 7px; height: 7px; border-radius: 50%; border: 1px solid rgba(0,0,0,0.25); }
     .pp-name { font-size: 13px; font-weight: 700; line-height: 1.2; }
     .pp-year { font-size: 11px; color: var(--gold); margin-top: 1px; }
     /* Empty slot placeholder */
@@ -805,8 +806,9 @@
     ).join('')}</div>`;
   }
 
-  function playerPickedHTML(p) {
+  function playerPickedHTML(p, chemDotHTML = '') {
     return `<div class="player-picked ${tcClass(p.tier)}" ${tcStyle(p.tier)}>
+      ${chemDotHTML}
       <div class="pp-name">${p.name}</div>
       <div class="pp-year">${p.year}</div>
       ${playerAttrIconsHTML(p)}
@@ -1088,12 +1090,24 @@
     const round = G.currentRound;
     const cards = G.currentCards;
 
-    // 12-slot team board: filled picks + empty placeholders (always shown)
-    const slotsHTML = Array.from({ length: 12 }, (_, i) =>
-      i < G.picks.length
-        ? playerPickedHTML(G.picks[i])
-        : `<div class="pick-slot-empty"><span class="pse-num">${i + 1}</span></div>`
-    ).join('');
+    // 12-slot team board: filled picks + chem dot when 2+ players drafted
+    const slotsHTML = Array.from({ length: 12 }, (_, i) => {
+      if (i < G.picks.length) {
+        const p = G.picks[i];
+        let chemDotHTML = '';
+        if (G.picks.length >= 2) {
+          const others = G.picks.filter((_, j) => j !== i);
+          const scores = others.flatMap(ep => [
+            calculatePairingChemistry(p, ep, 'foursomes'),
+            calculatePairingChemistry(p, ep, 'fourball')
+          ]);
+          const avg = Math.round(scores.reduce((a, b) => a + b, 0) / scores.length);
+          chemDotHTML = `<div class="pp-chem-dot ${chemClass(avg)}" title="Avg team chemistry: ${avg}"></div>`;
+        }
+        return playerPickedHTML(p, chemDotHTML);
+      }
+      return `<div class="pick-slot-empty"><span class="pse-num">${i + 1}</span></div>`;
+    }).join('');
 
     document.getElementById('app').innerHTML = `
       <div class="draft-full">
@@ -1114,18 +1128,7 @@
         <div class="pick-area">
           <div class="pick-round-label">Round ${round} of 12 — Choose</div>
           <div class="pick-cards-row">
-            ${cards.map(p => {
-              let chemDotHTML = '';
-              if (G.picks.length >= 2) {
-                const scores = G.picks.flatMap(ep => [
-                  calculatePairingChemistry(p, ep, 'foursomes'),
-                  calculatePairingChemistry(p, ep, 'fourball')
-                ]);
-                const avg = Math.round(scores.reduce((a, b) => a + b, 0) / scores.length);
-                chemDotHTML = `<div class="card-chem-dot ${chemClass(avg)}" title="Avg team chemistry: ${avg}"></div>`;
-              }
-              return playerCardHTML(p, true, '', chemDotHTML);
-            }).join('')}
+            ${cards.map(p => playerCardHTML(p, true)).join('')}
           </div>
         </div>
       </div>`;

@@ -208,6 +208,7 @@ console.log('\ncalculatePairingChemistry');
 
   const chemElite = calculatePairingChemistry(playerA, playerA, 'fourball');
   assert('elite fourball pair has high chemistry (> 70)', chemElite > 70);
+  assert('elite fourball pair does not cluster above 90', chemElite <= 90);
 }
 
 console.log('\ncaptainPerkBoost');

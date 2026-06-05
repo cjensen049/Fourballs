@@ -297,8 +297,8 @@
   // ─────────────────────────────────────────────────────────────────────────────
   // CONSTANTS
   // ─────────────────────────────────────────────────────────────────────────────
-  const STORAGE_KEY     = 'fourballs_state_v6';
-  const STORAGE_VERSION = 6;
+  const STORAGE_KEY     = 'fourballs_state_v7';
+  const STORAGE_VERSION = 7;
 
   const TIER_COLORS = {
     platinum: '#c084fc', gold: '#c9a84c', silver: '#94a3b8',
@@ -1793,19 +1793,35 @@
     helpBtn.addEventListener('click', showHelpModal);
     document.body.appendChild(helpBtn);
 
-    const saved = loadSaved();
-    if (saved && saved.phase !== 'landing') {
-      G = saved;
-    } else {
+    try {
+      const saved = loadSaved();
+      if (saved && saved.phase !== 'landing') {
+        G = saved;
+      } else {
+        G = initState();
+        save();
+      }
+
+      render();
+
+      if (!localStorage.getItem('tutorial_seen')) {
+        setTimeout(() => showTutorial(0), 600);
+      }
+    } catch(err) {
+      // Stale save or render crash — wipe state and restart clean
+      try { localStorage.removeItem(STORAGE_KEY); } catch(e) {}
       G = initState();
       save();
-    }
-
-    render();
-
-    // Show tutorial on first visit, after the screen renders
-    if (!localStorage.getItem('tutorial_seen')) {
-      setTimeout(() => showTutorial(0), 600);
+      try {
+        render();
+      } catch(e) {
+        document.getElementById('app').innerHTML = `
+          <div class="center-screen">
+            <h2 style="color:var(--gold)">Something went wrong</h2>
+            <p>Your saved game was cleared. Refresh to start a new game.</p>
+            <p style="margin-top:10px;font-size:12px;color:var(--text-dim)">${e.message}</p>
+          </div>`;
+      }
     }
   }
 

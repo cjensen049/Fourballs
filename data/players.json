@@ -15710,5 +15710,1448 @@
       "halved": 1
     },
     "flavor_text": "Fearless and unpredictable. Dubuisson plays shots that aren't in the coaching manual."
+  },
+  {
+    "id": "lee_janzen_2000",
+    "name": "Lee Janzen",
+    "year": 2000,
+    "nationality": "USA",
+    "world_ranking": 42,
+    "wins_that_year": 1,
+    "tier": "bronze",
+    "hero_boost": null,
+    "stats": {
+      "driving_distance": 60,
+      "driving_accuracy": 77,
+      "greens_in_regulation": 68,
+      "scrambling": 68,
+      "birdie_rate": 60,
+      "pressure_index": 60
+    },
+    "style_tags": {
+      "power": 60,
+      "accuracy": 73,
+      "aggression": 60,
+      "consistency": 73,
+      "match_play_affinity": 60
+    },
+    "format_fit": {
+      "foursomes": 78,
+      "fourball": 70,
+      "singles": 75
+    },
+    "ryder_cup_record": {
+      "played": true,
+      "won": 3,
+      "lost": 4,
+      "halved": 1
+    },
+    "flavor_text": "Two US Opens, a reputation for fairways and greens. Janzen was quietly dangerous."
+  },
+  {
+    "id": "lee_janzen_2003",
+    "name": "Lee Janzen",
+    "year": 2003,
+    "nationality": "USA",
+    "world_ranking": 48,
+    "wins_that_year": 0,
+    "tier": "bronze",
+    "hero_boost": null,
+    "stats": {
+      "driving_distance": 60,
+      "driving_accuracy": 77,
+      "greens_in_regulation": 68,
+      "scrambling": 68,
+      "birdie_rate": 60,
+      "pressure_index": 60
+    },
+    "style_tags": {
+      "power": 60,
+      "accuracy": 73,
+      "aggression": 60,
+      "consistency": 73,
+      "match_play_affinity": 60
+    },
+    "format_fit": {
+      "foursomes": 78,
+      "fourball": 70,
+      "singles": 75
+    },
+    "ryder_cup_record": {
+      "played": true,
+      "won": 3,
+      "lost": 4,
+      "halved": 1
+    },
+    "flavor_text": "Accuracy that never left him. Janzen could still find the middle of the fairway on demand."
+  },
+  {
+    "id": "paul_azinger_2002",
+    "name": "Paul Azinger",
+    "year": 2002,
+    "nationality": "USA",
+    "world_ranking": 55,
+    "wins_that_year": 0,
+    "tier": "bronze",
+    "hero_boost": null,
+    "stats": {
+      "driving_distance": 60,
+      "driving_accuracy": 62,
+      "greens_in_regulation": 61,
+      "scrambling": 74,
+      "birdie_rate": 61,
+      "pressure_index": 69
+    },
+    "style_tags": {
+      "power": 60,
+      "accuracy": 62,
+      "aggression": 61,
+      "consistency": 68,
+      "match_play_affinity": 69
+    },
+    "format_fit": {
+      "foursomes": 75,
+      "fourball": 75,
+      "singles": 80
+    },
+    "ryder_cup_record": {
+      "played": true,
+      "won": 5,
+      "lost": 6,
+      "halved": 2
+    },
+    "flavor_text": "Future captain, forever competitor. Azinger's short game and grit defined an era."
+  },
+  {
+    "id": "mark_calcavecchia_2002",
+    "name": "Mark Calcavecchia",
+    "year": 2002,
+    "nationality": "USA",
+    "world_ranking": 50,
+    "wins_that_year": 1,
+    "tier": "bronze",
+    "hero_boost": null,
+    "stats": {
+      "driving_distance": 78,
+      "driving_accuracy": 60,
+      "greens_in_regulation": 66,
+      "scrambling": 60,
+      "birdie_rate": 68,
+      "pressure_index": 60
+    },
+    "style_tags": {
+      "power": 78,
+      "accuracy": 63,
+      "aggression": 72,
+      "consistency": 60,
+      "match_play_affinity": 60
+    },
+    "format_fit": {
+      "foursomes": 68,
+      "fourball": 81,
+      "singles": 73
+    },
+    "ryder_cup_record": {
+      "played": true,
+      "won": 3,
+      "lost": 6,
+      "halved": 1
+    },
+    "flavor_text": "A howitzer with a putter. Calcavecchia won The Open in 1989 and never lost the ability to go low."
+  },
+  {
+    "id": "mark_calcavecchia_2004",
+    "name": "Mark Calcavecchia",
+    "year": 2004,
+    "nationality": "USA",
+    "world_ranking": 54,
+    "wins_that_year": 0,
+    "tier": "bronze",
+    "hero_boost": null,
+    "stats": {
+      "driving_distance": 78,
+      "driving_accuracy": 60,
+      "greens_in_regulation": 66,
+      "scrambling": 60,
+      "birdie_rate": 68,
+      "pressure_index": 60
+    },
+    "style_tags": {
+      "power": 78,
+      "accuracy": 63,
+      "aggression": 72,
+      "consistency": 60,
+      "match_play_affinity": 60
+    },
+    "format_fit": {
+      "foursomes": 68,
+      "fourball": 81,
+      "singles": 73
+    },
+    "ryder_cup_record": {
+      "played": true,
+      "won": 3,
+      "lost": 6,
+      "halved": 1
+    },
+    "flavor_text": "Still capable of a bomb down the middle. Calc never stopped swinging hard."
+  },
+  {
+    "id": "jeff_maggert_2000",
+    "name": "Jeff Maggert",
+    "year": 2000,
+    "nationality": "USA",
+    "world_ranking": 46,
+    "wins_that_year": 1,
+    "tier": "bronze",
+    "hero_boost": null,
+    "stats": {
+      "driving_distance": 60,
+      "driving_accuracy": 77,
+      "greens_in_regulation": 68,
+      "scrambling": 68,
+      "birdie_rate": 60,
+      "pressure_index": 60
+    },
+    "style_tags": {
+      "power": 60,
+      "accuracy": 73,
+      "aggression": 60,
+      "consistency": 73,
+      "match_play_affinity": 60
+    },
+    "format_fit": {
+      "foursomes": 78,
+      "fourball": 70,
+      "singles": 75
+    },
+    "ryder_cup_record": {
+      "played": true,
+      "won": 5,
+      "lost": 4,
+      "halved": 1
+    },
+    "flavor_text": "Under the radar but always competitive. Maggert's ball-striking held up under pressure."
+  },
+  {
+    "id": "jeff_maggert_2002",
+    "name": "Jeff Maggert",
+    "year": 2002,
+    "nationality": "USA",
+    "world_ranking": 50,
+    "wins_that_year": 0,
+    "tier": "bronze",
+    "hero_boost": null,
+    "stats": {
+      "driving_distance": 60,
+      "driving_accuracy": 77,
+      "greens_in_regulation": 68,
+      "scrambling": 68,
+      "birdie_rate": 60,
+      "pressure_index": 60
+    },
+    "style_tags": {
+      "power": 60,
+      "accuracy": 73,
+      "aggression": 60,
+      "consistency": 73,
+      "match_play_affinity": 60
+    },
+    "format_fit": {
+      "foursomes": 78,
+      "fourball": 70,
+      "singles": 75
+    },
+    "ryder_cup_record": {
+      "played": true,
+      "won": 5,
+      "lost": 4,
+      "halved": 1
+    },
+    "flavor_text": "Three Ryder Cups, three years of quiet excellence. Maggert made every team count."
+  },
+  {
+    "id": "jj_henry_2006",
+    "name": "JJ Henry",
+    "year": 2006,
+    "nationality": "USA",
+    "world_ranking": 48,
+    "wins_that_year": 1,
+    "tier": "bronze",
+    "hero_boost": null,
+    "stats": {
+      "driving_distance": 62,
+      "driving_accuracy": 69,
+      "greens_in_regulation": 66,
+      "scrambling": 67,
+      "birdie_rate": 61,
+      "pressure_index": 62
+    },
+    "style_tags": {
+      "power": 62,
+      "accuracy": 68,
+      "aggression": 61,
+      "consistency": 68,
+      "match_play_affinity": 62
+    },
+    "format_fit": {
+      "foursomes": 76,
+      "fourball": 72,
+      "singles": 74
+    },
+    "ryder_cup_record": {
+      "played": true,
+      "won": 0,
+      "lost": 2,
+      "halved": 1
+    },
+    "flavor_text": "A Ryder Cup experience that lasted a lifetime. Henry represented Team USA with heart."
+  },
+  {
+    "id": "vaughn_taylor_2006",
+    "name": "Vaughn Taylor",
+    "year": 2006,
+    "nationality": "USA",
+    "world_ranking": 52,
+    "wins_that_year": 1,
+    "tier": "bronze",
+    "hero_boost": null,
+    "stats": {
+      "driving_distance": 60,
+      "driving_accuracy": 77,
+      "greens_in_regulation": 68,
+      "scrambling": 68,
+      "birdie_rate": 60,
+      "pressure_index": 60
+    },
+    "style_tags": {
+      "power": 60,
+      "accuracy": 73,
+      "aggression": 60,
+      "consistency": 73,
+      "match_play_affinity": 60
+    },
+    "format_fit": {
+      "foursomes": 78,
+      "fourball": 70,
+      "singles": 75
+    },
+    "ryder_cup_record": {
+      "played": true,
+      "won": 0,
+      "lost": 2,
+      "halved": 0
+    },
+    "flavor_text": "Love Hal Sutton's 2004 pick, Vaughn Taylor flew under the radar at the K Club."
+  },
+  {
+    "id": "chad_campbell_2004",
+    "name": "Chad Campbell",
+    "year": 2004,
+    "nationality": "USA",
+    "world_ranking": 50,
+    "wins_that_year": 2,
+    "tier": "bronze",
+    "hero_boost": null,
+    "stats": {
+      "driving_distance": 62,
+      "driving_accuracy": 69,
+      "greens_in_regulation": 66,
+      "scrambling": 67,
+      "birdie_rate": 61,
+      "pressure_index": 62
+    },
+    "style_tags": {
+      "power": 62,
+      "accuracy": 68,
+      "aggression": 61,
+      "consistency": 68,
+      "match_play_affinity": 62
+    },
+    "format_fit": {
+      "foursomes": 76,
+      "fourball": 72,
+      "singles": 74
+    },
+    "ryder_cup_record": {
+      "played": true,
+      "won": 2,
+      "lost": 2,
+      "halved": 1
+    },
+    "flavor_text": "Oakmont 2004 — Chad Campbell showed what consistency under pressure looks like."
+  },
+  {
+    "id": "chad_campbell_2006",
+    "name": "Chad Campbell",
+    "year": 2006,
+    "nationality": "USA",
+    "world_ranking": 52,
+    "wins_that_year": 1,
+    "tier": "bronze",
+    "hero_boost": null,
+    "stats": {
+      "driving_distance": 62,
+      "driving_accuracy": 69,
+      "greens_in_regulation": 66,
+      "scrambling": 67,
+      "birdie_rate": 61,
+      "pressure_index": 62
+    },
+    "style_tags": {
+      "power": 62,
+      "accuracy": 68,
+      "aggression": 61,
+      "consistency": 68,
+      "match_play_affinity": 62
+    },
+    "format_fit": {
+      "foursomes": 76,
+      "fourball": 72,
+      "singles": 74
+    },
+    "ryder_cup_record": {
+      "played": true,
+      "won": 2,
+      "lost": 2,
+      "halved": 1
+    },
+    "flavor_text": "A quiet anchor. Campbell's game didn't dazzle but it always showed up."
+  },
+  {
+    "id": "jim_gallagher_jr_2000",
+    "name": "Jim Gallagher Jr",
+    "year": 2000,
+    "nationality": "USA",
+    "world_ranking": 54,
+    "wins_that_year": 0,
+    "tier": "bronze",
+    "hero_boost": null,
+    "stats": {
+      "driving_distance": 60,
+      "driving_accuracy": 62,
+      "greens_in_regulation": 60,
+      "scrambling": 82,
+      "birdie_rate": 61,
+      "pressure_index": 63
+    },
+    "style_tags": {
+      "power": 60,
+      "accuracy": 61,
+      "aggression": 61,
+      "consistency": 72,
+      "match_play_affinity": 63
+    },
+    "format_fit": {
+      "foursomes": 78,
+      "fourball": 75,
+      "singles": 78
+    },
+    "ryder_cup_record": {
+      "played": true,
+      "won": 2,
+      "lost": 2,
+      "halved": 1
+    },
+    "flavor_text": "The gritty Tennessean who never backed down. Gallagher earned every Ryder Cup yard."
+  },
+  {
+    "id": "da_points_2011",
+    "name": "DA Points",
+    "year": 2011,
+    "nationality": "USA",
+    "world_ranking": 55,
+    "wins_that_year": 1,
+    "tier": "bronze",
+    "hero_boost": null,
+    "stats": {
+      "driving_distance": 62,
+      "driving_accuracy": 69,
+      "greens_in_regulation": 66,
+      "scrambling": 67,
+      "birdie_rate": 61,
+      "pressure_index": 62
+    },
+    "style_tags": {
+      "power": 62,
+      "accuracy": 68,
+      "aggression": 61,
+      "consistency": 68,
+      "match_play_affinity": 62
+    },
+    "format_fit": {
+      "foursomes": 76,
+      "fourball": 72,
+      "singles": 74
+    },
+    "ryder_cup_record": {
+      "played": true,
+      "won": 0,
+      "lost": 2,
+      "halved": 0
+    },
+    "flavor_text": "Davis Love III's wildcard call at Medinah. Points played his heart out in defeat."
+  },
+  {
+    "id": "ryan_palmer_2014",
+    "name": "Ryan Palmer",
+    "year": 2014,
+    "nationality": "USA",
+    "world_ranking": 52,
+    "wins_that_year": 1,
+    "tier": "bronze",
+    "hero_boost": null,
+    "stats": {
+      "driving_distance": 71,
+      "driving_accuracy": 60,
+      "greens_in_regulation": 65,
+      "scrambling": 61,
+      "birdie_rate": 66,
+      "pressure_index": 62
+    },
+    "style_tags": {
+      "power": 71,
+      "accuracy": 62,
+      "aggression": 68,
+      "consistency": 61,
+      "match_play_affinity": 62
+    },
+    "format_fit": {
+      "foursomes": 71,
+      "fourball": 77,
+      "singles": 73
+    },
+    "ryder_cup_record": {
+      "played": true,
+      "won": 1,
+      "lost": 2,
+      "halved": 1
+    },
+    "flavor_text": "Tom Watson's Gleneagles pick. Palmer brought power and determination to the team."
+  },
+  {
+    "id": "charley_hoffman_2016",
+    "name": "Charley Hoffman",
+    "year": 2016,
+    "nationality": "USA",
+    "world_ranking": 46,
+    "wins_that_year": 1,
+    "tier": "bronze",
+    "hero_boost": null,
+    "stats": {
+      "driving_distance": 62,
+      "driving_accuracy": 69,
+      "greens_in_regulation": 66,
+      "scrambling": 67,
+      "birdie_rate": 61,
+      "pressure_index": 62
+    },
+    "style_tags": {
+      "power": 62,
+      "accuracy": 68,
+      "aggression": 61,
+      "consistency": 68,
+      "match_play_affinity": 62
+    },
+    "format_fit": {
+      "foursomes": 76,
+      "fourball": 72,
+      "singles": 74
+    },
+    "ryder_cup_record": {
+      "played": true,
+      "won": 1,
+      "lost": 2,
+      "halved": 0
+    },
+    "flavor_text": "Hazeltine 2016 on the losing side. Hoffman swung hard and gave everything."
+  },
+  {
+    "id": "billy_mayfair_2000",
+    "name": "Billy Mayfair",
+    "year": 2000,
+    "nationality": "USA",
+    "world_ranking": 52,
+    "wins_that_year": 1,
+    "tier": "bronze",
+    "hero_boost": null,
+    "stats": {
+      "driving_distance": 60,
+      "driving_accuracy": 62,
+      "greens_in_regulation": 60,
+      "scrambling": 82,
+      "birdie_rate": 61,
+      "pressure_index": 63
+    },
+    "style_tags": {
+      "power": 60,
+      "accuracy": 61,
+      "aggression": 61,
+      "consistency": 72,
+      "match_play_affinity": 63
+    },
+    "format_fit": {
+      "foursomes": 78,
+      "fourball": 75,
+      "singles": 78
+    },
+    "ryder_cup_record": {
+      "played": true,
+      "won": 1,
+      "lost": 2,
+      "halved": 1
+    },
+    "flavor_text": "A wizard with the flat stick. Mayfair's putting could carry him anywhere."
+  },
+  {
+    "id": "charles_howell_iii_2002",
+    "name": "Charles Howell III",
+    "year": 2002,
+    "nationality": "USA",
+    "world_ranking": 44,
+    "wins_that_year": 1,
+    "tier": "bronze",
+    "hero_boost": null,
+    "stats": {
+      "driving_distance": 60,
+      "driving_accuracy": 72,
+      "greens_in_regulation": 67,
+      "scrambling": 66,
+      "birdie_rate": 62,
+      "pressure_index": 62
+    },
+    "style_tags": {
+      "power": 60,
+      "accuracy": 70,
+      "aggression": 61,
+      "consistency": 69,
+      "match_play_affinity": 62
+    },
+    "format_fit": {
+      "foursomes": 76,
+      "fourball": 72,
+      "singles": 74
+    },
+    "ryder_cup_record": {
+      "played": false,
+      "won": 0,
+      "lost": 0,
+      "halved": 0
+    },
+    "flavor_text": "Long off the tee and pure with the irons. Howell always felt like a major was around the corner."
+  },
+  {
+    "id": "charles_howell_iii_2004",
+    "name": "Charles Howell III",
+    "year": 2004,
+    "nationality": "USA",
+    "world_ranking": 48,
+    "wins_that_year": 1,
+    "tier": "bronze",
+    "hero_boost": null,
+    "stats": {
+      "driving_distance": 60,
+      "driving_accuracy": 72,
+      "greens_in_regulation": 67,
+      "scrambling": 66,
+      "birdie_rate": 62,
+      "pressure_index": 62
+    },
+    "style_tags": {
+      "power": 60,
+      "accuracy": 70,
+      "aggression": 61,
+      "consistency": 69,
+      "match_play_affinity": 62
+    },
+    "format_fit": {
+      "foursomes": 76,
+      "fourball": 72,
+      "singles": 74
+    },
+    "ryder_cup_record": {
+      "played": false,
+      "won": 0,
+      "lost": 0,
+      "halved": 0
+    },
+    "flavor_text": "Consistent and underrated. Howell's ball-striking quietly topped the statistical leaderboards."
+  },
+  {
+    "id": "costantino_rocca_2000",
+    "name": "Costantino Rocca",
+    "year": 2000,
+    "nationality": "EUR",
+    "world_ranking": 52,
+    "wins_that_year": 1,
+    "tier": "bronze",
+    "hero_boost": null,
+    "stats": {
+      "driving_distance": 60,
+      "driving_accuracy": 62,
+      "greens_in_regulation": 61,
+      "scrambling": 74,
+      "birdie_rate": 61,
+      "pressure_index": 69
+    },
+    "style_tags": {
+      "power": 60,
+      "accuracy": 62,
+      "aggression": 61,
+      "consistency": 68,
+      "match_play_affinity": 69
+    },
+    "format_fit": {
+      "foursomes": 75,
+      "fourball": 75,
+      "singles": 80
+    },
+    "ryder_cup_record": {
+      "played": true,
+      "won": 6,
+      "lost": 5,
+      "halved": 2
+    },
+    "flavor_text": "The Valderama hero. Rocca's scrambling and composure made him a Ryder Cup legend."
+  },
+  {
+    "id": "costantino_rocca_2001",
+    "name": "Costantino Rocca",
+    "year": 2001,
+    "nationality": "EUR",
+    "world_ranking": 55,
+    "wins_that_year": 0,
+    "tier": "bronze",
+    "hero_boost": null,
+    "stats": {
+      "driving_distance": 60,
+      "driving_accuracy": 62,
+      "greens_in_regulation": 61,
+      "scrambling": 74,
+      "birdie_rate": 61,
+      "pressure_index": 69
+    },
+    "style_tags": {
+      "power": 60,
+      "accuracy": 62,
+      "aggression": 61,
+      "consistency": 68,
+      "match_play_affinity": 69
+    },
+    "format_fit": {
+      "foursomes": 75,
+      "fourball": 75,
+      "singles": 80
+    },
+    "ryder_cup_record": {
+      "played": true,
+      "won": 6,
+      "lost": 5,
+      "halved": 2
+    },
+    "flavor_text": "Every team needs a Costantino. Heart, short game, and an iron nerve."
+  },
+  {
+    "id": "jean_van_de_velde_2000",
+    "name": "Jean Van de Velde",
+    "year": 2000,
+    "nationality": "EUR",
+    "world_ranking": 58,
+    "wins_that_year": 0,
+    "tier": "bronze",
+    "hero_boost": null,
+    "stats": {
+      "driving_distance": 78,
+      "driving_accuracy": 60,
+      "greens_in_regulation": 66,
+      "scrambling": 60,
+      "birdie_rate": 68,
+      "pressure_index": 60
+    },
+    "style_tags": {
+      "power": 78,
+      "accuracy": 63,
+      "aggression": 72,
+      "consistency": 60,
+      "match_play_affinity": 60
+    },
+    "format_fit": {
+      "foursomes": 68,
+      "fourball": 81,
+      "singles": 73
+    },
+    "ryder_cup_record": {
+      "played": true,
+      "won": 0,
+      "lost": 3,
+      "halved": 1
+    },
+    "flavor_text": "The man who nearly won The Open. Van de Velde played golf on the edge of chaos — and sometimes it worked."
+  },
+  {
+    "id": "jean_van_de_velde_2001",
+    "name": "Jean Van de Velde",
+    "year": 2001,
+    "nationality": "EUR",
+    "world_ranking": 60,
+    "wins_that_year": 0,
+    "tier": "bronze",
+    "hero_boost": null,
+    "stats": {
+      "driving_distance": 78,
+      "driving_accuracy": 60,
+      "greens_in_regulation": 66,
+      "scrambling": 60,
+      "birdie_rate": 68,
+      "pressure_index": 60
+    },
+    "style_tags": {
+      "power": 78,
+      "accuracy": 63,
+      "aggression": 72,
+      "consistency": 60,
+      "match_play_affinity": 60
+    },
+    "format_fit": {
+      "foursomes": 68,
+      "fourball": 81,
+      "singles": 73
+    },
+    "ryder_cup_record": {
+      "played": true,
+      "won": 0,
+      "lost": 3,
+      "halved": 1
+    },
+    "flavor_text": "Unpredictable, powerful, uniquely French. Never count out Van de Velde."
+  },
+  {
+    "id": "andrew_coltart_2000",
+    "name": "Andrew Coltart",
+    "year": 2000,
+    "nationality": "EUR",
+    "world_ranking": 52,
+    "wins_that_year": 0,
+    "tier": "bronze",
+    "hero_boost": null,
+    "stats": {
+      "driving_distance": 60,
+      "driving_accuracy": 77,
+      "greens_in_regulation": 68,
+      "scrambling": 68,
+      "birdie_rate": 60,
+      "pressure_index": 60
+    },
+    "style_tags": {
+      "power": 60,
+      "accuracy": 73,
+      "aggression": 60,
+      "consistency": 73,
+      "match_play_affinity": 60
+    },
+    "format_fit": {
+      "foursomes": 78,
+      "fourball": 70,
+      "singles": 75
+    },
+    "ryder_cup_record": {
+      "played": true,
+      "won": 0,
+      "lost": 2,
+      "halved": 0
+    },
+    "flavor_text": "One of Mark James' picks at Brookline — Coltart brought Scottish determination."
+  },
+  {
+    "id": "andrew_coltart_2001",
+    "name": "Andrew Coltart",
+    "year": 2001,
+    "nationality": "EUR",
+    "world_ranking": 55,
+    "wins_that_year": 0,
+    "tier": "bronze",
+    "hero_boost": null,
+    "stats": {
+      "driving_distance": 60,
+      "driving_accuracy": 77,
+      "greens_in_regulation": 68,
+      "scrambling": 68,
+      "birdie_rate": 60,
+      "pressure_index": 60
+    },
+    "style_tags": {
+      "power": 60,
+      "accuracy": 73,
+      "aggression": 60,
+      "consistency": 73,
+      "match_play_affinity": 60
+    },
+    "format_fit": {
+      "foursomes": 78,
+      "fourball": 70,
+      "singles": 75
+    },
+    "ryder_cup_record": {
+      "played": true,
+      "won": 0,
+      "lost": 2,
+      "halved": 0
+    },
+    "flavor_text": "Accurate from tee to green. Coltart was always a solid piece of any European squad."
+  },
+  {
+    "id": "per_ulrich_johansson_2000",
+    "name": "Per-Ulrik Johansson",
+    "year": 2000,
+    "nationality": "EUR",
+    "world_ranking": 52,
+    "wins_that_year": 1,
+    "tier": "bronze",
+    "hero_boost": null,
+    "stats": {
+      "driving_distance": 60,
+      "driving_accuracy": 77,
+      "greens_in_regulation": 68,
+      "scrambling": 68,
+      "birdie_rate": 60,
+      "pressure_index": 60
+    },
+    "style_tags": {
+      "power": 60,
+      "accuracy": 73,
+      "aggression": 60,
+      "consistency": 73,
+      "match_play_affinity": 60
+    },
+    "format_fit": {
+      "foursomes": 78,
+      "fourball": 70,
+      "singles": 75
+    },
+    "ryder_cup_record": {
+      "played": true,
+      "won": 2,
+      "lost": 2,
+      "halved": 0
+    },
+    "flavor_text": "Two Ryder Cups for the Swede. PU Johansson was a steady, reliable presence on the European team."
+  },
+  {
+    "id": "per_ulrich_johansson_2001",
+    "name": "Per-Ulrik Johansson",
+    "year": 2001,
+    "nationality": "EUR",
+    "world_ranking": 55,
+    "wins_that_year": 0,
+    "tier": "bronze",
+    "hero_boost": null,
+    "stats": {
+      "driving_distance": 60,
+      "driving_accuracy": 77,
+      "greens_in_regulation": 68,
+      "scrambling": 68,
+      "birdie_rate": 60,
+      "pressure_index": 60
+    },
+    "style_tags": {
+      "power": 60,
+      "accuracy": 73,
+      "aggression": 60,
+      "consistency": 73,
+      "match_play_affinity": 60
+    },
+    "format_fit": {
+      "foursomes": 78,
+      "fourball": 70,
+      "singles": 75
+    },
+    "ryder_cup_record": {
+      "played": true,
+      "won": 2,
+      "lost": 2,
+      "halved": 0
+    },
+    "flavor_text": "The quiet Swede who delivered when it mattered. Accuracy was his calling card."
+  },
+  {
+    "id": "david_howell_2004",
+    "name": "David Howell",
+    "year": 2004,
+    "nationality": "EUR",
+    "world_ranking": 45,
+    "wins_that_year": 2,
+    "tier": "bronze",
+    "hero_boost": null,
+    "stats": {
+      "driving_distance": 60,
+      "driving_accuracy": 77,
+      "greens_in_regulation": 68,
+      "scrambling": 68,
+      "birdie_rate": 60,
+      "pressure_index": 60
+    },
+    "style_tags": {
+      "power": 60,
+      "accuracy": 73,
+      "aggression": 60,
+      "consistency": 73,
+      "match_play_affinity": 60
+    },
+    "format_fit": {
+      "foursomes": 78,
+      "fourball": 70,
+      "singles": 75
+    },
+    "ryder_cup_record": {
+      "played": true,
+      "won": 2,
+      "lost": 1,
+      "halved": 1
+    },
+    "flavor_text": "Oakland Hills 2004. Howell delivered for Europe with calm, precise golf."
+  },
+  {
+    "id": "david_howell_2006",
+    "name": "David Howell",
+    "year": 2006,
+    "nationality": "EUR",
+    "world_ranking": 48,
+    "wins_that_year": 1,
+    "tier": "bronze",
+    "hero_boost": null,
+    "stats": {
+      "driving_distance": 60,
+      "driving_accuracy": 77,
+      "greens_in_regulation": 68,
+      "scrambling": 68,
+      "birdie_rate": 60,
+      "pressure_index": 60
+    },
+    "style_tags": {
+      "power": 60,
+      "accuracy": 73,
+      "aggression": 60,
+      "consistency": 73,
+      "match_play_affinity": 60
+    },
+    "format_fit": {
+      "foursomes": 78,
+      "fourball": 70,
+      "singles": 75
+    },
+    "ryder_cup_record": {
+      "played": true,
+      "won": 2,
+      "lost": 1,
+      "halved": 1
+    },
+    "flavor_text": "The K Club, the passion, the victory. Howell was a proud piece of Europe's 2006 triumph."
+  },
+  {
+    "id": "oliver_wilson_2008",
+    "name": "Oliver Wilson",
+    "year": 2008,
+    "nationality": "EUR",
+    "world_ranking": 48,
+    "wins_that_year": 2,
+    "tier": "bronze",
+    "hero_boost": null,
+    "stats": {
+      "driving_distance": 60,
+      "driving_accuracy": 73,
+      "greens_in_regulation": 67,
+      "scrambling": 69,
+      "birdie_rate": 60,
+      "pressure_index": 60
+    },
+    "style_tags": {
+      "power": 60,
+      "accuracy": 70,
+      "aggression": 60,
+      "consistency": 71,
+      "match_play_affinity": 60
+    },
+    "format_fit": {
+      "foursomes": 78,
+      "fourball": 70,
+      "singles": 75
+    },
+    "ryder_cup_record": {
+      "played": true,
+      "won": 2,
+      "lost": 2,
+      "halved": 0
+    },
+    "flavor_text": "Valhalla 2008. Wilson showed up as a rookie and didn't look out of place."
+  },
+  {
+    "id": "oliver_wilson_2009",
+    "name": "Oliver Wilson",
+    "year": 2009,
+    "nationality": "EUR",
+    "world_ranking": 52,
+    "wins_that_year": 1,
+    "tier": "bronze",
+    "hero_boost": null,
+    "stats": {
+      "driving_distance": 60,
+      "driving_accuracy": 73,
+      "greens_in_regulation": 67,
+      "scrambling": 69,
+      "birdie_rate": 60,
+      "pressure_index": 60
+    },
+    "style_tags": {
+      "power": 60,
+      "accuracy": 70,
+      "aggression": 60,
+      "consistency": 71,
+      "match_play_affinity": 60
+    },
+    "format_fit": {
+      "foursomes": 78,
+      "fourball": 70,
+      "singles": 75
+    },
+    "ryder_cup_record": {
+      "played": true,
+      "won": 2,
+      "lost": 2,
+      "halved": 0
+    },
+    "flavor_text": "Consistent and hard-working. Wilson maximised every bit of talent he had."
+  },
+  {
+    "id": "soren_hansen_2006",
+    "name": "Soren Hansen",
+    "year": 2006,
+    "nationality": "EUR",
+    "world_ranking": 46,
+    "wins_that_year": 1,
+    "tier": "bronze",
+    "hero_boost": null,
+    "stats": {
+      "driving_distance": 62,
+      "driving_accuracy": 69,
+      "greens_in_regulation": 66,
+      "scrambling": 67,
+      "birdie_rate": 61,
+      "pressure_index": 62
+    },
+    "style_tags": {
+      "power": 62,
+      "accuracy": 68,
+      "aggression": 61,
+      "consistency": 68,
+      "match_play_affinity": 62
+    },
+    "format_fit": {
+      "foursomes": 76,
+      "fourball": 72,
+      "singles": 74
+    },
+    "ryder_cup_record": {
+      "played": true,
+      "won": 1,
+      "lost": 3,
+      "halved": 0
+    },
+    "flavor_text": "The quiet Dane. Hansen's steady game made him a reliable European pick."
+  },
+  {
+    "id": "soren_hansen_2008",
+    "name": "Soren Hansen",
+    "year": 2008,
+    "nationality": "EUR",
+    "world_ranking": 50,
+    "wins_that_year": 1,
+    "tier": "bronze",
+    "hero_boost": null,
+    "stats": {
+      "driving_distance": 62,
+      "driving_accuracy": 69,
+      "greens_in_regulation": 66,
+      "scrambling": 67,
+      "birdie_rate": 61,
+      "pressure_index": 62
+    },
+    "style_tags": {
+      "power": 62,
+      "accuracy": 68,
+      "aggression": 61,
+      "consistency": 68,
+      "match_play_affinity": 62
+    },
+    "format_fit": {
+      "foursomes": 76,
+      "fourball": 72,
+      "singles": 74
+    },
+    "ryder_cup_record": {
+      "played": true,
+      "won": 1,
+      "lost": 3,
+      "halved": 0
+    },
+    "flavor_text": "Valhalla 2008. Hansen showed the depth of European golf."
+  },
+  {
+    "id": "stephen_gallacher_2013",
+    "name": "Stephen Gallacher",
+    "year": 2013,
+    "nationality": "EUR",
+    "world_ranking": 44,
+    "wins_that_year": 2,
+    "tier": "bronze",
+    "hero_boost": null,
+    "stats": {
+      "driving_distance": 60,
+      "driving_accuracy": 62,
+      "greens_in_regulation": 61,
+      "scrambling": 74,
+      "birdie_rate": 61,
+      "pressure_index": 69
+    },
+    "style_tags": {
+      "power": 60,
+      "accuracy": 62,
+      "aggression": 61,
+      "consistency": 68,
+      "match_play_affinity": 69
+    },
+    "format_fit": {
+      "foursomes": 75,
+      "fourball": 75,
+      "singles": 80
+    },
+    "ryder_cup_record": {
+      "played": true,
+      "won": 2,
+      "lost": 2,
+      "halved": 0
+    },
+    "flavor_text": "Back-to-back wins at the Dubai Desert Classic. Gallacher announced himself to the world."
+  },
+  {
+    "id": "stephen_gallacher_2014",
+    "name": "Stephen Gallacher",
+    "year": 2014,
+    "nationality": "EUR",
+    "world_ranking": 46,
+    "wins_that_year": 1,
+    "tier": "bronze",
+    "hero_boost": null,
+    "stats": {
+      "driving_distance": 60,
+      "driving_accuracy": 62,
+      "greens_in_regulation": 61,
+      "scrambling": 74,
+      "birdie_rate": 61,
+      "pressure_index": 69
+    },
+    "style_tags": {
+      "power": 60,
+      "accuracy": 62,
+      "aggression": 61,
+      "consistency": 68,
+      "match_play_affinity": 69
+    },
+    "format_fit": {
+      "foursomes": 75,
+      "fourball": 75,
+      "singles": 80
+    },
+    "ryder_cup_record": {
+      "played": true,
+      "won": 2,
+      "lost": 2,
+      "halved": 0
+    },
+    "flavor_text": "Gleneagles 2014 — playing in front of his home crowd. Gallacher gave everything."
+  },
+  {
+    "id": "ross_fisher_2009",
+    "name": "Ross Fisher",
+    "year": 2009,
+    "nationality": "EUR",
+    "world_ranking": 50,
+    "wins_that_year": 2,
+    "tier": "bronze",
+    "hero_boost": null,
+    "stats": {
+      "driving_distance": 71,
+      "driving_accuracy": 60,
+      "greens_in_regulation": 65,
+      "scrambling": 61,
+      "birdie_rate": 66,
+      "pressure_index": 62
+    },
+    "style_tags": {
+      "power": 71,
+      "accuracy": 62,
+      "aggression": 68,
+      "consistency": 61,
+      "match_play_affinity": 62
+    },
+    "format_fit": {
+      "foursomes": 71,
+      "fourball": 77,
+      "singles": 73
+    },
+    "ryder_cup_record": {
+      "played": true,
+      "won": 1,
+      "lost": 2,
+      "halved": 1
+    },
+    "flavor_text": "Celtic Manor 2010. Fisher provided European firepower from the fairway."
+  },
+  {
+    "id": "ross_fisher_2010",
+    "name": "Ross Fisher",
+    "year": 2010,
+    "nationality": "EUR",
+    "world_ranking": 52,
+    "wins_that_year": 1,
+    "tier": "bronze",
+    "hero_boost": null,
+    "stats": {
+      "driving_distance": 71,
+      "driving_accuracy": 60,
+      "greens_in_regulation": 65,
+      "scrambling": 61,
+      "birdie_rate": 66,
+      "pressure_index": 62
+    },
+    "style_tags": {
+      "power": 71,
+      "accuracy": 62,
+      "aggression": 68,
+      "consistency": 61,
+      "match_play_affinity": 62
+    },
+    "format_fit": {
+      "foursomes": 71,
+      "fourball": 77,
+      "singles": 73
+    },
+    "ryder_cup_record": {
+      "played": true,
+      "won": 1,
+      "lost": 2,
+      "halved": 1
+    },
+    "flavor_text": "Gritty and long. Fisher never let the occasion be too big for him."
+  },
+  {
+    "id": "paul_broadhurst_2021",
+    "name": "Paul Broadhurst",
+    "year": 2021,
+    "nationality": "EUR",
+    "world_ranking": 65,
+    "wins_that_year": 0,
+    "tier": "bronze",
+    "hero_boost": null,
+    "stats": {
+      "driving_distance": 60,
+      "driving_accuracy": 68,
+      "greens_in_regulation": 64,
+      "scrambling": 76,
+      "birdie_rate": 60,
+      "pressure_index": 61
+    },
+    "style_tags": {
+      "power": 60,
+      "accuracy": 66,
+      "aggression": 60,
+      "consistency": 72,
+      "match_play_affinity": 61
+    },
+    "format_fit": {
+      "foursomes": 78,
+      "fourball": 73,
+      "singles": 77
+    },
+    "ryder_cup_record": {
+      "played": true,
+      "won": 1,
+      "lost": 1,
+      "halved": 0
+    },
+    "flavor_text": "Age 56 at Whistling Straits. The oldest player ever to compete in the Ryder Cup — and he won his singles match."
+  },
+  {
+    "id": "graeme_storm_2006",
+    "name": "Graeme Storm",
+    "year": 2006,
+    "nationality": "EUR",
+    "world_ranking": 55,
+    "wins_that_year": 1,
+    "tier": "bronze",
+    "hero_boost": null,
+    "stats": {
+      "driving_distance": 60,
+      "driving_accuracy": 73,
+      "greens_in_regulation": 67,
+      "scrambling": 69,
+      "birdie_rate": 60,
+      "pressure_index": 60
+    },
+    "style_tags": {
+      "power": 60,
+      "accuracy": 70,
+      "aggression": 60,
+      "consistency": 71,
+      "match_play_affinity": 60
+    },
+    "format_fit": {
+      "foursomes": 78,
+      "fourball": 70,
+      "singles": 75
+    },
+    "ryder_cup_record": {
+      "played": false,
+      "won": 0,
+      "lost": 0,
+      "halved": 0
+    },
+    "flavor_text": "A thorn in everyone's side on the European Tour. Storm won ugly and won often."
+  },
+  {
+    "id": "graeme_storm_2008",
+    "name": "Graeme Storm",
+    "year": 2008,
+    "nationality": "EUR",
+    "world_ranking": 58,
+    "wins_that_year": 0,
+    "tier": "bronze",
+    "hero_boost": null,
+    "stats": {
+      "driving_distance": 60,
+      "driving_accuracy": 73,
+      "greens_in_regulation": 67,
+      "scrambling": 69,
+      "birdie_rate": 60,
+      "pressure_index": 60
+    },
+    "style_tags": {
+      "power": 60,
+      "accuracy": 70,
+      "aggression": 60,
+      "consistency": 71,
+      "match_play_affinity": 60
+    },
+    "format_fit": {
+      "foursomes": 78,
+      "fourball": 70,
+      "singles": 75
+    },
+    "ryder_cup_record": {
+      "played": false,
+      "won": 0,
+      "lost": 0,
+      "halved": 0
+    },
+    "flavor_text": "Never flashy, always present. Storm embodied the grind of life on the European Tour."
   }
 ]

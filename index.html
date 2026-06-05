@@ -346,11 +346,16 @@
   }
 
   // Draw one player for a given tier, falling back through tiers if pool is empty.
+  // Fallback order prefers the nearest tier to avoid jarring platinum cards in round 12.
   function drawOneCard(nat, pickNum, usedNames, tierOverride, allowHero = true) {
-    const tier      = tierOverride || rollTier(pickNum, allowHero);
-    const tierOrder = allowHero
-      ? ['platinum','gold','silver','bronze','hero']
-      : ['platinum','gold','silver','bronze'];
+    const tier = tierOverride || rollTier(pickNum, allowHero);
+    const nearestFirst = {
+      platinum: ['gold','silver','bronze','hero'],
+      gold:     ['silver','platinum','bronze','hero'],
+      silver:   ['bronze','gold','platinum','hero'],
+      bronze:   ['silver','gold','platinum','hero'],
+      hero:     ['silver','platinum','bronze'],   // gold tried below first
+    };
 
     let pool = PLAYERS.filter(p =>
       p.nationality === nat &&
@@ -362,7 +367,9 @@
       pool = PLAYERS.filter(p => p.nationality === nat && p.tier === 'gold' && !usedNames.has(p.name));
     }
     if (!pool.length) {
-      for (const fb of tierOrder) {
+      const order = (nearestFirst[tier] || ['bronze','silver','gold','platinum'])
+        .filter(t => allowHero || t !== 'hero');
+      for (const fb of order) {
         const fb2 = PLAYERS.filter(p => p.nationality === nat && p.tier === fb && !usedNames.has(p.name));
         if (fb2.length) { pool = fb2; break; }
       }

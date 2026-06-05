@@ -282,8 +282,8 @@
   // ─────────────────────────────────────────────────────────────────────────────
   // CONSTANTS
   // ─────────────────────────────────────────────────────────────────────────────
-  const STORAGE_KEY     = 'fourballs_state_v5';
-  const STORAGE_VERSION = 5;
+  const STORAGE_KEY     = 'fourballs_state_v6';
+  const STORAGE_VERSION = 6;
 
   const TIER_COLORS = {
     platinum: '#c084fc', gold: '#c9a84c', silver: '#94a3b8',
@@ -329,20 +329,12 @@
       side: null,
       venue: null,
       picks: [],
-      pairings: {
-        fridayAM:   [[null,null],[null,null],[null,null],[null,null]], // foursomes
-        fridayPM:   [[null,null],[null,null],[null,null],[null,null]], // fourball
-        saturdayAM: [[null,null],[null,null],[null,null],[null,null]], // foursomes
-        saturdayPM: [[null,null],[null,null],[null,null],[null,null]]  // fourball
-      },
+      pairings: { fridayAM: [], fridayPM: [], saturdayAM: [], saturdayPM: [] },
+      pairingOptions: [],   // pre-computed options sorted by chemistry (best first)
+      pairingIndex:   0,    // which option is currently displayed (cycles 0-3 on reshuffle)
       captain: null,
       aiPicks: [],
-      aiPairings: {
-        fridayAM:   [[null,null],[null,null],[null,null],[null,null]],
-        fridayPM:   [[null,null],[null,null],[null,null],[null,null]],
-        saturdayAM: [[null,null],[null,null],[null,null],[null,null]],
-        saturdayPM: [[null,null],[null,null],[null,null],[null,null]]
-      },
+      aiPairings: { fridayAM: [], fridayPM: [], saturdayAM: [], saturdayPM: [] },
       aiCaptain: null,
       seenNames:   [],
       aiSeenNames: [],
@@ -477,118 +469,162 @@
     );
   }
 
-  // Minimum chemistry for a platinum pair to anchor (play all 4 sessions together).
-  const ANCHOR_CHEM_MIN = 90;
-  // Gold/hero players cap at this many team sessions (platinum can play all 4).
-  const GOLD_MAX_SESSIONS = 3;
+  // ── PAIRING ENGINE ─────────────────────────────────────────────────────────
+  // Tier rules: Platinum max 4 team matches, Gold max 3, all others max 2.
+  // 16 total team matches (8 foursomes + 8 fourball) × 2 players = 32 appearances.
+  // No player paired with same partner twice within the same format.
 
-  // AM session: best 8 by sorted order, paired top-to-bottom.
-  function _buildAMPairs(sorted) {
-    return [
-      [sorted[0], sorted[1]], [sorted[2], sorted[3]],
-      [sorted[4], sorted[5]], [sorted[6], sorted[7]]
-    ];
-  }
+  const TIER_MAX = { platinum: 4, gold: 3, silver: 2, bronze: 2, hero: 2 };
+  function getTierMax(tier) { return TIER_MAX[tier] || 2; }
 
-  // Second session of same format: anchor high-chem platinum pairs; cross-pair the rest.
-  // Anchor = both platinum AND chem >= ANCHOR_CHEM_MIN → play this format twice.
-  // Non-anchors: top-8 remainders cross-pair with bottom-4 (sorted[8-11]).
-  function _buildSecondSessionPairs(sorted, firstPairs, format) {
-    const anchored = new Set();
-    const pairs = [];
-
-    for (const [p1, p2] of firstPairs) {
-      if (!p1 || !p2) continue;
-      if (anchored.has(p1.id) || anchored.has(p2.id)) continue;
-      if (p1.tier === 'platinum' && p2.tier === 'platinum') {
-        const chem = calculatePairingChemistry(p1, p2, format);
-        if (chem >= ANCHOR_CHEM_MIN) {
-          pairs.push([p1, p2]);
-          anchored.add(p1.id);
-          anchored.add(p2.id);
-        }
-      }
-    }
-
-    // Cross-pair remaining top-8 with bottom-4
-    const topRem = sorted.slice(0, 8).filter(p => !anchored.has(p.id));
-    const bot4   = sorted.slice(8, 12);
-    const needed = 4 - pairs.length;
-    for (let i = 0; i < needed; i++) {
-      pairs.push([topRem[i] || null, bot4[i] || null]);
-    }
-    return pairs;
-  }
-
-  // Post-processing: gold/hero players who land in all 4 sessions get pulled from
-  // the lowest-priority session (saturdayPM first, then saturdayAM, then fridayPM).
-  function _enforceGoldCap(pairings, picks) {
-    const sessions  = ['fridayAM', 'fridayPM', 'saturdayAM', 'saturdayPM'];
-    const dropOrder = ['saturdayPM', 'saturdayAM', 'fridayPM']; // never drop from fridayAM
+  // Step 2: assign total team appearances per player, summing to exactly 32.
+  // Returns null if roster capacity < 32.
+  function _assignMatchCounts(picks) {
+    const cap = picks.reduce((s, p) => s + getTierMax(p.tier), 0);
+    if (cap < 32) return null;
 
     const counts = {};
-    for (const sess of sessions) {
-      for (const pair of pairings[sess]) {
-        for (const p of pair) {
-          if (p) counts[p.id] = (counts[p.id] || 0) + 1;
-        }
-      }
+    picks.forEach(p => { counts[p.id] = Math.min(2, getTierMax(p.tier)); });
+    let need = 32 - picks.reduce((s, p) => s + counts[p.id], 0);
+
+    const byMax = [...picks].sort((a, b) => getTierMax(b.tier) - getTierMax(a.tier));
+    for (const p of byMax) {
+      if (need <= 0) break;
+      const add = Math.min(getTierMax(p.tier) - counts[p.id], need);
+      counts[p.id] += add;
+      need -= add;
     }
-
-    const result = { fridayAM: pairings.fridayAM, fridayPM: pairings.fridayPM,
-                     saturdayAM: pairings.saturdayAM, saturdayPM: pairings.saturdayPM };
-
-    for (const [id, count] of Object.entries(counts)) {
-      if (count <= GOLD_MAX_SESSIONS) continue;
-      const p = picks.find(x => x.id === id);
-      if (!p || (p.tier !== 'gold' && p.tier !== 'hero')) continue;
-
-      // Remove from lowest-priority session that contains them
-      for (const sess of dropOrder) {
-        let removed = false;
-        result[sess] = result[sess].map(pair => {
-          if (removed) return pair;
-          return pair.map(slot => {
-            if (!removed && slot && slot.id === id) { removed = true; return null; }
-            return slot;
-          });
-        });
-        if (removed) break;
-      }
-    }
-    return result;
+    return need === 0 ? counts : null;
   }
 
-  // Auto-assign: Friday AM/Saturday AM = foursomes (by composite); Friday PM/Saturday PM = fourball (by aggression+birdie).
-  function resolveAutoPairings(picks) {
-    const fsSorted = [...picks].sort((a, b) =>
-      compositeScore(applyHeroBoost(b)) - compositeScore(applyHeroBoost(a))
-    );
-    const fbSorted = [...picks].sort((a, b) => {
-      const aS = (a.style_tags?.aggression || 50) + (a.stats?.birdie_rate || 50);
-      const bS = (b.style_tags?.aggression || 50) + (b.stats?.birdie_rate || 50);
-      return bS - aS;
+  // Split each player's count between foursomes (fs) and fourball (fb).
+  // Extra match goes to the format where their format_fit is higher.
+  // Balance loop corrects sums to exactly 16 each.
+  function _splitFormatCounts(picks, matchCounts) {
+    const fs = {}, fb = {};
+    picks.forEach(p => {
+      const tot  = matchCounts[p.id];
+      const ffFS = (p.format_fit && p.format_fit.foursomes) || 75;
+      const ffFB = (p.format_fit && p.format_fit.fourball)  || 75;
+      const half = Math.floor(tot / 2);
+      if (tot % 2 === 0) { fs[p.id] = half; fb[p.id] = half; }
+      else if (ffFS >= ffFB) { fs[p.id] = half + 1; fb[p.id] = half; }
+      else                    { fs[p.id] = half;     fb[p.id] = half + 1; }
     });
 
-    const fridayAM   = _buildAMPairs(fsSorted);
-    const saturdayAM = _buildSecondSessionPairs(fsSorted, fridayAM,   'foursomes');
-    const fridayPM   = _buildAMPairs(fbSorted);
-    const saturdayPM = _buildSecondSessionPairs(fbSorted, fridayPM,   'fourball');
+    // Balance to exactly 16 in each format
+    let fsT = picks.reduce((s, p) => s + fs[p.id], 0);
+    function shift(from, to, cond) {
+      for (const p of picks) {
+        if (fsT === 16) break;
+        if (!cond(p)) continue;
+        const ok = from[p.id] > 0 && to[p.id] < getTierMax(p.tier);
+        if (ok) { from[p.id]--; to[p.id]++; fsT += (from === fs ? -1 : 1); }
+      }
+    }
+    if (fsT > 16) shift(fs, fb, p => fs[p.id] > fb[p.id]);
+    if (fsT > 16) shift(fs, fb, () => true);
+    if (fsT < 16) shift(fb, fs, p => fb[p.id] > fs[p.id]);
+    if (fsT < 16) shift(fb, fs, () => true);
 
-    return _enforceGoldCap({ fridayAM, fridayPM, saturdayAM, saturdayPM }, picks);
+    return { fs, fb };
   }
 
-  // Re-randomize: shuffled order, same chemistry-anchor + gold-cap rules.
-  function resolveRandomPairings(picks) {
-    const shuffleFs = [...picks].sort(() => Math.random() - 0.5);
-    const shuffleFb = [...picks].sort(() => Math.random() - 0.5);
+  // All perfect matchings of an even-length player array (7!! = 105 for 8 players).
+  function _perfectMatchings(players) {
+    if (players.length === 0) return [[]];
+    const first = players[0], rest = players.slice(1), results = [];
+    for (let i = 0; i < rest.length; i++) {
+      const partner   = rest[i];
+      const remaining = rest.filter((_, j) => j !== i);
+      for (const sub of _perfectMatchings(remaining)) {
+        results.push([[first, partner], ...sub]);
+      }
+    }
+    return results;
+  }
 
-    const fridayAM   = _buildAMPairs(shuffleFs);
-    const saturdayAM = _buildSecondSessionPairs(shuffleFs, fridayAM, 'foursomes');
-    const fridayPM   = _buildAMPairs(shuffleFb);
-    const saturdayPM = _buildSecondSessionPairs(shuffleFb, fridayPM, 'fourball');
+  function _pairKey(p1, p2) { return [p1.id, p2.id].sort().join('|'); }
 
-    return _enforceGoldCap({ fridayAM, fridayPM, saturdayAM, saturdayPM }, picks);
+  function _scoreMatching(matching, format) {
+    return matching.reduce((s, [a, b]) => {
+      return s + (a && b ? calculatePairingChemistry(a, b, format) : 0);
+    }, 0);
+  }
+
+  // Generate 2 sessions for one format given per-player appearance counts.
+  // optionSeed varies which "1-appearance" players go to session 1 vs session 2.
+  function _generateFormatSessions(picks, countMap, format, optionSeed) {
+    const both = picks.filter(p => countMap[p.id] === 2);
+    const once = picks.filter(p => countMap[p.id] === 1);
+
+    // Deterministic but seed-varied shuffle of once-players
+    const shuffled = [...once].sort((a, b) => {
+      const ha = (a.id + optionSeed).split('').reduce((h, c) => (h * 31 + c.charCodeAt(0)) | 0, 0);
+      const hb = (b.id + optionSeed).split('').reduce((h, c) => (h * 31 + c.charCodeAt(0)) | 0, 0);
+      return ha - hb;
+    });
+
+    const need = 8 - both.length;
+    const sess1 = [...both, ...shuffled.slice(0, need)];
+    const sess2 = [...both, ...shuffled.slice(need)];
+
+    // Best matching for session 1 (exhaustive over 105 options)
+    const matchings1 = _perfectMatchings(sess1);
+    const best1 = matchings1.reduce((b, m) =>
+      _scoreMatching(m, format) > _scoreMatching(b, format) ? m : b, matchings1[0]);
+
+    // Session 2: avoid repeating pairs from session 1 (first relaxation: allow cross-format repeats)
+    const used = new Set(best1.map(([a, b]) => _pairKey(a, b)));
+    const matchings2 = _perfectMatchings(sess2);
+    const valid2  = matchings2.filter(m => m.every(([a, b]) => !used.has(_pairKey(a, b))));
+    const pool2   = valid2.length ? valid2 : matchings2; // fallback: allow repeat if no valid option
+    const best2   = pool2.reduce((b, m) =>
+      _scoreMatching(m, format) > _scoreMatching(b, format) ? m : b, pool2[0]);
+
+    return [best1, best2];
+  }
+
+  // Compute one complete pairing option using a given seed.
+  function _computeOneOption(picks, seed) {
+    const counts = _assignMatchCounts(picks);
+    if (!counts) return null;
+
+    const { fs, fb } = _splitFormatCounts(picks, counts);
+    const [fridayAM, saturdayAM] = _generateFormatSessions(picks, fs, 'foursomes', seed);
+    const [fridayPM, saturdayPM] = _generateFormatSessions(picks, fb, 'fourball',  seed);
+
+    // Track appearance counts to identify fatigued players (4 team matches)
+    const appearances = {};
+    for (const [p1, p2] of [...fridayAM, ...saturdayAM, ...fridayPM, ...saturdayPM]) {
+      if (p1) appearances[p1.id] = (appearances[p1.id] || 0) + 1;
+      if (p2) appearances[p2.id] = (appearances[p2.id] || 0) + 1;
+    }
+    const fatiguedIds = picks
+      .filter(p => (appearances[p.id] || 0) >= 4)
+      .map(p => p.id);
+
+    const score = _scoreMatching(fridayAM,   'foursomes') +
+                  _scoreMatching(saturdayAM, 'foursomes') +
+                  _scoreMatching(fridayPM,   'fourball')  +
+                  _scoreMatching(saturdayPM, 'fourball');
+
+    return { fridayAM, fridayPM, saturdayAM, saturdayPM, _score: score, _fatiguedIds: fatiguedIds };
+  }
+
+  // Compute up to N distinct options sorted by chemistry (best first).
+  // Pre-computed so reshuffle is instant.
+  function computePairingOptions(picks, n = 4) {
+    const options = [], seen = new Set();
+    for (let seed = 0; options.length < n && seed < n * 4; seed++) {
+      const opt = _computeOneOption(picks, seed);
+      if (!opt) break;
+      const fp = [...opt.fridayAM, ...opt.saturdayAM, ...opt.fridayPM, ...opt.saturdayPM]
+        .map(([a, b]) => a && b ? _pairKey(a, b) : 'null').sort().join(',');
+      if (!seen.has(fp)) { seen.add(fp); options.push(opt); }
+    }
+    options.sort((a, b) => b._score - a._score);
+    return options.length ? options : [{ fridayAM: [], fridayPM: [], saturdayAM: [], saturdayPM: [], _score: 0, _fatiguedIds: [] }];
   }
 
   // ─────────────────────────────────────────────────────────────────────────────
@@ -941,12 +977,9 @@
         G.aiSeenNames = [];
         G.picks       = [];
         G.aiPicks     = [];
-        G.pairings    = {
-          fridayAM:   [[null,null],[null,null],[null,null],[null,null]],
-          fridayPM:   [[null,null],[null,null],[null,null],[null,null]],
-          saturdayAM: [[null,null],[null,null],[null,null],[null,null]],
-          saturdayPM: [[null,null],[null,null],[null,null],[null,null]]
-        };
+        G.pairings       = { fridayAM: [], fridayPM: [], saturdayAM: [], saturdayPM: [] };
+        G.pairingOptions = [];
+        G.pairingIndex   = 0;
         G.currentCards = generateAndTrackCards(G.side, 1, G.seenNames, 0);
         save();
         render();
@@ -1052,8 +1085,13 @@
   function advanceFromAIReveal() {
     const round = G.currentRound;
     if (round >= 12) {
-      G.pairings   = resolveAutoPairings(G.picks);
-      G.aiPairings = resolveAutoPairings(G.aiPicks);
+      // Pre-compute 4 pairing options (best chemistry first); reshuffle cycles through them
+      G.pairingOptions = computePairingOptions(G.picks, 4);
+      G.pairingIndex   = 0;
+      G.pairings       = G.pairingOptions[0];
+      // AI always uses best option — no reshuffle
+      const aiOpts = computePairingOptions(G.aiPicks, 1);
+      G.aiPairings = aiOpts[0] || { fridayAM: [], fridayPM: [], saturdayAM: [], saturdayPM: [] };
       G.phase = 'review';
       save();
       render();
@@ -1074,28 +1112,21 @@
   function renderReview() {
     const app = document.getElementById('app');
 
-    function pairListHTML(pairings, format) {
-      return pairings.map((pair, i) => {
+    function pairListHTML(pairs, format) {
+      if (!pairs || !pairs.length) return `<div style="font-size:11px;color:var(--text-dim);padding:4px 0;">No pairs assigned</div>`;
+      return pairs.map((pair, i) => {
         const [p1, p2] = pair;
         if (!p1 && !p2) return `<div class="chem-pair" style="opacity:.4"><span class="cp-names">Pair ${i+1} — empty</span></div>`;
-        let chemHTML = '';
         if (p1 && p2) {
           const score = calculatePairingChemistry(p1, p2, format);
-          chemHTML = `<div class="chem-pair">
+          return `<div class="chem-pair">
             <span class="chem-dot ${chemClass(score)}"></span>
             <span class="cp-names">${p1.name} + ${p2.name}</span>
             <span style="font-size:10px;color:var(--text-muted)">${score}%</span>
           </div>`;
-        } else {
-          const only = p1 || p2;
-          chemHTML = `<div class="chem-pair">
-            <span class="cp-names">${only ? only.name : '—'} + (incomplete)</span>
-          </div>`;
         }
-        return `<div style="margin-bottom:2px;">
-          <div style="font-size:9px;color:var(--text-dim);text-transform:uppercase;margin-bottom:1px;">Pair ${i+1}</div>
-          ${chemHTML}
-        </div>`;
+        const only = p1 || p2;
+        return `<div class="chem-pair"><span class="cp-names">${only ? only.name : '—'} + (incomplete)</span></div>`;
       }).join('');
     }
 
@@ -1124,6 +1155,24 @@
         </div>`;
     }
 
+    // Fatigued players (platinum with 4 team appearances) + capacity error handling
+    const fatiguedIds   = new Set(G.pairings._fatiguedIds || []);
+    const fatiguedNames = G.picks.filter(p => fatiguedIds.has(p.id)).map(p => p.name);
+    const optCount      = (G.pairingOptions || []).length;
+    const optLabel      = optCount > 1 ? `Option ${(G.pairingIndex || 0) + 1} of ${optCount}` : '';
+    const hasCapErr     = !G.pairings.fridayAM || G.pairings.fridayAM.length === 0;
+
+    const fatigueWarning = fatiguedNames.length ? `
+      <div style="padding:6px 14px;background:rgba(201,168,76,.08);border-bottom:1px solid rgba(201,168,76,.2);font-size:11px;">
+        <span style="color:var(--gold);font-weight:700;">⚠ Fatigue: </span>
+        <span style="color:var(--text-muted)">${fatiguedNames.map(n => `${n} plays all 4 team sessions and enters Sunday fatigued.`).join(' ')}</span>
+      </div>` : '';
+
+    const capError = hasCapErr ? `
+      <div style="padding:10px 14px;background:rgba(229,57,53,.1);border-bottom:1px solid rgba(229,57,53,.3);font-size:12px;color:#ef9a9a;">
+        ⚠ Roster lacks the tier depth to fill all 16 team match slots. Consider reshuffling or accepting a lighter schedule.
+      </div>` : '';
+
     app.innerHTML = `
       <div style="display:flex;flex-direction:column;min-height:100vh;">
         <div class="page-header">
@@ -1133,8 +1182,13 @@
         </div>
         <div style="padding:8px 14px;background:var(--surface);border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap;">
           <button class="btn btn-gold" id="sim-btn" style="font-size:15px;padding:10px 22px;">Simulate The Cup →</button>
-          <button class="btn btn-outline" id="rerandom-btn" style="font-size:12px;padding:6px 14px;">Re-randomize Pairings</button>
+          <div style="display:flex;align-items:center;gap:8px;">
+            ${optLabel ? `<span style="font-size:10px;color:var(--text-dim)">${optLabel}</span>` : ''}
+            <button class="btn btn-outline" id="rerandom-btn" style="font-size:12px;padding:6px 14px;">Reshuffle Pairings</button>
+          </div>
         </div>
+        ${capError}
+        ${fatigueWarning}
         <div class="review-layout">
           <div class="review-col">${teamColHTML(G.pairings, G.captain, 'Your Team (' + G.side + ')')}</div>
           <div class="review-col">${teamColHTML(G.aiPairings, G.aiCaptain, 'Opponent (' + opp(G.side) + ')')}</div>
@@ -1142,7 +1196,11 @@
       </div>`;
 
     document.getElementById('rerandom-btn').addEventListener('click', () => {
-      G.pairings = resolveRandomPairings(G.picks);
+      const opts = G.pairingOptions || [];
+      if (opts.length > 1) {
+        G.pairingIndex = ((G.pairingIndex || 0) + 1) % opts.length;
+        G.pairings = opts[G.pairingIndex];
+      }
       save();
       renderReview();
     });

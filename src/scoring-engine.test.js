@@ -272,6 +272,7 @@ console.log('\ncalculateMatchProbability — 20 combinations');
     const sum  = prob.win + prob.halve + prob.loss;
     assert(`combo ${i}: win+halve+loss === 100 (got ${sum.toFixed(1)})`, Math.abs(sum - 100) < 0.2);
     assert(`combo ${i}: all values ≥ 0`, prob.win >= 0 && prob.halve >= 0 && prob.loss >= 0);
+    assert(`combo ${i}: halve in valid range`, prob.halve >= 2 && prob.halve <= 14);
   }
 
   const strongProb = calculateMatchProbability(playerA, playerB, powerVenue, 'singles', null);
@@ -413,8 +414,8 @@ console.log('\ncalculateMatchProbability — zero-sum constraint (50 combos)');
     assert(`combo ${i}: win+halve+loss === 100 (got ${sum.toFixed(1)})`, Math.abs(sum - 100) < 0.2);
     assert(`combo ${i}: win >= 5`,        prob.win   >= 5);
     assert(`combo ${i}: loss >= 5`,       prob.loss  >= 5);
-    assert(`combo ${i}: win <= 80`,       prob.win   <= 80);
-    assert(`combo ${i}: halve === 10`,    Math.abs(prob.halve - 10) < 0.1);
+    assert(`combo ${i}: win <= 85`,       prob.win   <= 85);
+    assert(`combo ${i}: halve in valid range`, prob.halve >= 2 && prob.halve <= 14);
   }
 
   // captain has tactician vs aiCaptain's flamboyant — in singles, captain has pressure_player advantage
@@ -422,7 +423,7 @@ console.log('\ncalculateMatchProbability — zero-sum constraint (50 combos)');
   const weak   = calculateMatchProbability(playerB, playerA, powerVenue, 'singles', aiCaptain, null, captain);
   assert('zero-sum: strong win > 45', strong.win > 45);
   assert('zero-sum: weak win < 45',   weak.win   < 45);
-  assert('zero-sum: win probabilities sum near 90', Math.abs((strong.win + weak.win) - 90) < 2);
+  assert('zero-sum: win probs sum near 100 - halve', Math.abs((strong.win + weak.win) - (100 - strong.halve)) < 3);
 
   const balanced = calculateMatchProbability(playerA, playerA, powerVenue, 'singles', captain, null, captain);
   assertApprox('balanced match: win near 45',  balanced.win,  45, 5);
@@ -500,6 +501,80 @@ console.log('\nchemistry bond boost — match probability');
     assert(`bond combo ${i}: win <= 80`, prob.win <= 80);
     assert(`bond combo ${i}: loss >= 5`,  prob.loss >= 5);
   }
+}
+
+console.log('\nformat-specific halve base + aggression/consistency spread');
+{
+  // Equal players, no captain, no partner — pure format base halve comparison
+  const baseFS  = calculateMatchProbability(playerA, playerA, powerVenue, 'foursomes', null);
+  const baseFB  = calculateMatchProbability(playerA, playerA, powerVenue, 'fourball',  null);
+  const baseSgl = calculateMatchProbability(playerA, playerA, powerVenue, 'singles',   null);
+
+  assert('foursomes halve < fourball halve (base)',  baseFS.halve  < baseFB.halve);
+  assert('singles halve < fourball halve (base)',    baseSgl.halve < baseFB.halve);
+  assert('foursomes halve < singles halve (base)',   baseFS.halve  < baseSgl.halve);
+  assert('fourball base halve near 10 (±4)',  Math.abs(baseFB.halve  - 10) <= 4);
+  assert('foursomes base halve near 5 (±3)',  Math.abs(baseFS.halve  -  5) <= 3);
+  assert('singles base halve near 7 (±3)',    Math.abs(baseSgl.halve -  7) <= 3);
+
+  // All formats sum to 100
+  for (const [label, prob] of [['foursomes', baseFS], ['fourball', baseFB], ['singles', baseSgl]]) {
+    assert(`${label} sums to 100`, Math.abs(prob.win + prob.halve + prob.loss - 100) < 0.2);
+  }
+
+  // Aggressive pair has fewer halves than defensive pair (same format, same skill)
+  const aggressivePair = makeTestPlayer('gold', {
+    id: 'agg1', name: 'Aggressive1',
+    style_tags: { power:88, accuracy:75, aggression:88, consistency:72, match_play_affinity:80 }
+  });
+  const aggressivePartner = makeTestPlayer('gold', {
+    id: 'agg2', name: 'Aggressive2',
+    style_tags: { power:85, accuracy:73, aggression:85, consistency:70, match_play_affinity:78 }
+  });
+  const defensivePlayer = makeTestPlayer('gold', {
+    id: 'def1', name: 'Defensive1',
+    style_tags: { power:72, accuracy:82, aggression:52, consistency:88, match_play_affinity:76 }
+  });
+  const defensivePartner = makeTestPlayer('gold', {
+    id: 'def2', name: 'Defensive2',
+    style_tags: { power:70, accuracy:84, aggression:50, consistency:90, match_play_affinity:75 }
+  });
+
+  const aggFB  = calculateMatchProbability(aggressivePair, playerB, powerVenue, 'fourball', null, aggressivePartner);
+  const defFB  = calculateMatchProbability(defensivePlayer, playerB, powerVenue, 'fourball', null, defensivePartner);
+  assert('aggressive fourball pair has fewer halves than defensive pair', aggFB.halve < defFB.halve);
+  assert('aggressive fourball: win+halve+loss=100', Math.abs(aggFB.win + aggFB.halve + aggFB.loss - 100) < 0.2);
+  assert('defensive fourball: win+halve+loss=100',  Math.abs(defFB.win + defFB.halve + defFB.loss - 100) < 0.2);
+
+  // Blow-up risk: aggressive+inconsistent pair has higher loss than aggressive+consistent pair
+  const volatilePlayer = makeTestPlayer('gold', {
+    id: 'vol1', name: 'Volatile1',
+    style_tags: { power:90, accuracy:68, aggression:90, consistency:48, match_play_affinity:75 }
+  });
+  const volatilePartner = makeTestPlayer('gold', {
+    id: 'vol2', name: 'Volatile2',
+    style_tags: { power:88, accuracy:65, aggression:88, consistency:45, match_play_affinity:72 }
+  });
+  const steadyPlayer = makeTestPlayer('gold', {
+    id: 'sdy1', name: 'Steady1',
+    style_tags: { power:88, accuracy:82, aggression:88, consistency:85, match_play_affinity:80 }
+  });
+  const steadyPartner = makeTestPlayer('gold', {
+    id: 'sdy2', name: 'Steady2',
+    style_tags: { power:85, accuracy:80, aggression:85, consistency:88, match_play_affinity:78 }
+  });
+
+  const volProb   = calculateMatchProbability(volatilePlayer, playerA, powerVenue, 'fourball', null, volatilePartner);
+  const steadyProb = calculateMatchProbability(steadyPlayer,  playerA, powerVenue, 'fourball', null, steadyPartner);
+  assert('volatile aggressive pair: win+halve+loss=100', Math.abs(volProb.win + volProb.halve + volProb.loss - 100) < 0.2);
+  assert('steady aggressive pair: win+halve+loss=100',   Math.abs(steadyProb.win + steadyProb.halve + steadyProb.loss - 100) < 0.2);
+  assert('volatile aggressive pair has higher loss than steady aggressive pair', volProb.loss > steadyProb.loss);
+  assert('steady aggressive pair has higher win than volatile pair',             steadyProb.win > volProb.win);
+
+  // Foursomes with aggressive+inconsistent: loss can exceed win (blow-up scenario)
+  const volFS = calculateMatchProbability(volatilePlayer, playerA, powerVenue, 'foursomes', null, volatilePartner);
+  assert('volatile foursomes: win+halve+loss=100', Math.abs(volFS.win + volFS.halve + volFS.loss - 100) < 0.2);
+  assert('volatile foursomes: halve stays low',  volFS.halve <= 6);
 }
 
 console.log('\nsinglesOrder — captain strategy');

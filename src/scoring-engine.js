@@ -223,17 +223,54 @@ function calculateMatchProbability(myPlayer, oppPlayer, venue, format, captain, 
   const phb = myPartner && myPartner.hero_bonus;
   if (phb && phb.chemistry_boost && format !== 'singles') totalSwing += phb.chemistry_boost * 2;
 
-  // Cap total swing — delta = swing/2 → userWin range 45 ± 15 = [30%, 60%]
+  // Cap total swing — delta = swing/2
   totalSwing = Math.min(30, Math.max(-30, totalSwing));
   const delta = totalSwing / 2;
 
-  // Base: Win 45% / Halve 10% / Loss 45%
-  let win   = Math.max(5, Math.min(80, Math.round((45 + delta) * 10) / 10));
-  let halve = 10;
-  let loss  = Math.max(5, Math.min(80, Math.round((45 - delta) * 10) / 10));
-  loss = Math.round((100 - win - halve) * 10) / 10; // ensure exactly 100
+  // Format-specific base halve: foursomes 5% (volatile), fourball 10%, singles 7%
+  const BASE_HALVE    = format === 'foursomes' ? 5 : format === 'singles' ? 7 : 10;
+  const BASE_WIN_LOSS = (100 - BASE_HALVE) / 2;
 
-  // Hero singles_loss_ceiling — applied after normalization
+  let win   = Math.max(5, Math.min(85, Math.round((BASE_WIN_LOSS + delta) * 10) / 10));
+  let halve = BASE_HALVE;
+  let loss  = Math.round((100 - win - halve) * 10) / 10;
+
+  // Aggression/consistency spread modifier
+  // Aggressive match → halve drops, freed points redistributed based on MY pair's consistency.
+  // High consistency → freed points lean toward win. Low consistency → blow-up risk (lean toward loss).
+  const _agg = p => (p && p.style_tags && p.style_tags.aggression) || 65;
+  const _con = p => (p && p.style_tags && p.style_tags.consistency) || 65;
+
+  const pairAgg    = myPartner  ? (_agg(myPlayer) + _agg(myPartner))  / 2 : _agg(myPlayer);
+  const oppPairAgg = oppPartner ? (_agg(oppPlayer) + _agg(oppPartner)) / 2 : _agg(oppPlayer);
+  const pairCon    = myPartner  ? (_con(myPlayer) + _con(myPartner))   / 2 : _con(myPlayer);
+  const matchAgg   = (pairAgg + oppPairAgg) / 2;
+
+  // halveShift > 0 = fewer halves (aggressive); < 0 = more halves (defensive)
+  const halveShift = Math.min(4, Math.max(-3, Math.round((matchAgg - 65) / 7)));
+  const newHalve   = Math.max(2, Math.min(halve + 3, halve - halveShift));
+  const freed      = halve - newHalve;
+  halve = newHalve;
+
+  if (freed !== 0) {
+    const conBias = Math.min(0.25, Math.max(-0.25, (pairCon - 65) / 50));
+    win  = Math.round((win  + freed * (0.5 + conBias)) * 10) / 10;
+    loss = Math.round((loss + freed * (0.5 - conBias)) * 10) / 10;
+  }
+
+  // Blow-up risk: aggressive + inconsistent pair → additional loss exposure
+  if (pairAgg > 72 && pairCon < 60) {
+    const blowUp = Math.min(3, Math.round((pairAgg - 72) / 18 * (60 - pairCon) / 10));
+    win  = Math.round((win  - blowUp) * 10) / 10;
+    loss = Math.round((loss + blowUp) * 10) / 10;
+  }
+
+  // Clamp and re-derive loss to guarantee win+halve+loss = 100
+  win  = Math.max(5, Math.min(85, win));
+  loss = Math.round((100 - win - halve) * 10) / 10;
+  if (loss < 5) { loss = 5; win = Math.round((100 - loss - halve) * 10) / 10; }
+
+  // Hero singles_loss_ceiling — applied after all modifiers
   if (format === 'singles' && hb && hb.singles_loss_ceiling != null && loss > hb.singles_loss_ceiling) {
     const excess = loss - hb.singles_loss_ceiling;
     loss = hb.singles_loss_ceiling;

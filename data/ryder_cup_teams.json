@@ -1,0 +1,80 @@
+[
+  {
+    "year": 1997,
+    "venue_id": "valderrama_1997",
+    "usa": ["Tiger Woods", "Phil Mickelson", "Jim Furyk", "Davis Love III", "Tom Lehman", "Mark Calcavecchia", "Brad Faxon", "Scott Hoch", "David Duval", "Lee Janzen", "Jeff Maggert", "Fred Couples"],
+    "eur": ["Colin Montgomerie", "Bernhard Langer", "Nick Faldo", "Lee Westwood", "Darren Clarke", "Costantino Rocca", "Per-Ulrik Johansson", "Thomas Bjorn", "Padraig Harrington", "Paul Lawrie", "Paul McGinley", "Andrew Coltart"]
+  },
+  {
+    "year": 1999,
+    "venue_id": "brookline_1999",
+    "usa": ["Tiger Woods", "Phil Mickelson", "Jim Furyk", "Davis Love III", "Tom Lehman", "David Duval", "Jeff Maggert", "Hal Sutton", "Mark Calcavecchia", "Steve Pate", "Lee Janzen", "Justin Leonard"],
+    "eur": ["Colin Montgomerie", "Lee Westwood", "Sergio Garcia", "Darren Clarke", "Padraig Harrington", "Jean Van de Velde", "Andrew Coltart", "Paul Lawrie", "Paul McGinley", "Costantino Rocca", "Jesper Parnevik", "Jose Maria Olazabal"]
+  },
+  {
+    "year": 2002,
+    "venue_id": "belfry_2002",
+    "usa": ["Tiger Woods", "Phil Mickelson", "Jim Furyk", "Davis Love III", "Mark Calcavecchia", "Scott Verplank", "Scott Hoch", "David Toms", "Stewart Cink", "David Duval", "Fred Funk", "Chris Riley"],
+    "eur": ["Colin Montgomerie", "Lee Westwood", "Sergio Garcia", "Darren Clarke", "Padraig Harrington", "Luke Donald", "Paul Casey", "Thomas Bjorn", "Bernhard Langer", "Paul McGinley", "Niclas Fasth", "Pierre Fulke"]
+  },
+  {
+    "year": 2004,
+    "venue_id": "oakland_hills_2004",
+    "usa": ["Tiger Woods", "Phil Mickelson", "Jim Furyk", "Davis Love III", "Chris DiMarco", "Chad Campbell", "Fred Funk", "David Toms", "Stewart Cink", "Chris Riley", "Zach Johnson", "Jay Haas"],
+    "eur": ["Lee Westwood", "Colin Montgomerie", "Sergio Garcia", "Padraig Harrington", "Luke Donald", "Paul Casey", "Ian Poulter", "Paul McGinley", "David Howell", "Thomas Levet", "Darren Clarke", "Miguel Jimenez"]
+  },
+  {
+    "year": 2006,
+    "venue_id": "k_club_2006",
+    "usa": ["Tiger Woods", "Phil Mickelson", "Jim Furyk", "Zach Johnson", "Brett Wetterich", "Chad Campbell", "Vaughn Taylor", "Chris DiMarco", "Stewart Cink", "JJ Henry", "Scott Verplank", "David Toms"],
+    "eur": ["Lee Westwood", "Colin Montgomerie", "Sergio Garcia", "Padraig Harrington", "Luke Donald", "Paul Casey", "Ian Poulter", "Paul McGinley", "Henrik Stenson", "Darren Clarke", "Robert Karlsson", "David Howell"]
+  },
+  {
+    "year": 2008,
+    "venue_id": "valhalla_2008",
+    "usa": ["Phil Mickelson", "Jim Furyk", "Steve Stricker", "Hunter Mahan", "Boo Weekley", "Kenny Perry", "JB Holmes", "Chad Campbell", "Stewart Cink", "Ryan Moore", "Ben Curtis", "Anthony Kim"],
+    "eur": ["Sergio Garcia", "Lee Westwood", "Ian Poulter", "Henrik Stenson", "Padraig Harrington", "Luke Donald", "Paul Casey", "Graeme McDowell", "Ross Fisher", "Oliver Wilson", "Soren Hansen", "Graeme Storm"]
+  },
+  {
+    "year": 2010,
+    "venue_id": "celtic_manor_2010",
+    "usa": ["Tiger Woods", "Phil Mickelson", "Jim Furyk", "Dustin Johnson", "Matt Kuchar", "Rickie Fowler", "Jeff Overton", "Bubba Watson", "Brandt Snedeker", "Steve Stricker", "Hunter Mahan", "Zach Johnson"],
+    "eur": ["Lee Westwood", "Rory McIlroy", "Luke Donald", "Graeme McDowell", "Francesco Molinari", "Edoardo Molinari", "Ian Poulter", "Paul Casey", "Martin Kaymer", "Ross Fisher", "Peter Hanson", "Robert Karlsson"]
+  },
+  {
+    "year": 2012,
+    "venue_id": "medinah_2012",
+    "usa": ["Tiger Woods", "Phil Mickelson", "Jim Furyk", "Dustin Johnson", "Brandt Snedeker", "Keegan Bradley", "Matt Kuchar", "Jason Dufner", "Webb Simpson", "Steve Stricker", "Zach Johnson", "Bubba Watson"],
+    "eur": ["Rory McIlroy", "Lee Westwood", "Sergio Garcia", "Ian Poulter", "Henrik Stenson", "Justin Rose", "Nicolas Colsaerts", "Martin Kaymer", "Francesco Molinari", "Graeme McDowell", "Luke Donald", "Paul Lawrie"]
+  },
+  {
+    "year": 2014,
+    "venue_id": "gleneagles_2014",
+    "usa": ["Phil Mickelson", "Jim Furyk", "Dustin Johnson", "Matt Kuchar", "Patrick Reed", "Bubba Watson", "Webb Simpson", "Keegan Bradley", "Hunter Mahan", "Rickie Fowler", "Zach Johnson", "Jimmy Walker"],
+    "eur": ["Rory McIlroy", "Sergio Garcia", "Henrik Stenson", "Lee Westwood", "Ian Poulter", "Justin Rose", "Martin Kaymer", "Luke Donald", "Graeme McDowell", "Jamie Donaldson", "Stephen Gallacher", "Victor Dubuisson"]
+  },
+  {
+    "year": 2016,
+    "venue_id": "hazeltine_2016",
+    "usa": ["Patrick Reed", "Jordan Spieth", "Dustin Johnson", "JB Holmes", "Rickie Fowler", "Phil Mickelson", "Matt Kuchar", "Ryan Moore", "Brandt Snedeker", "Brooks Koepka", "Zach Johnson", "Ryan Palmer"],
+    "eur": ["Sergio Garcia", "Henrik Stenson", "Rory McIlroy", "Ian Poulter", "Lee Westwood", "Justin Rose", "Danny Willett", "Thomas Pieters", "Chris Wood", "Martin Kaymer", "Andy Sullivan", "Rafa Cabrera-Bello"]
+  },
+  {
+    "year": 2018,
+    "venue_id": "le_golf_national_2018",
+    "usa": ["Patrick Reed", "Justin Thomas", "Jordan Spieth", "Dustin Johnson", "Tony Finau", "Bryson DeChambeau", "Brooks Koepka", "Phil Mickelson", "Tiger Woods", "Webb Simpson", "Rickie Fowler", "Kevin Kisner"],
+    "eur": ["Rory McIlroy", "Tommy Fleetwood", "Francesco Molinari", "Sergio Garcia", "Ian Poulter", "Paul Casey", "Jon Rahm", "Alex Noren", "Thorbjorn Olesen", "Tyrrell Hatton", "Henrik Stenson", "Justin Rose"]
+  },
+  {
+    "year": 2021,
+    "venue_id": "whistling_straits_2021",
+    "usa": ["Dustin Johnson", "Brooks Koepka", "Patrick Cantlay", "Xander Schauffele", "Collin Morikawa", "Tony Finau", "Scottie Scheffler", "Jordan Spieth", "Bryson DeChambeau", "Justin Thomas", "Daniel Berger", "Harris English"],
+    "eur": ["Rory McIlroy", "Jon Rahm", "Tommy Fleetwood", "Paul Casey", "Tyrrell Hatton", "Shane Lowry", "Sergio Garcia", "Viktor Hovland", "Matt Fitzpatrick", "Lee Westwood", "Ian Poulter", "Bernd Wiesberger"]
+  },
+  {
+    "year": 2023,
+    "venue_id": "marco_simone_2023",
+    "usa": ["Wyndham Clark", "Justin Thomas", "Brian Harman", "Patrick Cantlay", "Xander Schauffele", "Sam Burns", "Collin Morikawa", "Rickie Fowler", "Brooks Koepka", "Max Homa", "Jordan Spieth", "Scottie Scheffler"],
+    "eur": ["Rory McIlroy", "Jon Rahm", "Viktor Hovland", "Ludvig Aberg", "Tommy Fleetwood", "Tyrrell Hatton", "Shane Lowry", "Matt Fitzpatrick", "Sepp Straka", "Joost Luiten", "Nicolai Hojgaard", "Robert MacIntyre"]
+  }
+]

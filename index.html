@@ -407,8 +407,32 @@
   // ─────────────────────────────────────────────────────────────────────────────
   // AI LOGIC
   // ─────────────────────────────────────────────────────────────────────────────
-  function aiBestFromCards(cards) {
+  function aiBestFromCards(cards, existingPicks = []) {
     if (!cards.length) return null;
+
+    // Rule 1: always draft a hero if one is available
+    const heroes = cards.filter(p => p.tier === 'hero');
+    if (heroes.length) {
+      return heroes.reduce((best, p) =>
+        compositeScore(applyHeroBoost(p)) > compositeScore(applyHeroBoost(best)) ? p : best
+      );
+    }
+
+    // Rule 2: optimize for chemistry with existing picks
+    if (existingPicks.length > 0) {
+      function chemPotential(candidate) {
+        return existingPicks.reduce((sum, ep) => {
+          const fs = calculatePairingChemistry(candidate, ep, 'foursomes');
+          const fb = calculatePairingChemistry(candidate, ep, 'fourball');
+          return sum + (fs + fb) / 2;
+        }, 0) / existingPicks.length;
+      }
+      return cards.reduce((best, p) =>
+        chemPotential(p) > chemPotential(best) ? p : best
+      );
+    }
+
+    // Fallback (round 1): highest composite
     return cards.reduce((best, p) =>
       compositeScore(applyHeroBoost(p)) > compositeScore(applyHeroBoost(best)) ? p : best
     );
@@ -558,7 +582,7 @@
       <div class="card-year">${p.year}</div>
       <div class="card-sub">${p.nationality}</div>
       <div class="card-rank">#${p.world_ranking} world ranking</div>
-      <div class="card-wins">${p.wins_that_year} win${p.wins_that_year !== 1 ? 's' : ''} · ${score} composite</div>
+      <div class="card-wins">${p.wins_that_year} win${p.wins_that_year !== 1 ? 's' : ''} this year</div>
       <div class="card-style-tags">${styleTagsHTML(p)}</div>
       ${bonus ? `<div class="card-hero-bonus">${bonus}</div>` : ''}
       ${p.flavor_text ? `<div class="card-flavor">${p.flavor_text}</div>` : ''}
@@ -810,7 +834,7 @@
     const aiHeroCount = G.aiPicks.filter(p => p.tier === 'hero').length;
     const aiCards = generateAndTrackCards(opp(G.side), G.currentRound, G.aiSeenNames, aiHeroCount);
     G.aiRoundCards = aiCards;
-    const aiPick = aiBestFromCards(aiCards);
+    const aiPick = aiBestFromCards(aiCards, G.aiPicks);
     G.aiRoundPick = aiPick;
     if (aiPick) G.aiPicks.push(aiPick);
 
@@ -845,11 +869,11 @@
         <div class="ai-reveal-title">Opponent's Pick — ${opp(G.side)}</div>
         <div class="ai-reveal-sub">Here's what they had to choose from</div>
         ${myPick ? `<div class="ai-your-pick">Your pick: <strong>${myPick.name}</strong> (${myPick.year})</div>` : ''}
-        ${courseProfileHTML(G.venue)}
-        <div class="ai-reveal-cards">${cardsHTML || '<p style="color:var(--text-muted)">No options available</p>'}</div>
-        <button class="btn btn-gold" id="ai-continue-btn">
+        <button class="btn btn-gold" id="ai-continue-btn" style="margin:8px 0 4px;">
           ${isLast ? 'See Your Pairings →' : `Continue to Round ${round + 1} →`}
         </button>
+        ${courseProfileHTML(G.venue)}
+        <div class="ai-reveal-cards">${cardsHTML || '<p style="color:var(--text-muted)">No options available</p>'}</div>
       </div>`;
 
     document.getElementById('ai-continue-btn').addEventListener('click', advanceFromAIReveal);
@@ -929,16 +953,13 @@
           <span style="flex:1"></span>
           <span style="font-size:12px;color:var(--text-muted)">${G.venue.name}</span>
         </div>
-        <div style="padding:8px 14px;background:var(--surface);border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;gap:12px;">
-          <span style="font-size:12px;color:var(--text-muted);">Auto-assigned pairings — re-roll or simulate</span>
+        <div style="padding:8px 14px;background:var(--surface);border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap;">
+          <button class="btn btn-gold" id="sim-btn" style="font-size:15px;padding:10px 22px;">Simulate The Cup →</button>
           <button class="btn btn-outline" id="rerandom-btn" style="font-size:12px;padding:6px 14px;">Re-randomize Pairings</button>
         </div>
         <div class="review-layout">
           <div class="review-col">${teamColHTML(G.pairings, G.captain, 'Your Team (' + G.side + ')')}</div>
           <div class="review-col">${teamColHTML(G.aiPairings, G.aiCaptain, 'Opponent (' + opp(G.side) + ')')}</div>
-        </div>
-        <div class="simulate-bar">
-          <button class="btn btn-gold" id="sim-btn">Simulate The Cup →</button>
         </div>
       </div>`;
 

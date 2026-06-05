@@ -211,6 +211,10 @@ function _singlesOrder(players) {
 // Same pairings play both AM and PM sessions for their format.
 // Players in BOTH foursomesPairs and fourballPairs take a -2% fatigue penalty in singles.
 // Returns: { sessions, finalScore, totalPoints, winner }
+// myTeam / opponentTeam shape:
+//   { foursomesAMPairs, foursomesPMPairs, fourballAMPairs, fourballPMPairs: [[p1,p2]×4], allPlayers: [×12] }
+// Each session uses its own unique set of pairs — no pair repeats between AM and PM.
+// Players with 3+ team match appearances are fatigued: -2%/+2% singles adjustment.
 function simulateFullEvent(myTeam, opponentTeam, venue, myCaptain, aiCaptain) {
   // Apply hero boosts to pairs — never mutate source data
   function boostPair([p1, p2]) {
@@ -220,21 +224,36 @@ function simulateFullEvent(myTeam, opponentTeam, venue, myCaptain, aiCaptain) {
     };
   }
 
-  const myFs   = myTeam.foursomesPairs.map(boostPair);
-  const myFb   = myTeam.fourballPairs.map(boostPair);
+  const myFsAM = myTeam.foursomesAMPairs.map(boostPair);
+  const myFsPM = myTeam.foursomesPMPairs.map(boostPair);
+  const myFbAM = myTeam.fourballAMPairs.map(boostPair);
+  const myFbPM = myTeam.fourballPMPairs.map(boostPair);
   const myAll  = myTeam.allPlayers.map(applyHeroBoost);
-  const oppFs  = opponentTeam.foursomesPairs.map(boostPair);
-  const oppFb  = opponentTeam.fourballPairs.map(boostPair);
-  const oppAll = opponentTeam.allPlayers.map(applyHeroBoost);
 
-  // Players in both formats play 5 matches — -2% win probability in singles
-  const myFsIds        = new Set(myTeam.foursomesPairs.flat().filter(Boolean).map(p => p.id));
-  const myFbIds        = new Set(myTeam.fourballPairs.flat().filter(Boolean).map(p => p.id));
-  const myFatiguedIds  = new Set([...myFsIds].filter(id => myFbIds.has(id)));
+  const oppFsAM = opponentTeam.foursomesAMPairs.map(boostPair);
+  const oppFsPM = opponentTeam.foursomesPMPairs.map(boostPair);
+  const oppFbAM = opponentTeam.fourballAMPairs.map(boostPair);
+  const oppFbPM = opponentTeam.fourballPMPairs.map(boostPair);
+  const oppAll  = opponentTeam.allPlayers.map(applyHeroBoost);
 
-  const oppFsIds       = new Set(opponentTeam.foursomesPairs.flat().filter(Boolean).map(p => p.id));
-  const oppFbIds       = new Set(opponentTeam.fourballPairs.flat().filter(Boolean).map(p => p.id));
-  const oppFatiguedIds = new Set([...oppFsIds].filter(id => oppFbIds.has(id)));
+  // Count team match appearances per player — 3+ = fatigued in singles
+  function countAppearances(team) {
+    const counts = {};
+    const allPairs = [
+      ...team.foursomesAMPairs, ...team.foursomesPMPairs,
+      ...team.fourballAMPairs,  ...team.fourballPMPairs
+    ];
+    for (const pair of allPairs) {
+      for (const p of pair) {
+        if (p) counts[p.id] = (counts[p.id] || 0) + 1;
+      }
+    }
+    return counts;
+  }
+  const myAppearances   = countAppearances(myTeam);
+  const oppAppearances  = countAppearances(opponentTeam);
+  const myFatiguedIds   = new Set(Object.entries(myAppearances).filter(([, c]) => c >= 3).map(([id]) => id));
+  const oppFatiguedIds  = new Set(Object.entries(oppAppearances).filter(([, c]) => c >= 3).map(([id]) => id));
 
   const mySingles  = _singlesOrder(myAll);
   const oppSingles = _singlesOrder(oppAll);
@@ -265,10 +284,10 @@ function simulateFullEvent(myTeam, opponentTeam, venue, myCaptain, aiCaptain) {
     return results;
   }
 
-  const fridayAM   = playTeamSession(myFs, oppFs, 'foursomes');
-  const fridayPM   = playTeamSession(myFs, oppFs, 'foursomes');
-  const saturdayAM = playTeamSession(myFb, oppFb, 'fourball');
-  const saturdayPM = playTeamSession(myFb, oppFb, 'fourball');
+  const fridayAM   = playTeamSession(myFsAM, oppFsAM, 'foursomes');
+  const fridayPM   = playTeamSession(myFsPM, oppFsPM, 'foursomes');
+  const saturdayAM = playTeamSession(myFbAM, oppFbAM, 'fourball');
+  const saturdayPM = playTeamSession(myFbPM, oppFbPM, 'fourball');
 
   const sunday = mySingles.map((myP, i) => {
     const oppP = oppSingles[i];

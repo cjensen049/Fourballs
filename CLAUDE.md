@@ -125,11 +125,18 @@ tier probabilities are naturally weighted higher without manual adjustment.
 - All 12 drafted players play singles
 - Simulation button and Re-randomize both accessible from top of review screen (no scroll required)
 
-### Planned: Expand to 4 Unique Sessions (standalone task)
-Currently the same 4 foursomes pairs play both Friday AM and Friday PM; same for fourball Saturday.
-Planned change: generate unique pairings per session (Fri AM, Fri PM, Sat AM, Sat PM) so players
-can have different partners across sessions. This requires 16 unique pairs total. Affects
-simulateFullEvent, resolveAutoPairings, and the review screen layout.
+### Session Structure (4 unique pair sets)
+Each format generates two independent sets of 4 pairs — no pair repeats between AM and PM.
+- Foursomes AM: best 8 by composite, paired 1+2, 3+4, 5+6, 7+8
+- Foursomes PM: top 4 cross-paired with bottom 4: 1+9, 2+10, 3+11, 4+12
+- Fourball AM: best 8 by aggression+birdie, same structure
+- Fourball PM: same cross-pair structure
+Total: 16 unique team matches. Players 1–4 (best composite) appear in both AM and PM = 4 team matches = fatigued.
+
+### Fatigue (updated threshold)
+Players with 3+ team match appearances across all 4 sessions are fatigued.
+They receive -2% win / +2% loss in singles. `fatigue_immune` hero bonus bypasses this.
+With the 4-session structure, the top 4 players naturally appear in 4 sessions (all 4 team matches).
 
 ### Fatigue
 - Players appearing in BOTH foursomesPairs AND fourballPairs are considered overplayed

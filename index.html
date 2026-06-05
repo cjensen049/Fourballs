@@ -294,8 +294,8 @@
   // ─────────────────────────────────────────────────────────────────────────────
   // CONSTANTS
   // ─────────────────────────────────────────────────────────────────────────────
-  const STORAGE_KEY     = 'fourballs_state_v3';
-  const STORAGE_VERSION = 3;
+  const STORAGE_KEY     = 'fourballs_state_v4';
+  const STORAGE_VERSION = 4;
 
   const TIER_COLORS = {
     platinum: '#c084fc', gold: '#c9a84c', silver: '#94a3b8',
@@ -342,14 +342,18 @@
       venue: null,
       picks: [],
       pairings: {
-        foursomes: [[null,null],[null,null],[null,null],[null,null]],
-        fourball:  [[null,null],[null,null],[null,null],[null,null]]
+        foursomesAM: [[null,null],[null,null],[null,null],[null,null]],
+        foursomesPM: [[null,null],[null,null],[null,null],[null,null]],
+        fourballAM:  [[null,null],[null,null],[null,null],[null,null]],
+        fourballPM:  [[null,null],[null,null],[null,null],[null,null]]
       },
       captain: null,
       aiPicks: [],
       aiPairings: {
-        foursomes: [[null,null],[null,null],[null,null],[null,null]],
-        fourball:  [[null,null],[null,null],[null,null],[null,null]]
+        foursomesAM: [[null,null],[null,null],[null,null],[null,null]],
+        foursomesPM: [[null,null],[null,null],[null,null],[null,null]],
+        fourballAM:  [[null,null],[null,null],[null,null],[null,null]],
+        fourballPM:  [[null,null],[null,null],[null,null],[null,null]]
       },
       aiCaptain: null,
       seenNames:   [],
@@ -485,45 +489,48 @@
     );
   }
 
-  // Auto-assign pairings from 12 picks.
-  // Foursomes: rank by composite score, pair best 8 in order.
-  // Fourball: rank by aggression+birdie_rate, pair best 8 in order.
-  // Each player appears at most once per format section.
+  // Build two session pairs from a sorted 12-player list.
+  // AM: best 8 paired top-to-bottom (rank1+2, 3+4, 5+6, 7+8).
+  // PM: top 4 cross-paired with bottom 4 (rank1+9, 2+10, 3+11, 4+12).
+  // Guarantees no pair repeats between AM and PM within the same format.
+  function _makeSessionPairs(sorted) {
+    const am = [
+      [sorted[0], sorted[1]], [sorted[2], sorted[3]],
+      [sorted[4], sorted[5]], [sorted[6], sorted[7]]
+    ];
+    const pm = [
+      [sorted[0], sorted[8]],  [sorted[1], sorted[9]],
+      [sorted[2], sorted[10]], [sorted[3], sorted[11]]
+    ];
+    return { am, pm };
+  }
+
+  // Auto-assign: foursomes ranked by composite, fourball by aggression+birdie.
   function resolveAutoPairings(picks) {
     const fsSorted = [...picks].sort((a, b) =>
       compositeScore(applyHeroBoost(b)) - compositeScore(applyHeroBoost(a))
     );
-    const foursomes = [
-      [fsSorted[0], fsSorted[1]], [fsSorted[2], fsSorted[3]],
-      [fsSorted[4], fsSorted[5]], [fsSorted[6], fsSorted[7]]
-    ];
+    const { am: foursomesAM, pm: foursomesPM } = _makeSessionPairs(fsSorted);
 
     const fbSorted = [...picks].sort((a, b) => {
       const aScore = (a.style_tags?.aggression || 50) + (a.stats?.birdie_rate || 50);
       const bScore = (b.style_tags?.aggression || 50) + (b.stats?.birdie_rate || 50);
       return bScore - aScore;
     });
-    const fourball = [
-      [fbSorted[0], fbSorted[1]], [fbSorted[2], fbSorted[3]],
-      [fbSorted[4], fbSorted[5]], [fbSorted[6], fbSorted[7]]
-    ];
+    const { am: fourballAM, pm: fourballPM } = _makeSessionPairs(fbSorted);
 
-    return { foursomes, fourball };
+    return { foursomesAM, foursomesPM, fourballAM, fourballPM };
   }
 
-  // Re-randomize: shuffle picks before pairing for both formats.
+  // Re-randomize: independent shuffles for each format, same no-repeat structure.
   function resolveRandomPairings(picks) {
     const shuffleFs = [...picks].sort(() => Math.random() - 0.5);
-    const foursomes = [
-      [shuffleFs[0], shuffleFs[1]], [shuffleFs[2], shuffleFs[3]],
-      [shuffleFs[4], shuffleFs[5]], [shuffleFs[6], shuffleFs[7]]
-    ];
+    const { am: foursomesAM, pm: foursomesPM } = _makeSessionPairs(shuffleFs);
+
     const shuffleFb = [...picks].sort(() => Math.random() - 0.5);
-    const fourball = [
-      [shuffleFb[0], shuffleFb[1]], [shuffleFb[2], shuffleFb[3]],
-      [shuffleFb[4], shuffleFb[5]], [shuffleFb[6], shuffleFb[7]]
-    ];
-    return { foursomes, fourball };
+    const { am: fourballAM, pm: fourballPM } = _makeSessionPairs(shuffleFb);
+
+    return { foursomesAM, foursomesPM, fourballAM, fourballPM };
   }
 
   // ─────────────────────────────────────────────────────────────────────────────
@@ -841,8 +848,10 @@
         G.picks       = [];
         G.aiPicks     = [];
         G.pairings    = {
-          foursomes: [[null,null],[null,null],[null,null],[null,null]],
-          fourball:  [[null,null],[null,null],[null,null],[null,null]]
+          foursomesAM: [[null,null],[null,null],[null,null],[null,null]],
+          foursomesPM: [[null,null],[null,null],[null,null],[null,null]],
+          fourballAM:  [[null,null],[null,null],[null,null],[null,null]],
+          fourballPM:  [[null,null],[null,null],[null,null],[null,null]]
         };
         G.currentCards = generateAndTrackCards(G.side, 1, G.seenNames, 0);
         save();
@@ -1007,12 +1016,20 @@
           <div style="font-size:11px;color:var(--text-muted)">${captain.year_captained}</div>
         </div>` : ''}
         <div class="review-slot-group">
-          <div class="review-slot-label">Foursomes Pairings</div>
-          ${pairListHTML(pairings.foursomes, 'foursomes')}
+          <div class="review-slot-label">Foursomes — Friday AM</div>
+          ${pairListHTML(pairings.foursomesAM, 'foursomes')}
         </div>
         <div class="review-slot-group">
-          <div class="review-slot-label">Fourball Pairings</div>
-          ${pairListHTML(pairings.fourball, 'fourball')}
+          <div class="review-slot-label">Foursomes — Friday PM</div>
+          ${pairListHTML(pairings.foursomesPM, 'foursomes')}
+        </div>
+        <div class="review-slot-group">
+          <div class="review-slot-label">Fourball — Saturday AM</div>
+          ${pairListHTML(pairings.fourballAM, 'fourball')}
+        </div>
+        <div class="review-slot-group">
+          <div class="review-slot-label">Fourball — Saturday PM</div>
+          ${pairListHTML(pairings.fourballPM, 'fourball')}
         </div>`;
     }
 
@@ -1042,14 +1059,18 @@
     document.getElementById('sim-btn').addEventListener('click', () => {
       try {
         const myTeam = {
-          foursomesPairs: G.pairings.foursomes,
-          fourballPairs:  G.pairings.fourball,
-          allPlayers:     G.picks
+          foursomesAMPairs: G.pairings.foursomesAM,
+          foursomesPMPairs: G.pairings.foursomesPM,
+          fourballAMPairs:  G.pairings.fourballAM,
+          fourballPMPairs:  G.pairings.fourballPM,
+          allPlayers:       G.picks
         };
         const aiTeam = {
-          foursomesPairs: G.aiPairings.foursomes,
-          fourballPairs:  G.aiPairings.fourball,
-          allPlayers:     G.aiPicks
+          foursomesAMPairs: G.aiPairings.foursomesAM,
+          foursomesPMPairs: G.aiPairings.foursomesPM,
+          fourballAMPairs:  G.aiPairings.fourballAM,
+          fourballPMPairs:  G.aiPairings.fourballPM,
+          allPlayers:       G.aiPicks
         };
         G.results = simulateFullEvent(myTeam, aiTeam, G.venue, G.captain, G.aiCaptain);
         G.phase = 'complete';

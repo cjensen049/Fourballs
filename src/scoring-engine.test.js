@@ -52,16 +52,13 @@ const captain = {
 };
 
 function makeTeam(players) {
-  // foursomesPairs and fourballPairs both use first 8 players (overlapping = fatigued in singles)
+  // AM: top 8 paired; PM: top 4 cross-paired with bottom 4 (no pair repeats within format)
+  // Players 0-3 appear in both AM and PM = 4 team matches = fatigued in singles
   return {
-    foursomesPairs: [
-      [players[0], players[1]], [players[2], players[3]],
-      [players[4], players[5]], [players[6], players[7]]
-    ],
-    fourballPairs: [
-      [players[0], players[1]], [players[2], players[3]],
-      [players[4], players[5]], [players[6], players[7]]
-    ],
+    foursomesAMPairs: [[players[0], players[1]], [players[2], players[3]], [players[4], players[5]], [players[6], players[7]]],
+    foursomesPMPairs: [[players[0], players[8]], [players[1], players[9]], [players[2], players[10]], [players[3], players[11]]],
+    fourballAMPairs:  [[players[0], players[1]], [players[2], players[3]], [players[4], players[5]], [players[6], players[7]]],
+    fourballPMPairs:  [[players[0], players[8]], [players[1], players[9]], [players[2], players[10]], [players[3], players[11]]],
     allPlayers: players
   };
 }

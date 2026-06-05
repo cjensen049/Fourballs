@@ -1,0 +1,274 @@
+[
+  {
+    "id": "kiawah_1991",
+    "name": "Kiawah Island (Ocean Course)",
+    "year": 1991,
+    "location": "USA",
+    "display_name": "Kiawah Island, 1991",
+    "course_type": "links",
+    "user_descriptors": ["Links Test", "Wind Is A Factor", "Power Course"],
+    "hidden_tags": {
+      "power_weight": 80,
+      "accuracy_weight": 70,
+      "short_game_weight": 60,
+      "wind_factor": 85,
+      "pressure_factor": 90
+    },
+    "flavor_text": "The War by the Shore. Ocean winds make every iron decision a gamble."
+  },
+  {
+    "id": "belfry_1993",
+    "name": "The Belfry (Brabazon Course)",
+    "year": 1993,
+    "location": "EUR",
+    "display_name": "The Belfry, 1993",
+    "course_type": "parkland",
+    "user_descriptors": ["Precision Required", "High Pressure Venue", "Short Game Test"],
+    "hidden_tags": {
+      "power_weight": 55,
+      "accuracy_weight": 80,
+      "short_game_weight": 80,
+      "wind_factor": 30,
+      "pressure_factor": 85
+    },
+    "flavor_text": "Water on the 18th. Every approach matters. Europe's fortress."
+  },
+  {
+    "id": "oak_hill_1995",
+    "name": "Oak Hill Country Club",
+    "year": 1995,
+    "location": "USA",
+    "display_name": "Oak Hill, 1995",
+    "course_type": "parkland",
+    "user_descriptors": ["Precision Required", "Short Game Test", "High Pressure Venue"],
+    "hidden_tags": {
+      "power_weight": 55,
+      "accuracy_weight": 82,
+      "short_game_weight": 78,
+      "wind_factor": 25,
+      "pressure_factor": 80
+    },
+    "flavor_text": "Classic American parkland. Narrow fairways, thick rough. Ball-striking paradise."
+  },
+  {
+    "id": "valderrama_1997",
+    "name": "Valderrama",
+    "year": 1997,
+    "location": "EUR",
+    "display_name": "Valderrama, 1997",
+    "course_type": "parkland",
+    "user_descriptors": ["Precision Required", "Short Game Test", "High Pressure Venue"],
+    "hidden_tags": {
+      "power_weight": 40,
+      "accuracy_weight": 92,
+      "short_game_weight": 88,
+      "wind_factor": 35,
+      "pressure_factor": 90
+    },
+    "flavor_text": "Seve's home. Tight cork oaks punish every wayward shot. Precision or pain."
+  },
+  {
+    "id": "brookline_1999",
+    "name": "The Country Club (Brookline)",
+    "year": 1999,
+    "location": "USA",
+    "display_name": "Brookline, 1999",
+    "course_type": "parkland",
+    "user_descriptors": ["Precision Required", "High Pressure Venue", "Short Game Test"],
+    "hidden_tags": {
+      "power_weight": 50,
+      "accuracy_weight": 80,
+      "short_game_weight": 75,
+      "wind_factor": 30,
+      "pressure_factor": 95
+    },
+    "flavor_text": "The greatest comeback in Ryder Cup history happened here. Electric atmosphere."
+  },
+  {
+    "id": "belfry_2002",
+    "name": "The Belfry (Brabazon Course)",
+    "year": 2002,
+    "location": "EUR",
+    "display_name": "The Belfry, 2002",
+    "course_type": "parkland",
+    "user_descriptors": ["Precision Required", "High Pressure Venue", "Short Game Test"],
+    "hidden_tags": {
+      "power_weight": 55,
+      "accuracy_weight": 80,
+      "short_game_weight": 80,
+      "wind_factor": 30,
+      "pressure_factor": 85
+    },
+    "flavor_text": "Delayed a year by 9/11. Europe reclaimed the Cup in emotional fashion."
+  },
+  {
+    "id": "oakland_hills_2004",
+    "name": "Oakland Hills Country Club",
+    "year": 2004,
+    "location": "USA",
+    "display_name": "Oakland Hills, 2004",
+    "course_type": "parkland",
+    "user_descriptors": ["Precision Required", "Short Game Test", "High Pressure Venue"],
+    "hidden_tags": {
+      "power_weight": 50,
+      "accuracy_weight": 85,
+      "short_game_weight": 82,
+      "wind_factor": 20,
+      "pressure_factor": 80
+    },
+    "flavor_text": "The Monster. Narrow, punishing, unforgiving. Europe routed USA 18.5-9.5."
+  },
+  {
+    "id": "k_club_2006",
+    "name": "The K Club",
+    "year": 2006,
+    "location": "EUR",
+    "display_name": "The K Club, 2006",
+    "course_type": "parkland",
+    "user_descriptors": ["Short Game Test", "High Pressure Venue"],
+    "hidden_tags": {
+      "power_weight": 65,
+      "accuracy_weight": 68,
+      "short_game_weight": 80,
+      "wind_factor": 35,
+      "pressure_factor": 78
+    },
+    "flavor_text": "Ireland roared. Harrington, Clarke, Garcia. Europe won in a landslide."
+  },
+  {
+    "id": "valhalla_2008",
+    "name": "Valhalla Golf Club",
+    "year": 2008,
+    "location": "USA",
+    "display_name": "Valhalla, 2008",
+    "course_type": "parkland",
+    "user_descriptors": ["Power Course", "Birdie Fest", "High Pressure Venue"],
+    "hidden_tags": {
+      "power_weight": 82,
+      "accuracy_weight": 60,
+      "short_game_weight": 65,
+      "wind_factor": 25,
+      "pressure_factor": 80
+    },
+    "flavor_text": "Azinger's pods. Boo Weekley riding the 1st fairway. USA wins in Kentucky."
+  },
+  {
+    "id": "celtic_manor_2010",
+    "name": "Celtic Manor Resort",
+    "year": 2010,
+    "location": "EUR",
+    "display_name": "Celtic Manor, 2010",
+    "course_type": "parkland",
+    "user_descriptors": ["Precision Required", "Wind Is A Factor"],
+    "hidden_tags": {
+      "power_weight": 60,
+      "accuracy_weight": 78,
+      "short_game_weight": 72,
+      "wind_factor": 65,
+      "pressure_factor": 75
+    },
+    "flavor_text": "Three days of rain, three days of drama. Graeme McDowell's singles clincher."
+  },
+  {
+    "id": "medinah_2012",
+    "name": "Medinah Country Club",
+    "year": 2012,
+    "location": "USA",
+    "display_name": "Medinah, 2012",
+    "course_type": "parkland",
+    "user_descriptors": ["Power Course", "High Pressure Venue", "Birdie Fest"],
+    "hidden_tags": {
+      "power_weight": 78,
+      "accuracy_weight": 62,
+      "short_game_weight": 68,
+      "wind_factor": 20,
+      "pressure_factor": 88
+    },
+    "flavor_text": "The Miracle at Medinah. Europe trailed 10-6 heading into Sunday. Ian Poulter happened."
+  },
+  {
+    "id": "gleneagles_2014",
+    "name": "Gleneagles (PGA Centenary Course)",
+    "year": 2014,
+    "location": "EUR",
+    "display_name": "Gleneagles, 2014",
+    "course_type": "heathland",
+    "user_descriptors": ["Heathland Challenge", "Wind Is A Factor", "High Pressure Venue"],
+    "hidden_tags": {
+      "power_weight": 65,
+      "accuracy_weight": 72,
+      "short_game_weight": 70,
+      "wind_factor": 68,
+      "pressure_factor": 82
+    },
+    "flavor_text": "McGinley's masterclass. Scotland in autumn. Europe comfortable winners."
+  },
+  {
+    "id": "hazeltine_2016",
+    "name": "Hazeltine National Golf Club",
+    "year": 2016,
+    "location": "USA",
+    "display_name": "Hazeltine, 2016",
+    "course_type": "parkland",
+    "user_descriptors": ["Power Course", "Home Crowd Advantage", "Birdie Fest"],
+    "hidden_tags": {
+      "power_weight": 88,
+      "accuracy_weight": 55,
+      "short_game_weight": 65,
+      "wind_factor": 22,
+      "pressure_factor": 80
+    },
+    "flavor_text": "Wide fairways reward big hitters. USA fortress energy. Patrick Reed iconic."
+  },
+  {
+    "id": "le_golf_national_2018",
+    "name": "Le Golf National",
+    "year": 2018,
+    "location": "EUR",
+    "display_name": "Le Golf National, 2018",
+    "course_type": "parkland",
+    "user_descriptors": ["Precision Required", "Short Game Test", "High Pressure Venue"],
+    "hidden_tags": {
+      "power_weight": 55,
+      "accuracy_weight": 85,
+      "short_game_weight": 82,
+      "wind_factor": 45,
+      "pressure_factor": 88
+    },
+    "flavor_text": "Water everywhere. Paris roared. Molinari went 5-0. Europe's home court."
+  },
+  {
+    "id": "whistling_straits_2021",
+    "name": "Whistling Straits",
+    "year": 2021,
+    "location": "USA",
+    "display_name": "Whistling Straits, 2021",
+    "course_type": "links",
+    "user_descriptors": ["Links Test", "Wind Is A Factor", "Power Course"],
+    "hidden_tags": {
+      "power_weight": 80,
+      "accuracy_weight": 72,
+      "short_game_weight": 70,
+      "wind_factor": 75,
+      "pressure_factor": 82
+    },
+    "flavor_text": "Lake Michigan winds, Pete Dye drama. USA steamrolled 19-9. DJ went 5-0."
+  },
+  {
+    "id": "marco_simone_2023",
+    "name": "Marco Simone Golf & Country Club",
+    "year": 2023,
+    "location": "EUR",
+    "display_name": "Marco Simone, 2023",
+    "course_type": "parkland",
+    "user_descriptors": ["Precision Required", "High Pressure Venue"],
+    "hidden_tags": {
+      "power_weight": 62,
+      "accuracy_weight": 78,
+      "short_game_weight": 74,
+      "wind_factor": 30,
+      "pressure_factor": 85
+    },
+    "flavor_text": "Rome's first Ryder Cup. Tyrrell Hatton and Rory McIlroy led Europe to victory."
+  }
+]

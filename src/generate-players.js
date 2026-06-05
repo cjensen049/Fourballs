@@ -1,0 +1,510 @@
+const fs = require('fs');
+const path = require('path');
+
+const TIER_BASE = {
+  platinum: {dd:90,da:80,gir:89,scr:85,br:90,pi:90},
+  gold:     {dd:80,da:74,gir:79,scr:77,br:79,pi:78},
+  silver:   {dd:71,da:68,gir:71,scr:69,br:71,pi:69},
+  bronze:   {dd:63,da:62,gir:63,scr:63,br:63,pi:62},
+  hero:     {dd:68,da:66,gir:67,scr:72,br:69,pi:76}
+};
+const TIER_FULL = {plat:'platinum',gold:'gold',silv:'silver',brnz:'bronze',hero:'hero'};
+
+const STYLE = {
+  allr:{power:82,accuracy:78,aggression:80,consistency:84,match_play_affinity:80},
+  powr:{power:94,accuracy:58,aggression:82,consistency:70,match_play_affinity:70},
+  prec:{power:65,accuracy:90,aggression:60,consistency:90,match_play_affinity:75},
+  scrm:{power:72,accuracy:70,aggression:82,consistency:75,match_play_affinity:78},
+  grnd:{power:68,accuracy:78,aggression:60,consistency:88,match_play_affinity:82},
+  bird:{power:75,accuracy:65,aggression:92,consistency:68,match_play_affinity:85}
+};
+const FORMAT = {
+  allr:{foursomes:82,fourball:85,singles:85},
+  powr:{foursomes:68,fourball:88,singles:78},
+  prec:{foursomes:88,fourball:72,singles:80},
+  scrm:{foursomes:78,fourball:85,singles:82},
+  grnd:{foursomes:82,fourball:72,singles:86},
+  bird:{foursomes:70,fourball:90,singles:80}
+};
+
+function clamp(v){return Math.min(99,Math.max(40,Math.round(v)));}
+function toId(name,year){
+  return name.toLowerCase().replace(/[^a-z0-9\s]/g,'').trim().replace(/\s+/g,'_')+'_'+year;
+}
+function rankBonus(wr,tier){
+  const caps={platinum:5,gold:20,silver:45,bronze:80,hero:60};
+  const cap=caps[tier]||50;
+  return Math.max(0,Math.round(7*(1-Math.min(wr,cap)/cap)));
+}
+function build(raw,nat){
+  return raw.map(([name,year,wr,wins,ts,hb,arch,rc,ft,adj={}])=>{
+    const tier=TIER_FULL[ts]||ts;
+    const base={...TIER_BASE[tier]};
+    const rb=rankBonus(wr,tier);
+    const s=STYLE[arch], f=FORMAT[arch];
+    const [rcp,rcw,rcl,rch]=rc;
+    return {
+      id:toId(name,year), name, year, nationality:nat,
+      world_ranking:wr, wins_that_year:wins, tier, hero_boost:hb,
+      stats:{
+        driving_distance:   clamp(base.dd +rb+(adj.dd||0)),
+        driving_accuracy:   clamp(base.da +rb+(adj.da||0)),
+        greens_in_regulation:clamp(base.gir+rb+(adj.gir||0)),
+        scrambling:         clamp(base.scr+rb+(adj.scr||0)),
+        birdie_rate:        clamp(base.br +rb+(adj.br||0)),
+        pressure_index:     clamp(base.pi +rb+(adj.pi||0))
+      },
+      style_tags:s, format_fit:f,
+      ryder_cup_record:{played:!!rcp,won:rcw,lost:rcl,halved:rch},
+      flavor_text:ft
+    };
+  });
+}
+
+// Format: [name, year, worldRank, wins, tier, heroBoost, archetype, [rcPlayed,rcW,rcL,rcH], flavorText, {statAdj}]
+const USA_RAW = [
+  // 2000
+  ["Tiger Woods",2000,1,9,"plat",null,"allr",[1,10,17,3],"9 wins, 3 majors. The greatest single season in golf history.",{dd:2,br:3,pi:9}],
+  ["Phil Mickelson",2000,4,4,"gold",null,"scrm",[1,18,20,7],"4 wins. Lefty at his prime, chasing history.",{scr:8,da:-6}],
+  ["Davis Love III",2000,8,2,"gold",null,"grnd",[1,9,12,5],"Elegant ball-striker and Ryder Cup mainstay."],
+  ["Jim Furyk",2000,18,1,"silv",null,"prec",[1,10,20,4],"Ugly swing, beautiful results.",{da:8,pi:5}],
+  ["Hal Sutton",2000,22,1,"silv",null,"grnd",[1,7,7,2],"Gritty veteran and team room leader."],
+  ["Tom Lehman",2000,30,1,"silv",null,"grnd",[1,5,6,2],"1996 Open champion, still competing at the top."],
+  ["Brad Faxon",2000,45,0,"brnz",null,"prec",[1,3,4,1],"Best putter on tour, quietly deadly.",{pi:5}],
+  ["Scott Verplank",2000,50,1,"brnz",null,"prec",[0,0,0,0],"Diabetic warrior, short-game wizard."],
+  // 2001
+  ["Tiger Woods",2001,1,5,"plat",null,"allr",[1,10,17,3],"Masters champion. Ruthless and relentless.",{dd:2,pi:9}],
+  ["Phil Mickelson",2001,4,4,"gold",null,"scrm",[1,18,20,7],"Four wins. The major drought continues but the wins pile up.",{scr:8,da:-6}],
+  ["David Toms",2001,12,3,"gold",null,"prec",[1,7,6,2],"PGA champion. Short-game surgeon.",{pi:5}],
+  ["Jim Furyk",2001,16,1,"silv",null,"prec",[1,10,20,4],"Textbook consistency, never flinches.",{da:8,pi:5}],
+  ["Davis Love III",2001,20,1,"silv",null,"grnd",[1,9,12,5],"Veteran presence on the biggest stages."],
+  ["Scott Hoch",2001,35,1,"silv",null,"grnd",[1,4,5,1],"Mr Reliable. Solid in team formats."],
+  ["Chris DiMarco",2001,42,1,"brnz",null,"grnd",[1,4,6,2],"Claw grip, clutch finisher.",{pi:4}],
+  ["Jerry Kelly",2001,48,1,"brnz",null,"grnd",[0,0,0,0],"Wisconsin grinder, Tour steadfast."],
+  // 2002
+  ["Tiger Woods",2002,1,5,"plat",null,"allr",[1,10,17,3],"Masters and US Open. Unstoppable.",{dd:2,pi:9}],
+  ["Phil Mickelson",2002,3,4,"gold",null,"scrm",[1,18,20,7],"4 wins. Closing in on the major.",{scr:8,da:-6}],
+  ["Jim Furyk",2002,12,2,"gold",null,"prec",[1,10,20,4],"Two wins, model of consistency.",{da:8,pi:5}],
+  ["David Toms",2002,15,2,"silv",null,"prec",[1,7,6,2],"Solid, experienced match-play performer.",{pi:4}],
+  ["Davis Love III",2002,22,1,"silv",null,"grnd",[1,9,12,5],"Ryder Cup backbone, dependable."],
+  ["Stewart Cink",2002,30,1,"silv",null,"grnd",[1,8,9,3],"Tall Texan, reliable Tour hand."],
+  ["Scott Verplank",2002,40,1,"brnz",null,"prec",[0,0,0,0],"Quietly solid, accuracy first."],
+  ["Chris Riley",2002,55,0,"brnz",null,"grnd",[0,0,0,0],"Team-first attitude, blue-collar game."],
+  // 2003
+  ["Tiger Woods",2003,1,5,"plat",null,"allr",[1,10,17,3],"5 wins. Dominant even in a rebuilding year.",{dd:2,pi:9,br:2}],
+  ["Phil Mickelson",2003,3,3,"gold",null,"scrm",[1,18,20,7],"3 wins. The major drought grows louder.",{scr:8,da:-6}],
+  ["Jim Furyk",2003,8,2,"gold",null,"prec",[1,10,20,4],"US Open champion. The grinder peaks.",{da:8,pi:7}],
+  ["Kenny Perry",2003,20,2,"silv",null,"grnd",[1,6,8,2],"Two wins. Kentucky's finest."],
+  ["Davis Love III",2003,28,1,"silv",null,"grnd",[1,9,12,5],"Veteran class that never fades."],
+  ["David Toms",2003,25,1,"silv",null,"prec",[1,7,6,2],"Consistent shotmaker, one win."],
+  ["Scott Verplank",2003,38,1,"brnz",null,"prec",[0,0,0,0],"Steady, accurate, unspectacular."],
+  ["Fred Funk",2003,45,1,"brnz",null,"prec",[1,1,2,0],"Shortest driver on tour, straightest too.",{da:8}],
+  // 2004
+  ["Phil Mickelson",2004,2,4,"plat",null,"scrm",[1,18,20,7],"Masters champion. First major, at last.",{scr:10,da:-7,pi:6}],
+  ["Tiger Woods",2004,1,1,"gold",null,"allr",[1,10,17,3],"Off year. Still WR#1 by sheer reputation.",{pi:9}],
+  ["Jim Furyk",2004,5,2,"gold",null,"prec",[1,10,20,4],"Two wins, relentless consistency.",{da:8,pi:5}],
+  ["Stewart Cink",2004,22,1,"silv",null,"grnd",[1,8,9,3],"Reliable in all team environments."],
+  ["Zach Johnson",2004,40,1,"silv",null,"grnd",[1,8,11,2],"Rising star from Cedar Rapids."],
+  ["Chris DiMarco",2004,30,1,"silv",null,"grnd",[1,4,6,2],"Claw grip, Ryder Cup fighter.",{pi:5}],
+  ["Chris Riley",2004,60,0,"hero",1.06,"grnd",[1,1,2,0],"Wildcard pick who outperformed everyone. Blue-collar Ryder Cup legend.",{pi:8}],
+  ["Hal Sutton",2004,35,0,"brnz",null,"grnd",[1,7,7,2],"Fading but seasoned. Captain's insurance pick."],
+  // 2005
+  ["Tiger Woods",2005,1,6,"plat",null,"allr",[1,10,17,3],"6 wins, 2 majors. Back to full dominance.",{dd:2,pi:9,br:3}],
+  ["Phil Mickelson",2005,3,4,"plat",null,"scrm",[1,18,20,7],"Back-to-back Masters. His era has arrived.",{scr:10,da:-7,pi:5}],
+  ["Jim Furyk",2005,7,2,"gold",null,"prec",[1,10,20,4],"Two wins, year-in year-out excellence.",{da:8,pi:5}],
+  ["Zach Johnson",2005,25,1,"silv",null,"grnd",[1,8,11,2],"Building quietly towards something special."],
+  ["David Toms",2005,22,1,"silv",null,"prec",[1,7,6,2],"Solid veteran, precision play."],
+  ["Stewart Cink",2005,28,1,"silv",null,"grnd",[1,8,9,3],"Quiet consistency, one win."],
+  ["Fred Funk",2005,35,1,"brnz",null,"prec",[1,1,2,0],"Players champion. Proof accuracy beats power.",{da:8}],
+  ["Chris DiMarco",2005,30,1,"brnz",null,"grnd",[1,4,6,2],"Augusta runner-up. Always in the mix.",{pi:3}],
+  // 2006
+  ["Tiger Woods",2006,1,8,"plat",null,"allr",[1,10,17,3],"8 wins, 2 majors. Dominant even in grief.",{dd:2,pi:9,br:4}],
+  ["Phil Mickelson",2006,4,2,"gold",null,"scrm",[1,18,20,7],"Masters champion again. On top of the world.",{scr:10,da:-7}],
+  ["Jim Furyk",2006,8,1,"silv",null,"prec",[1,10,20,4],"One win, steady as ever.",{da:7,pi:5}],
+  ["Zach Johnson",2006,28,1,"silv",null,"grnd",[1,8,11,2],"On the rise, quiet Ryder Cup contender."],
+  ["JB Holmes",2006,40,1,"silv",null,"powr",[1,3,2,1],"Haymaker driver. Raw power on the PGA Tour.",{dd:5}],
+  ["Stewart Cink",2006,25,1,"silv",null,"grnd",[1,8,9,3],"Reliable team hand, one win."],
+  ["Brett Wetterich",2006,50,1,"brnz",null,"grnd",[0,0,0,0],"One win, surprise Ryder Cup debut."],
+  ["Scott Verplank",2006,42,0,"brnz",null,"prec",[0,0,0,0],"Veteran accuracy, minimal wins.",{da:5}],
+  // 2007
+  ["Tiger Woods",2007,1,7,"plat",null,"allr",[1,10,17,3],"7 wins including PGA Championship. Back to best.",{dd:2,pi:9,br:3}],
+  ["Zach Johnson",2007,12,2,"gold",null,"grnd",[1,8,11,2],"Masters champion. Augusta ground game legend.",{pi:8}],
+  ["Phil Mickelson",2007,3,3,"gold",null,"scrm",[1,18,20,7],"Three wins, still elite.",{scr:8,da:-5}],
+  ["Jim Furyk",2007,10,1,"silv",null,"prec",[1,10,20,4],"One win, permanent fixture in contention.",{da:7,pi:5}],
+  ["Hunter Mahan",2007,35,1,"silv",null,"allr",[1,5,7,2],"Young and hungry, first Tour win."],
+  ["Kenny Perry",2007,30,2,"silv",null,"grnd",[1,6,8,2],"Two wins. Kentucky's finest again."],
+  ["Boo Weekley",2007,55,1,"brnz",null,"powr",[0,0,0,0],"Raw power, raw personality. About to explode."],
+  ["Scott Verplank",2007,45,0,"brnz",null,"prec",[0,0,0,0],"Accurate veteran, hanging on."],
+  // 2008
+  ["Phil Mickelson",2008,2,3,"gold",null,"scrm",[1,18,20,7],"Three wins, anchoring Azinger's pod.",{scr:9,da:-5,pi:5}],
+  ["Kenny Perry",2008,22,3,"gold",null,"grnd",[1,6,8,2],"Three wins. Career-best season at 47.",{pi:4}],
+  ["Jim Furyk",2008,6,2,"gold",null,"prec",[1,10,20,4],"Two wins. Azinger's cornerstone.",{da:8,pi:6}],
+  ["Zach Johnson",2008,10,1,"silv",null,"grnd",[1,8,11,2],"Post-Masters steadiness."],
+  ["Hunter Mahan",2008,25,1,"silv",null,"allr",[1,5,7,2],"Second year stepping up."],
+  ["JB Holmes",2008,30,1,"silv",null,"powr",[1,3,2,1],"Power off the tee, up-and-down threat.",{dd:5}],
+  ["Stewart Cink",2008,20,2,"silv",null,"grnd",[1,8,9,3],"Two wins, quietly excellent."],
+  ["Boo Weekley",2008,50,1,"hero",1.07,"powr",[1,3,1,0],"Rode his driver down the 1st fairway. Valhalla legend.",{dd:4,pi:8}],
+  // 2009
+  ["Tiger Woods",2009,1,6,"plat",null,"allr",[1,10,17,3],"6 wins. Dominant before the storm.",{dd:2,pi:9,br:3}],
+  ["Phil Mickelson",2009,3,2,"gold",null,"scrm",[1,18,20,7],"Two wins, regularly contending.",{scr:9,da:-5}],
+  ["Stewart Cink",2009,15,2,"gold",null,"grnd",[1,8,9,3],"British Open champion. Career peak.",{pi:6}],
+  ["Jim Furyk",2009,8,1,"gold",null,"prec",[1,10,20,4],"One win, always in the mix.",{da:8,pi:5}],
+  ["Zach Johnson",2009,18,1,"silv",null,"grnd",[1,8,11,2],"Solid, a Tour staple."],
+  ["Hunter Mahan",2009,22,1,"silv",null,"allr",[1,5,7,2],"Establishing himself at the top."],
+  ["Brian Gay",2009,30,2,"silv",null,"grnd",[0,0,0,0],"Two wins. A genuine surprise standout."],
+  ["Kenny Perry",2009,25,2,"silv",null,"grnd",[1,6,8,2],"Two more wins. Ageless grinder."],
+  // 2010
+  ["Phil Mickelson",2010,2,3,"gold",null,"scrm",[1,18,20,7],"Masters champion again. Elite and engaged.",{scr:9,da:-5,pi:5}],
+  ["Jim Furyk",2010,10,1,"silv",null,"prec",[1,10,20,4],"One win, consistent as clockwork.",{da:7,pi:5}],
+  ["Bubba Watson",2010,35,1,"silv",null,"powr",[1,2,4,1],"Hook shots nobody else attempts.",{dd:8}],
+  ["Dustin Johnson",2010,40,2,"silv",null,"powr",[1,6,5,3],"Raw length, spectacular potential.",{dd:6}],
+  ["Matt Kuchar",2010,25,2,"silv",null,"prec",[1,3,3,2],"Two wins, model of consistency.",{da:5,pi:4}],
+  ["Hunter Mahan",2010,20,2,"silv",null,"allr",[1,5,7,2],"Two wins, best season to date."],
+  ["Rickie Fowler",2010,45,0,"brnz",null,"bird",[0,0,0,0],"No wins but top-5 everywhere. The future is here."],
+  ["Jeff Overton",2010,50,1,"brnz",null,"grnd",[0,0,0,0],"One win, celebrated Ryder Cup debut."],
+  // 2011
+  ["Phil Mickelson",2011,3,2,"gold",null,"scrm",[1,18,20,7],"Two wins, elite form sustained.",{scr:9,da:-5}],
+  ["Dustin Johnson",2011,12,2,"silv",null,"powr",[1,6,5,3],"Power game maturing fast.",{dd:7}],
+  ["Matt Kuchar",2011,20,3,"silv",null,"prec",[1,3,3,2],"Three wins. Career best so far.",{da:4,pi:4}],
+  ["Hunter Mahan",2011,18,2,"silv",null,"allr",[1,5,7,2],"Two wins, established top-20."],
+  ["Bubba Watson",2011,25,1,"silv",null,"powr",[1,2,4,1],"One win. The Masters is coming.",{dd:8}],
+  ["Tiger Woods",2011,30,0,"silv",null,"allr",[1,10,17,3],"Injury-plagued. Zero wins. Uncharted territory.",{pi:7}],
+  ["Rickie Fowler",2011,35,0,"brnz",null,"bird",[0,0,0,0],"Zero wins but close every week. Breakout pending."],
+  ["Nick Watney",2011,30,2,"brnz",null,"allr",[0,0,0,0],"Two wins. Underappreciated talent."],
+  // 2012
+  ["Tiger Woods",2012,2,3,"gold",null,"allr",[1,10,17,3],"Three wins. Tiger is resurgent.",{pi:8}],
+  ["Bubba Watson",2012,8,2,"gold",null,"powr",[1,2,4,1],"Masters champion. That hook shot for the ages.",{dd:9,pi:4}],
+  ["Webb Simpson",2012,10,2,"gold",null,"grnd",[1,3,1,1],"US Open champion. Composed surprise winner.",{pi:5}],
+  ["Phil Mickelson",2012,4,3,"gold",null,"scrm",[1,18,20,7],"Three wins. Major contention again.",{scr:9,da:-5}],
+  ["Jim Furyk",2012,12,1,"silv",null,"prec",[1,10,20,4],"One win, Ryder Cup backbone.",{da:7,pi:5}],
+  ["Jason Dufner",2012,20,1,"silv",null,"grnd",[1,3,3,0],"Dufnering into greatness. Quiet and lethal."],
+  ["Dustin Johnson",2012,15,1,"silv",null,"powr",[1,6,5,3],"One win. The power game is real.",{dd:7}],
+  ["Keegan Bradley",2012,25,2,"hero",1.07,"bird",[1,2,2,0],"PGA champion. Fist pumps and pure Ryder Cup fire.",{pi:10}],
+  // 2013
+  ["Tiger Woods",2013,1,5,"plat",null,"allr",[1,10,17,3],"5 wins. Best season in a decade.",{dd:2,pi:8,br:3}],
+  ["Phil Mickelson",2013,3,2,"gold",null,"scrm",[1,18,20,7],"British Open champion. The major drought is over.",{scr:9,da:-5,pi:5}],
+  ["Dustin Johnson",2013,8,1,"silv",null,"powr",[1,6,5,3],"One win. Distance king ascending.",{dd:8}],
+  ["Jordan Spieth",2013,22,1,"silv",null,"scrm",[1,7,8,2],"First Tour win. Augusta next year is just practice.",{scr:5,pi:4}],
+  ["Keegan Bradley",2013,28,1,"silv",null,"bird",[1,2,2,0],"Emotional leader. The Ryder Cup runs in his veins.",{pi:8}],
+  ["Patrick Reed",2013,35,1,"brnz",null,"grnd",[1,7,4,1],"First win. Chip-on-shoulder mentality.",{pi:5}],
+  ["Webb Simpson",2013,25,1,"silv",null,"grnd",[1,3,1,1],"Defending US Open holder, solid follow-up."],
+  ["Zach Johnson",2013,18,1,"silv",null,"grnd",[1,8,11,2],"One win. Always relevant, always reliable."],
+  // 2014
+  ["Phil Mickelson",2014,4,1,"gold",null,"scrm",[1,18,20,7],"One win. The hunger for another major burns.",{scr:9,da:-5,pi:5}],
+  ["Bubba Watson",2014,5,2,"gold",null,"powr",[1,2,4,1],"Back-to-back Masters. Bubble-gum and birdies.",{dd:9}],
+  ["Dustin Johnson",2014,6,3,"gold",null,"powr",[1,6,5,3],"Three wins. The distance titan emerges.",{dd:8,pi:3}],
+  ["Jordan Spieth",2014,15,2,"silv",null,"scrm",[1,7,8,2],"Augusta runner-up. The world is on notice.",{scr:6,pi:5}],
+  ["Rickie Fowler",2014,12,1,"silv",null,"bird",[0,0,0,0],"Four runner-ups in majors. So painfully close."],
+  ["Patrick Reed",2014,20,2,"silv",null,"grnd",[1,7,4,1],"Two wins. Captain America taking shape.",{pi:6}],
+  ["Jim Furyk",2014,22,1,"silv",null,"prec",[1,10,20,4],"One win. Veteran anchor on every team.",{da:7,pi:4}],
+  ["Matt Kuchar",2014,18,2,"silv",null,"prec",[1,3,3,2],"Two wins. The model of steadiness.",{da:4}],
+  // 2015
+  ["Jordan Spieth",2015,2,5,"plat",null,"scrm",[1,7,8,2],"Masters and US Open. Nearly swept all four.",{scr:7,pi:7,br:3}],
+  ["Dustin Johnson",2015,4,3,"gold",null,"powr",[1,6,5,3],"Three wins. Distance domination.",{dd:9}],
+  ["Zach Johnson",2015,12,2,"gold",null,"grnd",[1,8,11,2],"British Open champion. Punching above every weight class.",{pi:8}],
+  ["Phil Mickelson",2015,8,1,"silv",null,"scrm",[1,18,20,7],"One win. Still hunting, still here.",{scr:8,da:-5}],
+  ["Patrick Reed",2015,18,2,"silv",null,"grnd",[1,7,4,1],"Two wins. Growing force on the Tour.",{pi:7}],
+  ["Bubba Watson",2015,10,2,"silv",null,"powr",[1,2,4,1],"Two wins. Masters aura lingers.",{dd:8}],
+  ["Rickie Fowler",2015,15,2,"silv",null,"bird",[0,0,0,0],"Two wins including the Players. Arrived."],
+  ["Matt Kuchar",2015,25,2,"brnz",null,"prec",[1,3,3,2],"Two wins. Dependably excellent.",{da:4}],
+  // 2016
+  ["Dustin Johnson",2016,1,3,"plat",null,"powr",[1,6,5,3],"US Open champion. WR#1. Peak DJ.",{dd:10,pi:6,br:3}],
+  ["Patrick Reed",2016,12,2,"hero",1.08,"grnd",[1,7,4,1],"Captain America. Born to play the Ryder Cup.",{pi:10}],
+  ["Jordan Spieth",2016,3,2,"gold",null,"scrm",[1,7,8,2],"Two wins, major threat every week.",{scr:7,pi:6}],
+  ["Phil Mickelson",2016,6,2,"gold",null,"scrm",[1,18,20,7],"Two wins. Evergreen excellence.",{scr:8,da:-5}],
+  ["Bubba Watson",2016,10,2,"silv",null,"powr",[1,2,4,1],"Two wins. Ryder Cup passion player.",{dd:8}],
+  ["Ryan Moore",2016,35,2,"silv",null,"grnd",[0,0,0,0],"Two wins. Last-minute Davis Love pick that paid off."],
+  ["Rickie Fowler",2016,18,1,"silv",null,"bird",[0,0,0,0],"One win. Hazeltine energy."],
+  ["JB Holmes",2016,40,1,"brnz",null,"powr",[1,3,2,1],"One win. Power game still a weapon.",{dd:6}],
+  // 2017
+  ["Dustin Johnson",2017,1,3,"gold",null,"powr",[1,6,5,3],"WR#1. Three wins. Consistent force.",{dd:10,pi:4}],
+  ["Justin Thomas",2017,4,5,"gold",null,"bird",[1,4,4,0],"PGA champion. Five wins. A new era begins.",{br:5,pi:5}],
+  ["Jordan Spieth",2017,3,2,"gold",null,"scrm",[1,7,8,2],"British Open champion. Still the man.",{scr:7,pi:6}],
+  ["Phil Mickelson",2017,10,1,"silv",null,"scrm",[1,18,20,7],"One win. Eternal entertainer.",{scr:7,da:-4}],
+  ["Rickie Fowler",2017,8,2,"silv",null,"bird",[0,0,0,0],"Two wins. A consistent popular presence."],
+  ["Patrick Reed",2017,15,2,"silv",null,"grnd",[1,7,4,1],"Two wins. Always fighting.",{pi:8}],
+  ["Xander Schauffele",2017,30,1,"silv",null,"allr",[1,3,3,0],"Rookie of the Year. Clean, powerful, poised."],
+  ["Tony Finau",2017,40,0,"brnz",null,"powr",[1,2,3,0],"Zero wins but elite in every metric.",{dd:6}],
+  // 2018
+  ["Brooks Koepka",2018,3,2,"plat",null,"grnd",[1,5,4,0],"Back-to-back US Opens plus PGA. Historically dominant.",{pi:10,da:4}],
+  ["Justin Thomas",2018,4,4,"gold",null,"bird",[1,4,4,0],"Four wins. Elite everywhere.",{br:5,pi:4}],
+  ["Dustin Johnson",2018,2,2,"gold",null,"powr",[1,6,5,3],"Two wins. WR#2 and still pressing.",{dd:10,pi:4}],
+  ["Patrick Reed",2018,12,2,"gold",null,"grnd",[1,7,4,1],"Masters champion. Captain America confirmed.",{pi:9}],
+  ["Tiger Woods",2018,13,1,"silv",null,"allr",[1,10,17,3],"Tour Championship comeback. The greatest story in sport.",{pi:8}],
+  ["Tony Finau",2018,18,0,"silv",null,"powr",[1,2,3,0],"Zero wins but elite in every tournament.",{dd:6}],
+  ["Rickie Fowler",2018,8,2,"silv",null,"bird",[0,0,0,0],"Two wins. Le Golf National fighter."],
+  ["Jordan Spieth",2018,10,1,"silv",null,"scrm",[1,7,8,2],"One win. Searching for his old rhythm.",{scr:6,pi:4}],
+  // 2019
+  ["Brooks Koepka",2019,1,2,"plat",null,"grnd",[1,5,4,0],"PGA champion again. Historic three-major streak.",{pi:10,da:4,gir:4}],
+  ["Dustin Johnson",2019,2,2,"gold",null,"powr",[1,6,5,3],"Two wins. WR throne contested.",{dd:10,pi:4}],
+  ["Justin Thomas",2019,3,3,"gold",null,"bird",[1,4,4,0],"Three wins. Elite status confirmed.",{br:5,pi:4}],
+  ["Tiger Woods",2019,6,1,"gold",null,"allr",[1,10,17,3],"Masters champion. Greatest sporting comeback.",{pi:9,br:2}],
+  ["Patrick Cantlay",2019,10,2,"gold",null,"prec",[1,3,2,0],"Two wins. Clinical precision under pressure.",{pi:5,da:5}],
+  ["Xander Schauffele",2019,15,1,"silv",null,"allr",[1,3,3,0],"One win. Always in the mix."],
+  ["Tony Finau",2019,20,1,"silv",null,"powr",[1,2,3,0],"First win. Power-player fully arrived.",{dd:6}],
+  ["Rickie Fowler",2019,25,0,"brnz",null,"bird",[0,0,0,0],"Zero wins. Form in gentle decline."],
+  // 2020
+  ["Dustin Johnson",2020,1,3,"plat",null,"powr",[1,6,5,3],"Masters champion. WR#1. Peak of peaks.",{dd:10,pi:6,br:4}],
+  ["Collin Morikawa",2020,8,2,"gold",null,"prec",[1,2,1,0],"PGA champion as a rookie. Iron play generational.",{da:6,gir:5,pi:4}],
+  ["Justin Thomas",2020,3,5,"gold",null,"bird",[1,4,4,0],"Five wins. FedEx powerhouse.",{br:5,pi:4}],
+  ["Bryson DeChambeau",2020,6,2,"gold",null,"powr",[1,2,2,0],"US Open by 6 shots. Bulked up and terrifying.",{dd:15,pi:4}],
+  ["Patrick Cantlay",2020,10,2,"gold",null,"prec",[1,3,2,0],"Two wins. Steely clutch performer.",{pi:4,da:4}],
+  ["Xander Schauffele",2020,12,1,"silv",null,"allr",[1,3,3,0],"One win. Consistent top-15 machine."],
+  ["Tony Finau",2020,18,1,"silv",null,"powr",[1,2,3,0],"One win. Power specialist.",{dd:6}],
+  ["Patrick Reed",2020,14,2,"silv",null,"grnd",[1,7,4,1],"Two wins. Always scrappy, always dangerous.",{pi:7}],
+  // 2021
+  ["Collin Morikawa",2021,2,2,"gold",null,"prec",[1,2,1,0],"British Open champion. Two majors by 24.",{da:6,gir:6,pi:4}],
+  ["Patrick Cantlay",2021,3,4,"gold",null,"prec",[1,3,2,0],"FedEx Cup. Four wins. Ice-cold under pressure.",{pi:7,da:5}],
+  ["Dustin Johnson",2021,5,2,"gold",null,"powr",[1,6,5,3],"Two wins. Whistling Straits 5-0 legend.",{dd:10,pi:4}],
+  ["Justin Thomas",2021,6,3,"gold",null,"bird",[1,4,4,0],"Three wins. Elite and consistent.",{br:5,pi:4}],
+  ["Xander Schauffele",2021,4,2,"gold",null,"allr",[1,3,3,0],"Olympic gold. Two wins. Complete player.",{br:3,pi:3}],
+  ["Bryson DeChambeau",2021,10,1,"silv",null,"powr",[1,2,2,0],"One win. The bomber identity is set.",{dd:15}],
+  ["Tony Finau",2021,18,1,"silv",null,"powr",[1,2,3,0],"One win. Power support.",{dd:5}],
+  ["Billy Horschel",2021,15,3,"gold",null,"bird",[1,1,1,0],"Three wins including WGC titles. Fired up.",{br:4,pi:5}],
+  // 2022
+  ["Scottie Scheffler",2022,1,4,"plat",null,"allr",[1,2,2,0],"Masters champion. WR#1. The next great one.",{gir:4,pi:6,br:3}],
+  ["Justin Thomas",2022,7,2,"gold",null,"bird",[1,4,4,0],"PGA champion again. Still a clutch machine.",{br:4,pi:4}],
+  ["Patrick Cantlay",2022,5,2,"gold",null,"prec",[1,3,2,0],"Two wins. FedEx force.",{pi:6,da:5}],
+  ["Xander Schauffele",2022,6,2,"gold",null,"allr",[1,3,3,0],"Two wins. Dependable excellence.",{br:3}],
+  ["Dustin Johnson",2022,15,1,"silv",null,"powr",[1,6,5,3],"LIV transition. One win. Power unchanged.",{dd:10}],
+  ["Tony Finau",2022,12,3,"silv",null,"powr",[1,2,3,0],"Three wins. Career-best season.",{dd:5,pi:3}],
+  ["Tom Kim",2022,25,2,"silv",null,"bird",[0,0,0,0],"Korean phenom. Two wins at age 20."],
+  ["Sam Burns",2022,20,3,"silv",null,"allr",[1,2,2,0],"Three wins. Tour standout."],
+  // 2023
+  ["Scottie Scheffler",2023,1,7,"plat",null,"allr",[1,2,2,0],"Seven wins. A season for the ages.",{gir:5,pi:7,br:4}],
+  ["Wyndham Clark",2023,12,2,"gold",null,"grnd",[0,0,0,0],"US Open champion. Cinderella story.",{pi:6,da:4}],
+  ["Brian Harman",2023,18,1,"gold",null,"prec",[0,0,0,0],"British Open by 6 shots. Ice in his veins.",{da:7,pi:7}],
+  ["Max Homa",2023,10,3,"gold",null,"bird",[1,3,2,0],"Three wins. Fan favourite and genuine star.",{br:4}],
+  ["Collin Morikawa",2023,8,1,"gold",null,"prec",[1,2,1,0],"One win. Iron play remains elite.",{da:6,gir:5}],
+  ["Patrick Cantlay",2023,7,2,"silv",null,"prec",[1,3,2,0],"Two wins. Reliable top-10.",{pi:5,da:4}],
+  ["Xander Schauffele",2023,5,1,"silv",null,"allr",[1,3,3,0],"One win. Major contender every week."],
+  ["Justin Thomas",2023,14,1,"silv",null,"bird",[1,4,4,0],"One win. Searching for old form.",{pi:4}],
+];
+
+const EUR_RAW = [
+  // 2000
+  ["Lee Westwood",2000,5,5,"gold",null,"grnd",[1,20,9,9],"Nine European Tour wins. Knocking on the world's door.",{da:3}],
+  ["Colin Montgomerie",2000,7,4,"gold",null,"prec",[1,20,9,7],"Four wins. Europe's heartbeat.",{da:5,pi:6}],
+  ["Darren Clarke",2000,15,2,"silv",null,"grnd",[1,10,7,2],"Two wins. The big Ulsterman is a team force."],
+  ["Padraig Harrington",2000,25,2,"silv",null,"grnd",[1,15,9,4],"Two wins. Methodical, reliable, always there.",{scr:4}],
+  ["Sergio Garcia",2000,20,1,"silv",null,"scrm",[1,25,12,7],"The kid from Castellon. Born to play match play.",{scr:5}],
+  ["Thomas Bjorn",2000,40,1,"brnz",null,"grnd",[1,4,5,2],"Danish grit. Solid team player."],
+  ["Paul Lawrie",2000,35,1,"brnz",null,"prec",[1,1,0,0],"1999 Open champion. Accurate and battle-hardened."],
+  ["Bernhard Langer",2000,45,1,"brnz",null,"prec",[1,15,6,5],"Veteran excellence. Ryder Cup royalty fading gracefully."],
+  // 2001
+  ["Colin Montgomerie",2001,6,5,"gold",null,"prec",[1,20,9,7],"Five wins. Europe's uncrowned king.",{da:5,pi:6}],
+  ["Lee Westwood",2001,8,3,"silv",null,"grnd",[1,20,9,9],"Three wins. Dip from the 2000 peak, still elite.",{da:3}],
+  ["Sergio Garcia",2001,15,2,"silv",null,"scrm",[1,25,12,7],"Two wins. The Ryder Cup fire burns bright.",{scr:5}],
+  ["Darren Clarke",2001,18,2,"hero",1.07,"grnd",[1,10,7,2],"Two wins. Heart of the European team."],
+  ["Padraig Harrington",2001,22,2,"silv",null,"grnd",[1,15,9,4],"Two wins. Grinding excellence.",{scr:4}],
+  ["Thomas Bjorn",2001,38,1,"brnz",null,"grnd",[1,4,5,2],"One win. Dependable Danish presence."],
+  ["Paul Lawrie",2001,32,1,"brnz",null,"prec",[1,1,0,0],"One win. Accurate and quietly dangerous."],
+  ["Nick Faldo",2001,55,0,"brnz",null,"prec",[1,23,19,4],"Six majors. The legend fades but never disappears."],
+  // 2002
+  ["Colin Montgomerie",2002,5,5,"gold",null,"prec",[1,20,9,7],"Five wins. The Belfry was his home.",{da:5,pi:6}],
+  ["Sergio Garcia",2002,10,3,"gold",null,"scrm",[1,25,12,7],"Three wins. Young and brilliantly dangerous.",{scr:5}],
+  ["Padraig Harrington",2002,20,2,"silv",null,"grnd",[1,15,9,4],"Two wins. Building towards the majors.",{scr:4}],
+  ["Lee Westwood",2002,25,2,"silv",null,"grnd",[1,20,9,9],"Two wins. Still a force.",{da:3}],
+  ["Darren Clarke",2002,22,1,"hero",1.07,"grnd",[1,10,7,2],"One win. Beloved team room anchor."],
+  ["Paul McGinley",2002,50,1,"hero",1.06,"grnd",[1,3,2,0],"Holed the winning putt at The Belfry. Ryder Cup royalty.",{pi:8}],
+  ["Niclas Fasth",2002,55,1,"hero",1.06,"prec",[1,2,1,0],"2-1 debut at The Belfry. Swedish hero nobody expected."],
+  ["Thomas Levet",2002,60,1,"brnz",null,"grnd",[0,0,0,0],"One win. Hardworking French presence."],
+  // 2003
+  ["Colin Montgomerie",2003,5,4,"gold",null,"prec",[1,20,9,7],"Four wins. Relentless European excellence.",{da:5,pi:6}],
+  ["Lee Westwood",2003,20,2,"silv",null,"grnd",[1,20,9,9],"Two wins. Consistency rebuilt.",{da:3}],
+  ["Darren Clarke",2003,22,2,"silv",null,"grnd",[1,10,7,2],"Two wins. The big man in fine form."],
+  ["Sergio Garcia",2003,18,2,"silv",null,"scrm",[1,25,12,7],"Two wins. Growing into his greatness.",{scr:5}],
+  ["Padraig Harrington",2003,24,2,"silv",null,"grnd",[1,15,9,4],"Two wins. The major is coming.",{scr:4}],
+  ["Thomas Bjorn",2003,30,1,"silv",null,"grnd",[1,4,5,2],"British Open heartbreak. The Bunker at Royal St Georges haunts him."],
+  ["Paul Casey",2003,40,1,"silv",null,"powr",[0,0,0,0],"Long, athletic, on the rise."],
+  ["Luke Donald",2003,45,0,"brnz",null,"prec",[0,0,0,0],"Short off the tee, elite everywhere else.",{da:6,scr:8,dd:-10}],
+  // 2004
+  ["Colin Montgomerie",2004,4,4,"gold",null,"prec",[1,20,9,7],"Four wins. Oakland Hills was his finest hour.",{da:5,pi:6}],
+  ["Sergio Garcia",2004,8,3,"gold",null,"scrm",[1,25,12,7],"Three wins. Ryder Cup genius confirmed.",{scr:5}],
+  ["Lee Westwood",2004,18,2,"silv",null,"grnd",[1,20,9,9],"Two wins. Anchor of a dominant team.",{da:3}],
+  ["Darren Clarke",2004,20,1,"hero",1.07,"grnd",[1,10,7,2],"One win. Team warrior and inspiration."],
+  ["Padraig Harrington",2004,22,2,"silv",null,"grnd",[1,15,9,4],"Two wins. Europe's reliable backbone.",{scr:4}],
+  ["Paul Casey",2004,25,2,"silv",null,"powr",[1,9,7,4],"Two wins. Power game arriving at top level."],
+  ["Luke Donald",2004,35,1,"silv",null,"prec",[1,10,6,3],"Elite short game, incredible Ryder Cup debut.",{da:6,scr:8,dd:-10}],
+  ["Ian Poulter",2004,40,1,"hero",1.08,"bird",[1,14,6,5],"One win. The Ryder Cup finds its new poster boy.",{pi:12}],
+  // 2005
+  ["Sergio Garcia",2005,5,4,"gold",null,"scrm",[1,25,12,7],"Four wins. The heir apparent is here.",{scr:5}],
+  ["Lee Westwood",2005,12,3,"silv",null,"grnd",[1,20,9,9],"Three wins. Rebuilding to former glories.",{da:3}],
+  ["Colin Montgomerie",2005,10,3,"silv",null,"prec",[1,20,9,7],"Three wins. The legend slowly fading.",{da:5,pi:6}],
+  ["Padraig Harrington",2005,18,2,"silv",null,"grnd",[1,15,9,4],"Two wins. Grinding, always grinding.",{scr:4}],
+  ["Paul Casey",2005,20,2,"silv",null,"powr",[1,9,7,4],"Two wins. Power player cementing his status."],
+  ["Luke Donald",2005,28,1,"silv",null,"prec",[1,10,6,3],"One win. The precision king of Europe.",{da:6,scr:8,dd:-10}],
+  ["Ian Poulter",2005,35,1,"hero",1.08,"bird",[1,14,6,5],"One win. The purple tiger hunting always.",{pi:12}],
+  ["Henrik Stenson",2005,45,0,"brnz",null,"prec",[0,0,0,0],"Zero wins but the irons are something special.",{gir:5}],
+  // 2006
+  ["Padraig Harrington",2006,8,3,"gold",null,"grnd",[1,15,9,4],"Three wins. The major is close.",{scr:4,pi:5}],
+  ["Darren Clarke",2006,20,2,"hero",1.09,"grnd",[1,10,7,2],"Played through grief. The K Club was his cathedral.",{pi:8}],
+  ["Sergio Garcia",2006,10,2,"gold",null,"scrm",[1,25,12,7],"Two wins. K Club magician.",{scr:5}],
+  ["Paul Casey",2006,12,3,"gold",null,"powr",[1,9,7,4],"Three wins. Career-best year. Power golf arrived."],
+  ["Luke Donald",2006,22,1,"silv",null,"prec",[1,10,6,3],"One win. Precision the best in Europe.",{da:6,scr:8,dd:-10}],
+  ["Ian Poulter",2006,28,1,"hero",1.08,"bird",[1,14,6,5],"One win. Born for The K Club.",{pi:12}],
+  ["Henrik Stenson",2006,30,1,"silv",null,"prec",[0,0,0,0],"First win. Stenson announces himself.",{gir:5,da:4}],
+  ["Justin Rose",2006,35,1,"silv",null,"prec",[0,0,0,0],"One win. Growing into a world-class player.",{da:4}],
+  // 2007
+  ["Padraig Harrington",2007,5,3,"gold",null,"grnd",[1,15,9,4],"British Open champion. The wait is over.",{scr:4,pi:5}],
+  ["Lee Westwood",2007,8,4,"gold",null,"grnd",[1,20,9,9],"Four wins. The roar is back.",{da:3}],
+  ["Sergio Garcia",2007,7,3,"gold",null,"scrm",[1,25,12,7],"Three wins. Elite everywhere.",{scr:5}],
+  ["Paul Casey",2007,10,3,"gold",null,"powr",[1,9,7,4],"Three wins. Top-10 in the world confirmed."],
+  ["Luke Donald",2007,20,1,"silv",null,"prec",[1,10,6,3],"One win. Short-game genius.",{da:6,scr:8,dd:-10}],
+  ["Ian Poulter",2007,22,1,"hero",1.08,"bird",[1,14,6,5],"One win. The Ryder Cup is always on his mind.",{pi:12}],
+  ["Henrik Stenson",2007,18,2,"silv",null,"prec",[0,0,0,0],"Two wins. Irons are world-class.",{gir:5,da:4}],
+  ["Justin Rose",2007,25,1,"silv",null,"prec",[0,0,0,0],"One win. Rising English star.",{da:4}],
+  // 2008
+  ["Padraig Harrington",2008,2,3,"plat",null,"grnd",[1,15,9,4],"British Open AND PGA champion. Two majors in one year.",{scr:5,pi:7}],
+  ["Lee Westwood",2008,6,3,"gold",null,"grnd",[1,20,9,9],"Three wins. WR#6 and climbing.",{da:3}],
+  ["Sergio Garcia",2008,4,3,"gold",null,"scrm",[1,25,12,7],"Three wins. WR#4. Career peak.",{scr:5}],
+  ["Henrik Stenson",2008,10,2,"gold",null,"prec",[1,12,6,4],"Two wins. Iron play era begins.",{gir:6,da:4}],
+  ["Luke Donald",2008,15,1,"silv",null,"prec",[1,10,6,3],"One win. Precision personified.",{da:6,scr:8,dd:-10}],
+  ["Ian Poulter",2008,18,2,"hero",1.08,"bird",[1,14,6,5],"Two wins. Valhalla fire. Europe in his DNA.",{pi:12}],
+  ["Graeme McDowell",2008,30,1,"silv",null,"grnd",[1,9,5,3],"One win. Northern Irish grit emerging."],
+  ["Robert Karlsson",2008,25,1,"silv",null,"grnd",[1,2,1,0],"One win. Swedish Ryder Cup warrior."],
+  // 2009
+  ["Lee Westwood",2009,4,4,"gold",null,"grnd",[1,20,9,9],"Four wins. WR#4. The number one is close.",{da:3}],
+  ["Henrik Stenson",2009,10,3,"gold",null,"prec",[1,12,6,4],"Three wins. Iron play dominance.",{gir:6,da:4}],
+  ["Sergio Garcia",2009,8,2,"silv",null,"scrm",[1,25,12,7],"Two wins. Consistently dangerous.",{scr:5}],
+  ["Luke Donald",2009,12,2,"silv",null,"prec",[1,10,6,3],"Two wins. Short game elite.",{da:6,scr:8,dd:-10}],
+  ["Ian Poulter",2009,20,1,"hero",1.08,"bird",[1,14,6,5],"One win. The Ryder Cup never leaves his heart.",{pi:12}],
+  ["Graeme McDowell",2009,22,1,"silv",null,"grnd",[1,9,5,3],"One win. Solid Northern Irish presence."],
+  ["Justin Rose",2009,18,2,"silv",null,"prec",[1,12,11,3],"Two wins. Consistently excellent.",{da:4}],
+  ["Rory McIlroy",2009,30,1,"silv",null,"allr",[0,0,0,0],"First Tour win at 20. The star is born.",{dd:5,gir:3}],
+  // 2010
+  ["Rory McIlroy",2010,10,2,"gold",null,"allr",[1,17,14,5],"Two wins at 21. The future is now.",{dd:5,gir:3,pi:4}],
+  ["Lee Westwood",2010,3,4,"gold",null,"grnd",[1,20,9,9],"Four wins. WR#1 by year end.",{da:3}],
+  ["Luke Donald",2010,5,3,"gold",null,"prec",[1,10,6,3],"Three wins. Best season yet.",{da:6,scr:8,dd:-10}],
+  ["Martin Kaymer",2010,8,2,"gold",null,"prec",[1,9,3,2],"PGA champion. German precision announced to the world.",{gir:5,da:5}],
+  ["Graeme McDowell",2010,12,2,"gold",null,"grnd",[1,9,5,3],"US Open champion. Celtic Manor singles hero.",{pi:6}],
+  ["Henrik Stenson",2010,15,2,"gold",null,"prec",[1,12,6,4],"Two wins. FedEx form building.",{gir:6,da:4}],
+  ["Ian Poulter",2010,18,1,"hero",1.08,"bird",[1,14,6,5],"One win. Celtic Manor intensity never dimmed.",{pi:12}],
+  ["Justin Rose",2010,22,1,"silv",null,"prec",[1,12,11,3],"One win. Consistent English presence.",{da:4}],
+  // 2011
+  ["Rory McIlroy",2011,2,3,"plat",null,"allr",[1,17,14,5],"US Open by 8 shots. The age of Rory begins.",{dd:5,gir:4,pi:4}],
+  ["Luke Donald",2011,1,4,"gold",null,"prec",[1,10,6,3],"WR#1 all year. Precision perfection.",{da:7,scr:8,dd:-10}],
+  ["Lee Westwood",2011,3,3,"gold",null,"grnd",[1,20,9,9],"Three wins. World number three.",{da:3}],
+  ["Darren Clarke",2011,25,1,"hero",1.09,"grnd",[1,10,7,2],"British Open champion. The greatest underdog story.",{pi:8}],
+  ["Martin Kaymer",2011,5,2,"gold",null,"prec",[1,9,3,2],"Two wins. WR#5. German machine.",{gir:5,da:5}],
+  ["Ian Poulter",2011,20,1,"hero",1.08,"bird",[1,14,6,5],"One win. Always, always dangerous.",{pi:12}],
+  ["Graeme McDowell",2011,15,1,"silv",null,"grnd",[1,9,5,3],"One win. Solid post-major consistency."],
+  ["Henrik Stenson",2011,12,2,"silv",null,"prec",[1,12,6,4],"Two wins. Iron play never wavers.",{gir:6,da:4}],
+  // 2012
+  ["Rory McIlroy",2012,1,4,"plat",null,"allr",[1,17,14,5],"British Open and PGA. WR#1. Unstoppable.",{dd:5,gir:4,pi:5}],
+  ["Luke Donald",2012,3,2,"gold",null,"prec",[1,10,6,3],"Two wins. Precision never wavers.",{da:7,scr:8,dd:-10}],
+  ["Justin Rose",2012,10,2,"silv",null,"prec",[1,12,11,3],"Two wins. Building to the major.",{da:4}],
+  ["Ian Poulter",2012,12,2,"hero",1.09,"bird",[1,14,6,5],"Medinah. Five points in one night. A legend was born.",{pi:14}],
+  ["Nicolas Colsaerts",2012,40,1,"hero",1.06,"powr",[1,2,1,1],"Monster drives at Medinah. Belgium's finest Ryder Cup hour.",{dd:12}],
+  ["Graeme McDowell",2012,18,1,"silv",null,"grnd",[1,9,5,3],"One win. Medinah warrior."],
+  ["Sergio Garcia",2012,20,1,"hero",1.07,"scrm",[1,25,12,7],"One win. The Ryder Cup still loves him.",{scr:5,pi:8}],
+  ["Lee Westwood",2012,8,2,"silv",null,"grnd",[1,20,9,9],"Two wins. Ryder Cup backbone again.",{da:3}],
+  // 2013
+  ["Henrik Stenson",2013,4,4,"gold",null,"prec",[1,12,6,4],"FedEx Cup champion. Career-best season.",{gir:7,da:5}],
+  ["Justin Rose",2013,5,2,"gold",null,"prec",[1,12,11,3],"US Open champion. English golf's finest moment in years.",{da:5,pi:5}],
+  ["Rory McIlroy",2013,3,3,"gold",null,"allr",[1,17,14,5],"Three wins. WR#3. Still the world's best.",{dd:5,gir:3,pi:4}],
+  ["Lee Westwood",2013,10,2,"silv",null,"grnd",[1,20,9,9],"Two wins. Veteran excellence.",{da:3}],
+  ["Ian Poulter",2013,18,1,"hero",1.08,"bird",[1,14,6,5],"One win. Medinah never fades from memory.",{pi:12}],
+  ["Graeme McDowell",2013,20,1,"silv",null,"grnd",[1,9,5,3],"One win. Grinding through the season."],
+  ["Sergio Garcia",2013,22,1,"silv",null,"scrm",[1,25,12,7],"One win. The Masters drought continues.",{scr:5}],
+  ["Luke Donald",2013,15,1,"silv",null,"prec",[1,10,6,3],"One win. Short game still world-class.",{da:6,scr:8,dd:-10}],
+  // 2014
+  ["Rory McIlroy",2014,1,4,"plat",null,"allr",[1,17,14,5],"British Open and PGA. WR#1. Dominant.",{dd:6,gir:4,pi:6}],
+  ["Justin Rose",2014,5,2,"gold",null,"prec",[1,12,11,3],"Two wins. Consistent major-calibre form.",{da:5,pi:4}],
+  ["Henrik Stenson",2014,4,3,"gold",null,"prec",[1,12,6,4],"Three wins. The iron king of the world.",{gir:7,da:5}],
+  ["Ian Poulter",2014,12,1,"hero",1.08,"bird",[1,14,6,5],"One win. Gleneagles heartbeat.",{pi:12}],
+  ["Sergio Garcia",2014,15,1,"hero",1.07,"scrm",[1,25,12,7],"One win. The major is coming. Gleneagles showed why.",{scr:5,pi:8}],
+  ["Graeme McDowell",2014,18,1,"silv",null,"grnd",[1,9,5,3],"One win. Solid Gleneagles Ryder Cup squad."],
+  ["Luke Donald",2014,20,1,"silv",null,"prec",[1,10,6,3],"One win. Gleneagles experience.",{da:6,scr:7,dd:-10}],
+  ["Jamie Donaldson",2014,35,1,"brnz",null,"grnd",[1,2,0,1],"Clinched the Ryder Cup for Europe on Saturday. Hero without the label."],
+  // 2015
+  ["Rory McIlroy",2015,2,4,"gold",null,"allr",[1,17,14,5],"Four wins. WR#2. Always in it.",{dd:6,gir:3,pi:5}],
+  ["Justin Rose",2015,6,2,"gold",null,"prec",[1,12,11,3],"Two wins. A model of excellence.",{da:5,pi:4}],
+  ["Henrik Stenson",2015,5,3,"gold",null,"prec",[1,12,6,4],"Three wins. Iron play elite.",{gir:7,da:5}],
+  ["Sergio Garcia",2015,10,2,"silv",null,"scrm",[1,25,12,7],"Two wins. The Ryder Cup fire never dims.",{scr:5}],
+  ["Ian Poulter",2015,20,1,"hero",1.08,"bird",[1,14,6,5],"One win. The Postman always delivers.",{pi:12}],
+  ["Graeme McDowell",2015,25,1,"silv",null,"grnd",[1,9,5,3],"One win. European bedrock."],
+  ["Paul Casey",2015,15,2,"silv",null,"powr",[1,9,7,4],"Two wins. Power game elite."],
+  ["Danny Willett",2015,30,1,"silv",null,"allr",[0,0,0,0],"On the rise. The Masters is a year away."],
+  // 2016
+  ["Henrik Stenson",2016,3,2,"gold",null,"prec",[1,12,6,4],"British Open champion. One of the greatest major duels ever.",{gir:8,da:5,pi:6}],
+  ["Rory McIlroy",2016,4,3,"gold",null,"allr",[1,17,14,5],"Three wins. The standard bearer.",{dd:6,gir:3,pi:5}],
+  ["Danny Willett",2016,8,2,"gold",null,"allr",[1,0,3,0],"Masters champion. Jordan Spieth's meltdown. The world watched.",{pi:4}],
+  ["Justin Rose",2016,6,2,"gold",null,"prec",[1,12,11,3],"Two wins. Hazeltine Ryder Cup squad.",{da:5,pi:4}],
+  ["Sergio Garcia",2016,12,2,"silv",null,"scrm",[1,25,12,7],"Two wins. The Ryder Cup legend doesn't fade.",{scr:5}],
+  ["Tyrrell Hatton",2016,30,1,"brnz",null,"grnd",[0,0,0,0],"First win. Loud, passionate, destined for Ryder Cups."],
+  ["Lee Westwood",2016,35,1,"brnz",null,"grnd",[1,20,9,9],"One win. The veteran's final Ryder Cup chapters."],
+  ["Chris Wood",2016,40,1,"brnz",null,"powr",[1,0,1,0],"One win. Power off the tee, Ryder Cup debutant."],
+  // 2017
+  ["Jon Rahm",2017,5,4,"gold",null,"allr",[1,7,5,1],"Four wins including Irish Open. The heir to Seve emerges.",{dd:3,gir:3,pi:5}],
+  ["Rory McIlroy",2017,4,3,"gold",null,"allr",[1,17,14,5],"Three wins. Europe's anchor.",{dd:6,gir:3,pi:5}],
+  ["Justin Rose",2017,5,3,"gold",null,"prec",[1,12,11,3],"Three wins. WR#5. Consistent major threat.",{da:5,pi:4}],
+  ["Sergio Garcia",2017,8,2,"hero",1.08,"scrm",[1,25,12,7],"Masters champion. The major drought ended at Augusta.",{scr:6,pi:8}],
+  ["Tommy Fleetwood",2017,15,2,"silv",null,"grnd",[1,6,5,2],"Two wins. A new European star is born."],
+  ["Tyrrell Hatton",2017,18,2,"silv",null,"grnd",[1,7,4,2],"Two wins. Fiery, passionate, impossible to beat in a match."],
+  ["Henrik Stenson",2017,10,1,"silv",null,"prec",[1,12,6,4],"One win. The iron legend endures.",{gir:6,da:4}],
+  ["Paul Casey",2017,20,2,"silv",null,"powr",[1,9,7,4],"Two wins. Power and precision."],
+  // 2018
+  ["Rory McIlroy",2018,6,2,"gold",null,"allr",[1,17,14,5],"Two wins. Le Golf National warrior.",{dd:6,gir:3,pi:5}],
+  ["Justin Rose",2018,2,3,"gold",null,"prec",[1,12,11,3],"Three wins. WR#2. Career peak.",{da:5,pi:5}],
+  ["Jon Rahm",2018,5,3,"gold",null,"allr",[1,7,5,1],"Three wins. The Spanish heir is taking over.",{dd:3,gir:3,pi:5}],
+  ["Tommy Fleetwood",2018,8,3,"gold",null,"grnd",[1,6,5,2],"Three wins. Fleetwood and Molinari: Moliwood magic."],
+  ["Francesco Molinari",2018,12,3,"hero",1.08,"prec",[1,7,2,1],"5-0 at Le Golf National. The greatest Ryder Cup individual performance.",{pi:8,da:5}],
+  ["Ian Poulter",2018,20,1,"hero",1.08,"bird",[1,14,6,5],"One win. The Postman still delivers.",{pi:12}],
+  ["Tyrrell Hatton",2018,15,2,"silv",null,"grnd",[1,7,4,2],"Two wins. Angry and brilliant.",],
+  ["Paul Casey",2018,18,2,"silv",null,"powr",[1,9,7,4],"Two wins. Le Golf National squad."],
+  // 2019
+  ["Rory McIlroy",2019,3,3,"gold",null,"allr",[1,17,14,5],"Three wins. WR#3. Consistent excellence.",{dd:6,gir:3,pi:5}],
+  ["Jon Rahm",2019,4,3,"gold",null,"allr",[1,7,5,1],"Three wins. The Spaniard owns the world.",{dd:4,gir:4,pi:5}],
+  ["Shane Lowry",2019,10,2,"gold",null,"grnd",[1,3,3,1],"British Open champion. Portrush. All of Ireland roaring.",{pi:7}],
+  ["Tommy Fleetwood",2019,12,1,"silv",null,"grnd",[1,6,5,2],"One win. Consistent European mainstay."],
+  ["Justin Rose",2019,8,2,"silv",null,"prec",[1,12,11,3],"Two wins. Reliable excellence.",{da:4}],
+  ["Francesco Molinari",2019,15,2,"silv",null,"prec",[1,7,2,1],"Two wins. Precision never leaves.",{da:4}],
+  ["Sergio Garcia",2019,20,1,"hero",1.07,"scrm",[1,25,12,7],"One win. The Ryder Cup spirit endures.",{scr:5,pi:6}],
+  ["Paul Casey",2019,18,2,"silv",null,"powr",[1,9,7,4],"Two wins. Power and experience."],
+  // 2020
+  ["Jon Rahm",2020,2,4,"gold",null,"allr",[1,7,5,1],"Four wins. WR#2. Near-platinum dominance.",{dd:4,gir:4,pi:6}],
+  ["Rory McIlroy",2020,3,3,"gold",null,"allr",[1,17,14,5],"Three wins. The European anchor.",{dd:6,gir:3,pi:4}],
+  ["Tyrrell Hatton",2020,6,4,"gold",null,"grnd",[1,7,4,2],"Four wins. BMW PGA and more. Career year.",{pi:5}],
+  ["Tommy Fleetwood",2020,15,1,"silv",null,"grnd",[1,6,5,2],"One win. Steady European presence."],
+  ["Victor Hovland",2020,20,2,"silv",null,"allr",[0,0,0,0],"Two wins. Norwegian phenom. The future is now.",{dd:3,gir:3}],
+  ["Shane Lowry",2020,22,1,"silv",null,"grnd",[1,3,3,1],"One win. The Open champion adapting."],
+  ["Matt Fitzpatrick",2020,25,1,"silv",null,"prec",[0,0,0,0],"One win. Sheffield's finest, building his legacy.",{da:5,scr:5}],
+  ["Paul Casey",2020,18,2,"silv",null,"powr",[1,9,7,4],"Two wins. Evergreen power."],
+  // 2021
+  ["Jon Rahm",2021,1,3,"plat",null,"allr",[1,7,5,1],"US Open champion. WR#1. Spain has its king.",{dd:5,gir:4,pi:7}],
+  ["Rory McIlroy",2021,6,2,"gold",null,"allr",[1,17,14,5],"Two wins. Whistling Straits disappointment stings.",{dd:6,gir:3,pi:4}],
+  ["Victor Hovland",2021,8,3,"gold",null,"allr",[1,5,3,1],"Three wins. Norway's world-class star arrived.",{dd:3,gir:4}],
+  ["Tyrrell Hatton",2021,7,3,"gold",null,"grnd",[1,7,4,2],"Three wins. Emotional and brilliant.",{pi:5}],
+  ["Tommy Fleetwood",2021,15,1,"silv",null,"grnd",[1,6,5,2],"One win. Whistling Straits heartbreak."],
+  ["Shane Lowry",2021,20,1,"silv",null,"grnd",[1,3,3,1],"One win. Emotional team player."],
+  ["Matt Fitzpatrick",2021,22,1,"silv",null,"prec",[1,5,3,1],"One win. Short game elite arriving.",{da:5,scr:5}],
+  ["Ian Poulter",2021,30,1,"hero",1.08,"bird",[1,14,6,5],"One final Ryder Cup call. The Postman delivered again.",{pi:12}],
+  // 2022
+  ["Jon Rahm",2022,1,3,"gold",null,"allr",[1,7,5,1],"Three wins. WR#1. Dominant.",{dd:5,gir:4,pi:6}],
+  ["Rory McIlroy",2022,2,4,"gold",null,"allr",[1,17,14,5],"Four wins. Still European golf's north star.",{dd:6,gir:3,pi:5}],
+  ["Victor Hovland",2022,5,3,"gold",null,"allr",[1,5,3,1],"Three wins. WR#5. The heir is ready.",{dd:3,gir:4}],
+  ["Tyrrell Hatton",2022,8,3,"gold",null,"grnd",[1,7,4,2],"Three wins. Always competing, never yielding.",{pi:5}],
+  ["Matt Fitzpatrick",2022,7,2,"gold",null,"prec",[1,5,3,1],"US Open champion at The Country Club. Sheffield's finest hour.",{da:5,scr:5,pi:5}],
+  ["Tommy Fleetwood",2022,15,1,"silv",null,"grnd",[1,6,5,2],"One win. Consistent European mainstay."],
+  ["Shane Lowry",2022,18,2,"silv",null,"grnd",[1,3,3,1],"Two wins. Gathering for Rome.",{pi:4}],
+  ["Sepp Straka",2022,25,2,"silv",null,"grnd",[1,2,2,0],"Two wins. Austrian grit on the world stage."],
+  // 2023
+  ["Jon Rahm",2023,1,4,"plat",null,"allr",[1,7,5,1],"Masters champion. Dominant force. WR#1.",{dd:5,gir:5,pi:7}],
+  ["Rory McIlroy",2023,3,3,"gold",null,"allr",[1,17,14,5],"Three wins. Rome was his finest Ryder Cup.",{dd:6,gir:3,pi:5}],
+  ["Victor Hovland",2023,4,4,"gold",null,"allr",[1,5,3,1],"Four wins. WR#4. Norway's greatest ever.",{dd:4,gir:4,pi:4}],
+  ["Tyrrell Hatton",2023,8,3,"gold",null,"grnd",[1,7,4,2],"Three wins. Rome's snarling warrior.",{pi:6}],
+  ["Matt Fitzpatrick",2023,10,2,"gold",null,"prec",[1,5,3,1],"Two wins. Elite precision on the world stage.",{da:5,scr:5}],
+  ["Tommy Fleetwood",2023,15,1,"silv",null,"grnd",[1,6,5,2],"One win. Faithful European anchor."],
+  ["Shane Lowry",2023,18,1,"hero",1.06,"grnd",[1,3,3,1],"One win. Rome hero. 4-1 Ryder Cup record.",{pi:8}],
+  ["Ludvig Aberg",2023,22,2,"gold",null,"allr",[1,3,1,0],"Instant rookie star. 3-1 at Rome on debut.",{dd:3,gir:4}],
+];
+
+const players = [
+  ...build(USA_RAW, 'USA'),
+  ...build(EUR_RAW, 'EUR')
+];
+
+const outPath = path.join(__dirname, '../data/players.json');
+fs.writeFileSync(outPath, JSON.stringify(players, null, 2));
+console.log(`Generated ${players.length} players -> data/players.json`);

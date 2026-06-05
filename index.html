@@ -1,0 +1,1281 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Fourballs — Ryder Cup Draft</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg:           #080f08;
+      --surface:      #0f1a0f;
+      --surface2:     #142014;
+      --surface3:     #1a2a1a;
+      --border:       #1e341e;
+      --green:        #2d6a2d;
+      --green-bright: #4caf50;
+      --gold:         #c9a84c;
+      --text:         #ddeedd;
+      --text-muted:   #6a8f6a;
+      --text-dim:     #405040;
+      --win:          #4caf50;
+      --loss:         #e53935;
+      --halve:        #c9a84c;
+      --radius:       8px;
+    }
+
+    html, body { height: 100%; background: var(--bg); color: var(--text); font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; font-size: 15px; line-height: 1.5; }
+    #app { min-height: 100vh; }
+
+    /* ── BUTTONS ── */
+    .btn { background: var(--green); color: var(--text); border: none; border-radius: var(--radius); padding: 11px 22px; font-size: 15px; font-weight: 600; cursor: pointer; transition: background .15s, transform .1s; }
+    .btn:hover:not(:disabled) { background: #3a843a; transform: translateY(-1px); }
+    .btn:disabled { opacity: .4; cursor: not-allowed; transform: none; }
+    .btn-gold { background: var(--gold); color: #1a0e00; font-size: 17px; padding: 14px 36px; }
+    .btn-gold:hover:not(:disabled) { background: #d4b05e; }
+    .btn-red  { background: #b71c1c; color: #fff; }
+    .btn-red:hover:not(:disabled) { background: #c62828; }
+    .btn-outline { background: transparent; color: var(--text); border: 1px solid var(--border); }
+    .btn-outline:hover:not(:disabled) { background: var(--surface2); border-color: var(--green); }
+
+    /* ── HEADER / TICKER ── */
+    .page-header { background: var(--surface); border-bottom: 1px solid var(--border); padding: 9px 16px; display: flex; align-items: center; gap: 16px; position: sticky; top: 0; z-index: 20; }
+    .page-title  { font-size: 14px; font-weight: 800; color: var(--gold); letter-spacing: .06em; text-transform: uppercase; }
+    .ticker-score { font-size: 15px; font-weight: 700; color: var(--gold); }
+
+    /* ── LANDING ── */
+    .landing-wrap { min-height: 100vh; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 32px 24px; text-align: center; background: radial-gradient(ellipse at 50% 30%, #0a2010 0%, var(--bg) 65%); }
+    .landing-logo { font-size: 58px; font-weight: 900; color: var(--gold); letter-spacing: .04em; line-height: 1; margin-bottom: 10px; }
+    .landing-rule { width: 60px; height: 2px; background: var(--green); margin: 12px auto; }
+    .landing-tagline { font-size: 18px; color: var(--text); margin-bottom: 6px; }
+    .landing-flavor { font-size: 13px; color: var(--text-muted); font-style: italic; margin-bottom: 36px; }
+    .landing-continue { margin-top: 14px; font-size: 12px; color: var(--text-muted); }
+    .landing-continue a { color: var(--green-bright); cursor: pointer; text-decoration: underline; }
+
+    /* ── NATIONALITY ── */
+    .nation-wrap { min-height: 100vh; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 32px 24px; text-align: center; background: radial-gradient(ellipse at 50% 30%, #0a1a2a 0%, var(--bg) 70%); }
+    .nation-eyebrow { font-size: 11px; text-transform: uppercase; letter-spacing: .12em; color: var(--text-muted); margin-bottom: 8px; }
+    .nation-title { font-size: 34px; font-weight: 800; color: var(--text); margin-bottom: 30px; }
+    .nation-cards { display: flex; gap: 20px; justify-content: center; flex-wrap: wrap; }
+    .nation-card { background: var(--surface2); border: 2px solid var(--border); border-radius: 12px; padding: 28px 36px; cursor: pointer; transition: border-color .2s, transform .2s, box-shadow .2s; min-width: 160px; }
+    .nation-card:hover { transform: translateY(-4px); box-shadow: 0 8px 28px rgba(0,0,0,.5); }
+    .nation-card.usa:hover { border-color: #3b6abf; }
+    .nation-card.eur:hover { border-color: #5a40b0; }
+    .nation-flag { font-size: 42px; margin-bottom: 10px; }
+    .nation-name { font-size: 20px; font-weight: 700; }
+    .nation-sub  { font-size: 12px; color: var(--text-muted); margin-top: 3px; }
+
+    /* ── VENUE SPINNER ── */
+    .spinner-screen { min-height: 100vh; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 32px; text-align: center; background: radial-gradient(ellipse at 50% 20%, #0f2a0f 0%, var(--bg) 70%); }
+    .spin-eyebrow { font-size: 11px; text-transform: uppercase; letter-spacing: .12em; color: var(--text-muted); margin-bottom: 20px; }
+    .spin-reel { font-size: 40px; font-weight: 800; color: var(--text); line-height: 1.1; max-width: 560px; transition: color .4s; min-height: 96px; display: flex; align-items: center; justify-content: center; }
+    .spin-reel.landed { color: var(--gold); }
+    .spin-sub { font-size: 14px; color: var(--text-muted); margin-top: 10px; min-height: 22px; }
+
+    /* ── VENUE REVEAL ── */
+    .venue-wrap { min-height: 100vh; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 24px; text-align: center; background: radial-gradient(ellipse at 50% 20%, #0f2a0f 0%, var(--bg) 70%); }
+    .venue-name { font-size: 38px; font-weight: 800; line-height: 1.1; margin-bottom: 8px; max-width: 600px; }
+    .venue-sub  { font-size: 15px; color: var(--text-muted); margin-bottom: 14px; }
+    .venue-badge { display: inline-block; background: var(--surface2); border: 1px solid var(--border); border-radius: 20px; padding: 4px 14px; font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: .07em; margin-bottom: 12px; }
+    .venue-pills { display: flex; gap: 8px; justify-content: center; flex-wrap: wrap; margin-bottom: 12px; }
+    .pill { background: var(--surface2); border: 1px solid var(--border); border-radius: 20px; padding: 4px 12px; font-size: 12px; color: var(--text-muted); }
+    .venue-flavor { font-style: italic; color: var(--text-muted); max-width: 460px; margin-bottom: 30px; font-size: 14px; }
+
+    /* ── PLAYER CARDS ── */
+    .player-card { background: var(--surface2); border-radius: var(--radius); border: 1px solid var(--border); border-left: 4px solid var(--tc, #444); padding: 12px 12px 10px; cursor: pointer; transition: transform .15s, box-shadow .15s; position: relative; }
+    .player-card:hover { transform: translateY(-2px); box-shadow: 0 4px 18px rgba(0,0,0,.45); }
+    .player-card.selected { border-color: var(--green-bright) !important; box-shadow: 0 0 12px rgba(76,175,80,.35); }
+    .player-card.hero-card { animation: hero-glow 2s ease-in-out infinite; }
+    @keyframes hero-glow { 0%,100% { box-shadow: 0 0 8px rgba(123,45,139,.35); } 50% { box-shadow: 0 0 22px rgba(123,45,139,.7); } }
+    .card-tier-dot { position: absolute; top: 10px; right: 10px; width: 9px; height: 9px; border-radius: 50%; background: var(--tc, #444); }
+    .card-name  { font-size: 14px; font-weight: 700; padding-right: 72px; }
+    .card-year  { font-size: 11px; color: var(--gold); font-weight: 600; margin-top: 1px; }
+    .card-sub   { font-size: 11px; color: var(--text-muted); margin-top: 1px; }
+    .card-rank  { font-size: 12px; color: var(--gold); font-weight: 600; margin-top: 5px; }
+    .card-wins  { font-size: 12px; color: var(--text-muted); }
+    .card-hero-bonus { margin-top: 6px; font-size: 10px; font-weight: 700; color: var(--hero, #38bdf8); letter-spacing: .03em; text-transform: uppercase; }
+    .card-style-tags { display: flex; flex-wrap: wrap; gap: 3px; margin-top: 6px; }
+    .card-style-tag { font-size: 9px; font-weight: 700; letter-spacing: .04em; text-transform: uppercase; padding: 1px 5px; border-radius: 3px; border: 1px solid; opacity: .85; }
+    .cst-power      { color: #f97316; border-color: #f97316; }
+    .cst-accurate   { color: #38bdf8; border-color: #38bdf8; }
+    .cst-shortgame  { color: #4ade80; border-color: #4ade80; }
+    .cst-clutch     { color: #f59e0b; border-color: #f59e0b; }
+    .cst-consistent { color: #a78bfa; border-color: #a78bfa; }
+    .cst-aggressive { color: #fb7185; border-color: #fb7185; }
+    .card-flavor { display: none; position: absolute; bottom: calc(100% + 5px); left: 0; right: 0; background: #050e05; border: 1px solid var(--border); border-radius: var(--radius); padding: 8px 10px; font-size: 12px; font-style: italic; color: var(--text-muted); z-index: 30; pointer-events: none; }
+    .player-card:hover .card-flavor { display: block; }
+
+    .tc-platinum { --tc: #c084fc; } .tc-gold { --tc: #c9a84c; } .tc-silver { --tc: #94a3b8; } .tc-bronze { --tc: #a0522d; } .tc-hero { --tc: #38bdf8; }
+    .card-tier-badge { position: absolute; top: 8px; right: 8px; font-size: 9px; font-weight: 800; text-transform: uppercase; letter-spacing: .04em; padding: 2px 6px; border-radius: 3px; background: rgba(0,0,0,.45); color: var(--tc, #888); border: 1px solid var(--tc, #888); }
+
+    /* ── COURSE PROFILE BAR ── */
+    .course-profile-bar { background: rgba(255,255,255,.04); border: 1px solid var(--border); border-radius: var(--radius); padding: 10px 14px; margin: 0 14px 10px; }
+    .cpb-venue { font-size: 12px; font-weight: 700; color: var(--gold); margin-bottom: 2px; }
+    .cpb-descriptors { font-size: 10px; color: var(--text-muted); margin-bottom: 8px; letter-spacing: .03em; text-transform: uppercase; }
+    .cpb-demands { display: flex; flex-direction: column; gap: 4px; }
+    .cpb-row { display: flex; align-items: center; gap: 8px; }
+    .cpb-label { font-size: 9px; font-weight: 700; text-transform: uppercase; letter-spacing: .04em; width: 72px; flex-shrink: 0; }
+    .cpb-bar { flex: 1; height: 5px; background: rgba(255,255,255,.08); border-radius: 3px; overflow: hidden; }
+    .cpb-fill { height: 100%; border-radius: 3px; transition: width .3s; }
+
+    /* ── DRAFT PICK AREA ── */
+    .pick-area { padding: 12px 14px 10px; }
+    .pick-round-label { font-size: 12px; color: var(--text-muted); margin-bottom: 8px; }
+    .pick-cards-row { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; }
+    @media (max-width: 560px) { .pick-cards-row { grid-template-columns: 1fr; } }
+
+    /* ── PICKS SO FAR (during draft) ── */
+    .psf-chip { display: inline-block; padding: 2px 8px; border-radius: 3px; background: var(--surface2); border-left: 3px solid var(--tc, #444); font-size: 11px; font-weight: 600; }
+
+    /* ── PLAYER MINI (reused in pairing seats) ── */
+    .player-mini { width: 100%; padding: 5px 8px; border-radius: 4px; border-left: 3px solid var(--tc, #444); background: var(--surface3); }
+    .pm-name { font-size: 12px; font-weight: 700; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .pm-meta { font-size: 10px; color: var(--text-muted); }
+
+    /* ── AI REVEAL SCREEN ── */
+    .ai-reveal-screen { min-height: 100vh; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 28px 16px; text-align: center; background: radial-gradient(ellipse at 50% 0%, #1a0505 0%, var(--bg) 65%); }
+    .ai-reveal-eyebrow { font-size: 11px; text-transform: uppercase; letter-spacing: .12em; color: var(--text-muted); margin-bottom: 6px; }
+    .ai-reveal-title { font-size: 26px; font-weight: 700; margin-bottom: 8px; }
+    .ai-reveal-sub { font-size: 13px; color: var(--text-muted); margin-bottom: 24px; }
+    .ai-reveal-cards { display: flex; gap: 12px; justify-content: center; flex-wrap: wrap; margin-bottom: 28px; }
+    .ai-card-wrap { position: relative; }
+    .ai-card-wrap.ai-picked .player-card { border-color: #e53935 !important; box-shadow: 0 0 18px rgba(229,57,53,.35); cursor: default; }
+    .ai-card-wrap.ai-not-picked .player-card { opacity: .35; cursor: default; pointer-events: none; }
+    .ai-card-wrap.ai-picked .player-card:hover { transform: none; }
+    .ai-picked-badge { position: absolute; top: -11px; left: 50%; transform: translateX(-50%); background: #c62828; color: #fff; font-size: 10px; font-weight: 700; padding: 2px 9px; border-radius: 10px; white-space: nowrap; text-transform: uppercase; letter-spacing: .05em; z-index: 5; }
+    .ai-your-pick { background: var(--surface2); border: 1px solid var(--border); border-radius: var(--radius); padding: 10px 16px; margin-bottom: 20px; font-size: 13px; }
+    .ai-your-pick strong { color: var(--green-bright); }
+
+    /* ── CAPTAIN SCREEN ── */
+    .captain-screen { display: flex; flex-direction: column; align-items: center; padding: 32px 16px 48px; background: radial-gradient(ellipse at 50% 0%, #1a0a2a 0%, var(--bg) 70%); min-height: 100vh; }
+    .captain-title { font-size: 32px; font-weight: 800; color: var(--gold); text-align: center; margin-bottom: 6px; }
+    .captain-cards { display: flex; gap: 14px; justify-content: center; flex-wrap: wrap; margin-top: 24px; }
+    .captain-card  { background: var(--surface2); border: 1px solid var(--border); border-radius: var(--radius); padding: 18px; width: 240px; cursor: pointer; transition: border-color .15s, transform .15s; }
+    .captain-card:hover { border-color: var(--gold); transform: translateY(-3px); box-shadow: 0 6px 24px rgba(0,0,0,.4); }
+    .cap-name { font-size: 17px; font-weight: 700; }
+    .cap-year { font-size: 11px; color: var(--text-muted); margin-bottom: 10px; }
+    .cap-bonus-line { font-size: 12px; color: var(--green-bright); margin-bottom: 2px; }
+    .cap-desc { font-size: 11px; color: var(--text-muted); margin-top: 10px; font-style: italic; line-height: 1.4; }
+
+
+    /* ── REVIEW SCREEN ── */
+    .review-layout { display: grid; grid-template-columns: 1fr 1fr; gap: 0; flex: 1; }
+    @media (max-width: 680px) { .review-layout { grid-template-columns: 1fr; } }
+    .review-col { padding: 14px 14px 24px; border-right: 1px solid var(--border); }
+    .review-col:last-child { border-right: none; }
+    .review-col-title { font-size: 13px; font-weight: 700; color: var(--gold); margin-bottom: 12px; }
+    .review-slot-group { margin-bottom: 14px; }
+    .review-slot-label { font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: .07em; color: var(--text-muted); margin-bottom: 5px; }
+    .chem-pair { display: flex; align-items: center; gap: 6px; padding: 4px 8px; background: var(--surface2); border-radius: 4px; margin-bottom: 3px; font-size: 11px; }
+    .chem-pair .cp-names { flex: 1; }
+    .chem-dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
+    .chem-strong { background: var(--win); }
+    .chem-neutral { background: #4a4a4a; }
+    .chem-weak    { background: #e6a817; }
+    .captain-summary { background: var(--surface2); border: 1px solid var(--border); border-radius: var(--radius); padding: 10px 12px; margin-top: 10px; font-size: 12px; }
+    .simulate-bar { padding: 16px 16px 32px; text-align: center; border-top: 1px solid var(--border); }
+
+    /* ── RESULTS SCREEN ── */
+    .results-layout { display: flex; gap: 20px; max-width: 1060px; margin: 0 auto; padding: 16px 16px 48px; align-items: flex-start; width: 100%; }
+    .results-feed { flex: 1; min-width: 0; }
+    .results-sidebar { width: 168px; flex-shrink: 0; }
+    @media (max-width: 680px) { .results-layout { flex-direction: column-reverse; } .results-sidebar { width: 100%; } }
+
+    .score-panel { position: sticky; top: 48px; background: var(--surface2); border: 1px solid var(--border); border-radius: var(--radius); padding: 14px 12px; text-align: center; }
+    .sp-total-label { font-size: 9px; text-transform: uppercase; letter-spacing: .1em; color: var(--text-dim); margin-bottom: 4px; }
+    .sp-total-score { font-size: 32px; font-weight: 900; color: var(--gold); line-height: 1; margin-bottom: 4px; }
+    .sp-team-names { display: flex; justify-content: space-between; font-size: 11px; color: var(--text-muted); margin-bottom: 4px; }
+    .sp-divider { height: 1px; background: var(--border); margin: 10px 0; }
+    .sp-sess-label { font-size: 9px; text-transform: uppercase; letter-spacing: .08em; color: var(--text-dim); margin-bottom: 3px; }
+    .sp-sess-name { font-size: 11px; color: var(--text-muted); margin-bottom: 5px; min-height: 16px; }
+    .sp-sess-score { font-size: 20px; font-weight: 800; color: var(--text); }
+
+    .session-block { margin-bottom: 6px; }
+    .session-head-row { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; margin: 20px 0 4px; padding-bottom: 6px; border-bottom: 1px solid var(--border); }
+    .session-header { font-size: 19px; font-weight: 700; color: var(--gold); flex-shrink: 0; }
+    .session-score-badge { font-size: 15px; font-weight: 800; color: var(--gold); white-space: nowrap; opacity: 0; transition: opacity .5s; }
+    .session-score-badge.visible { opacity: 1; }
+    .sub-header { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: .07em; color: var(--text-muted); margin: 12px 0 6px; }
+    .session-summary { text-align: center; font-size: 13px; color: var(--text-muted); padding: 6px 0 4px; }
+
+    .match-row { display: flex; align-items: center; gap: 8px; padding: 7px 12px; border-radius: 5px; background: var(--surface2); margin-bottom: 5px; opacity: 0; transform: translateY(6px); transition: opacity .35s, transform .35s; font-size: 13px; }
+    .match-row.revealed { opacity: 1; transform: none; }
+    .match-num { font-size: 11px; color: var(--text-dim); min-width: 22px; }
+    .match-players { flex: 1; }
+    .match-pts { font-size: 11px; color: var(--text-muted); min-width: 28px; text-align: right; }
+    .match-result { font-weight: 700; font-size: 14px; min-width: 18px; text-align: right; }
+    .r-win  { color: var(--win); }
+    .r-loss { color: var(--loss); }
+    .r-half { color: var(--halve); }
+
+    .result-banner { border-radius: var(--radius); padding: 36px 20px; text-align: center; margin: 20px 0; }
+    .banner-win  { background: linear-gradient(135deg, #0f2a0f, #1e4a1e); border: 1px solid #2d6a2d; }
+    .banner-loss { background: linear-gradient(135deg, #1a0808, #3a1010); border: 1px solid #5a1818; }
+    .banner-tie  { background: linear-gradient(135deg, #0a0a1a, #1a1a3a); border: 1px solid #2a2a5a; }
+    .banner-title { font-size: 36px; font-weight: 800; margin-bottom: 8px; }
+    .banner-sub   { font-size: 16px; color: var(--text-muted); }
+    .share-card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 18px; margin: 20px 0; }
+    .share-card h3 { color: var(--gold); margin-bottom: 12px; font-size: 15px; }
+    .share-card p  { font-size: 13px; margin-bottom: 5px; }
+    .share-btns { display: flex; gap: 10px; margin-top: 14px; flex-wrap: wrap; }
+
+    .dramatic-pause { text-align: center; padding: 18px; color: var(--gold); font-style: italic; font-size: 14px; animation: dpulse 1s ease-in-out infinite; }
+    @keyframes dpulse { 0%,100% { opacity: .5; } 50% { opacity: 1; } }
+
+    /* ── UTILS ── */
+    .spinner { width: 14px; height: 14px; border: 2px solid var(--border); border-top-color: var(--green-bright); border-radius: 50%; animation: spin .7s linear infinite; flex-shrink: 0; }
+    @keyframes spin { to { transform: rotate(360deg); } }
+    .center-screen { display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 100vh; padding: 24px; text-align: center; gap: 14px; }
+    .center-screen h2 { color: var(--gold); }
+    .center-screen p  { color: var(--text-muted); max-width: 440px; font-size: 14px; }
+    .center-screen code { background: var(--surface2); padding: 2px 6px; border-radius: 4px; font-size: 13px; }
+    .fade-in { animation: fadein .3s ease-out; }
+    @keyframes fadein { from { opacity:0; transform:translateY(6px); } to { opacity:1; transform:none; } }
+  </style>
+</head>
+<body>
+  <div id="app">
+    <div class="center-screen">
+      <div class="spinner" style="width:36px;height:36px;border-width:3px;"></div>
+      <p>Loading game data…</p>
+    </div>
+  </div>
+
+  <script src="src/scoring-engine.js"></script>
+  <script>
+  // ─────────────────────────────────────────────────────────────────────────────
+  // CONSTANTS
+  // ─────────────────────────────────────────────────────────────────────────────
+  const STORAGE_KEY     = 'fourballs_state_v3';
+  const STORAGE_VERSION = 3;
+
+  const TIER_COLORS = {
+    platinum: '#c084fc', gold: '#c9a84c', silver: '#94a3b8',
+    bronze: '#a0522d',   hero: '#38bdf8'
+  };
+
+  const TIER_LABELS = {
+    platinum: 'Platinum', gold: 'Gold', silver: 'Silver',
+    bronze: 'Bronze',     hero: 'Hero'
+  };
+
+  // Index 1–12; hero always 5%, rest distributed
+  const TIER_WEIGHTS = [
+    null,
+    { hero:5, platinum:80, gold:15, silver:0,  bronze:0  },
+    { hero:5, platinum:80, gold:15, silver:0,  bronze:0  },
+    { hero:5, platinum:15, gold:65, silver:15, bronze:0  },
+    { hero:5, platinum:15, gold:65, silver:15, bronze:0  },
+    { hero:5, platinum:0,  gold:45, silver:45, bronze:5  },
+    { hero:5, platinum:0,  gold:45, silver:45, bronze:5  },
+    { hero:5, platinum:0,  gold:15, silver:55, bronze:25 },
+    { hero:5, platinum:0,  gold:15, silver:55, bronze:25 },
+    { hero:5, platinum:0,  gold:0,  silver:25, bronze:70 },
+    { hero:5, platinum:0,  gold:0,  silver:25, bronze:70 },
+    { hero:5, platinum:0,  gold:0,  silver:5,  bronze:90 },
+    { hero:5, platinum:0,  gold:0,  silver:5,  bronze:90 },
+  ];
+
+  // ─────────────────────────────────────────────────────────────────────────────
+  // DATA
+  // ─────────────────────────────────────────────────────────────────────────────
+  let VENUES = [], CAPTAINS = [], PLAYERS = [];
+
+  // ─────────────────────────────────────────────────────────────────────────────
+  // STATE
+  // ─────────────────────────────────────────────────────────────────────────────
+  let G = null;
+
+  function initState() {
+    return {
+      _version: STORAGE_VERSION,
+      phase: 'landing',
+      side: null,
+      venue: null,
+      picks: [],
+      pairings: {
+        foursomes: [[null,null],[null,null],[null,null],[null,null]],
+        fourball:  [[null,null],[null,null],[null,null],[null,null]]
+      },
+      captain: null,
+      aiPicks: [],
+      aiPairings: {
+        foursomes: [[null,null],[null,null],[null,null],[null,null]],
+        fourball:  [[null,null],[null,null],[null,null],[null,null]]
+      },
+      aiCaptain: null,
+      seenNames:   [],
+      aiSeenNames: [],
+      currentRound: 1,
+      currentCards: [],
+      aiRoundCards: [],
+      aiRoundPick:  null,
+      captainCards: [],
+      results: null
+    };
+  }
+
+  function save() {
+    try { localStorage.setItem(STORAGE_KEY, JSON.stringify(G)); } catch(e) {}
+  }
+
+  function loadSaved() {
+    try {
+      const raw = localStorage.getItem(STORAGE_KEY);
+      if (!raw) return null;
+      const s = JSON.parse(raw);
+      return (s && s._version === STORAGE_VERSION && s.phase) ? s : null;
+    } catch(e) { return null; }
+  }
+
+  // ─────────────────────────────────────────────────────────────────────────────
+  // PLAYER POOL — NO YEAR REQUIREMENT
+  // ─────────────────────────────────────────────────────────────────────────────
+  // allowHero=false redistributes the 5% hero weight across remaining tiers (cap enforcement).
+  function rollTier(pickNum, allowHero = true) {
+    const w     = TIER_WEIGHTS[pickNum];
+    const total = allowHero ? 100 : 95;
+    let r = Math.random() * total, cum = 0;
+    for (const [tier, wt] of Object.entries(w)) {
+      if (!allowHero && tier === 'hero') continue;
+      cum += wt;
+      if (r < cum) return tier;
+    }
+    return 'bronze';
+  }
+
+  // Draw one player for a given tier, falling back through tiers if pool is empty.
+  function drawOneCard(nat, pickNum, usedNames, tierOverride, allowHero = true) {
+    const tier      = tierOverride || rollTier(pickNum, allowHero);
+    const tierOrder = allowHero
+      ? ['platinum','gold','silver','bronze','hero']
+      : ['platinum','gold','silver','bronze'];
+
+    let pool = PLAYERS.filter(p =>
+      p.nationality === nat &&
+      p.tier === tier &&
+      !usedNames.has(p.name)
+    );
+
+    if (!pool.length && tier === 'hero') {
+      pool = PLAYERS.filter(p => p.nationality === nat && p.tier === 'gold' && !usedNames.has(p.name));
+    }
+    if (!pool.length) {
+      for (const fb of tierOrder) {
+        const fb2 = PLAYERS.filter(p => p.nationality === nat && p.tier === fb && !usedNames.has(p.name));
+        if (fb2.length) { pool = fb2; break; }
+      }
+    }
+    if (!pool.length) {
+      pool = PLAYERS.filter(p => p.nationality === nat && !usedNames.has(p.name));
+    }
+    if (!pool.length) return null;
+
+    return pool[Math.floor(Math.random() * pool.length)];
+  }
+
+  // Each of the 3 cards rolls its own tier independently.
+  // heroCount: heroes already picked by this side — once >=2, hero cards are suppressed.
+  function getCardsAnyYear(nat, pickNum, seenNames, heroCount = 0) {
+    const allowHero = heroCount < 2;
+    const usedNames = new Set(seenNames);
+    const cards = [];
+    for (let i = 0; i < 3; i++) {
+      const card = drawOneCard(nat, pickNum, usedNames, null, allowHero);
+      if (card) {
+        cards.push(card);
+        usedNames.add(card.name);
+      }
+    }
+    return cards;
+  }
+
+  function generateAndTrackCards(nat, pickNum, seenNames, heroCount = 0) {
+    const cards = getCardsAnyYear(nat, pickNum, seenNames, heroCount);
+    cards.forEach(c => { if (!seenNames.includes(c.name)) seenNames.push(c.name); });
+    return cards;
+  }
+
+  // ─────────────────────────────────────────────────────────────────────────────
+  // AI LOGIC
+  // ─────────────────────────────────────────────────────────────────────────────
+  function aiBestFromCards(cards) {
+    if (!cards.length) return null;
+    return cards.reduce((best, p) =>
+      compositeScore(applyHeroBoost(p)) > compositeScore(applyHeroBoost(best)) ? p : best
+    );
+  }
+
+  // Auto-assign pairings from 12 picks.
+  // Foursomes: rank by composite score, pair best 8 in order.
+  // Fourball: rank by aggression+birdie_rate, pair best 8 in order.
+  // Each player appears at most once per format section.
+  function resolveAutoPairings(picks) {
+    const fsSorted = [...picks].sort((a, b) =>
+      compositeScore(applyHeroBoost(b)) - compositeScore(applyHeroBoost(a))
+    );
+    const foursomes = [
+      [fsSorted[0], fsSorted[1]], [fsSorted[2], fsSorted[3]],
+      [fsSorted[4], fsSorted[5]], [fsSorted[6], fsSorted[7]]
+    ];
+
+    const fbSorted = [...picks].sort((a, b) => {
+      const aScore = (a.style_tags?.aggression || 50) + (a.stats?.birdie_rate || 50);
+      const bScore = (b.style_tags?.aggression || 50) + (b.stats?.birdie_rate || 50);
+      return bScore - aScore;
+    });
+    const fourball = [
+      [fbSorted[0], fbSorted[1]], [fbSorted[2], fbSorted[3]],
+      [fbSorted[4], fbSorted[5]], [fbSorted[6], fbSorted[7]]
+    ];
+
+    return { foursomes, fourball };
+  }
+
+  // Re-randomize: shuffle picks before pairing for both formats.
+  function resolveRandomPairings(picks) {
+    const shuffleFs = [...picks].sort(() => Math.random() - 0.5);
+    const foursomes = [
+      [shuffleFs[0], shuffleFs[1]], [shuffleFs[2], shuffleFs[3]],
+      [shuffleFs[4], shuffleFs[5]], [shuffleFs[6], shuffleFs[7]]
+    ];
+    const shuffleFb = [...picks].sort(() => Math.random() - 0.5);
+    const fourball = [
+      [shuffleFb[0], shuffleFb[1]], [shuffleFb[2], shuffleFb[3]],
+      [shuffleFb[4], shuffleFb[5]], [shuffleFb[6], shuffleFb[7]]
+    ];
+    return { foursomes, fourball };
+  }
+
+  // ─────────────────────────────────────────────────────────────────────────────
+  // HELPERS
+  // ─────────────────────────────────────────────────────────────────────────────
+  const opp = side => side === 'USA' ? 'EUR' : 'USA';
+
+  function tcStyle(tier) { return `style="--tc:${TIER_COLORS[tier] || '#555'}"` ; }
+  function tcClass(tier) { return `tc-${tier || 'bronze'}`; }
+  function isHero(p)     { return p.tier === 'hero'; }
+  function delay(ms)     { return new Promise(r => setTimeout(r, ms)); }
+  function chemClass(s)  { return s >= 75 ? 'chem-strong' : s >= 52 ? 'chem-neutral' : 'chem-weak'; }
+  function rClass(r)     { return r === 'win' ? 'r-win' : r === 'loss' ? 'r-loss' : 'r-half'; }
+  function rLabel(r)     { return r === 'win' ? 'W' : r === 'loss' ? 'L' : 'H'; }
+
+  function heroBonusLabel(p) {
+    const hb = p.hero_bonus;
+    if (!hb) return '';
+    const parts = [];
+    if (hb.all_formats_boost)      parts.push(`+${hb.all_formats_boost}% all formats`);
+    if (hb.singles_boost)          parts.push(`+${hb.singles_boost}% singles`);
+    if (hb.foursomes_boost)        parts.push(`+${hb.foursomes_boost}% foursomes`);
+    if (hb.fourball_boost)         parts.push(`+${hb.fourball_boost}% fourball`);
+    if (hb.chemistry_boost)        parts.push(`+${hb.chemistry_boost}% pair chem`);
+    if (hb.home_boost)             parts.push(`+${hb.home_boost}% home`);
+    if (hb.away_boost)             parts.push(`+${hb.away_boost}% away`);
+    if (hb.singles_loss_ceiling)   parts.push(`loss floor ≤${hb.singles_loss_ceiling}% singles`);
+    if (hb.fatigue_immune)         parts.push('fatigue immune');
+    return parts.length ? parts.join(' · ') : '';
+  }
+
+  function randomCaptains(nat, n) {
+    return [...CAPTAINS.filter(c => c.nationality === nat)]
+      .sort(() => Math.random() - .5)
+      .slice(0, n);
+  }
+
+  // Returns up to 2 style tags for a player, mapped to the same labels as course demands
+  // 5 categories map 1-to-1 with course demands shown in the course profile bar.
+  // Scored purely from stats (not style_tags) which actually differentiate by tier.
+  function playerStyleTags(p) {
+    const s = p.stats;
+    const scores = [
+      { tag:'power',      val: s.driving_distance },
+      { tag:'accurate',   val: (s.driving_accuracy * 0.55 + s.greens_in_regulation * 0.45) },
+      { tag:'shortgame',  val: s.scrambling },
+      { tag:'consistent', val: Math.min(s.driving_accuracy, s.scrambling) }, // both must be solid
+      { tag:'clutch',     val: s.pressure_index },
+    ];
+    scores.sort((a, b) => b.val - a.val);
+    // Always show top 1; add 2nd only if it's within 5 points of the leader
+    const tags = [scores[0].tag];
+    if (scores[1].val >= scores[0].val - 5) tags.push(scores[1].tag);
+    return tags;
+  }
+
+  const STYLE_TAG_LABELS = { power:'Power', accurate:'Accurate', shortgame:'Short Game', clutch:'Clutch', consistent:'Consistent' };
+
+  function styleTagsHTML(p) {
+    const tags = playerStyleTags(p);
+    return tags.map(t => `<span class="card-style-tag cst-${t}">${STYLE_TAG_LABELS[t]}</span>`).join('');
+  }
+
+  // Course demand bars — sorted by weight, top 5
+  // Labels intentionally match the player style tag labels so the connection is obvious
+  const DEMAND_META = [
+    { key:'power_weight',      label:'Power',      cls:'cst-power',      color:'#f97316' },
+    { key:'accuracy_weight',   label:'Accurate',   cls:'cst-accurate',   color:'#38bdf8' },
+    { key:'short_game_weight', label:'Short Game', cls:'cst-shortgame',  color:'#4ade80' },
+    { key:'wind_factor',       label:'Consistent', cls:'cst-consistent', color:'#a78bfa' },
+    { key:'pressure_factor',   label:'Clutch',     cls:'cst-clutch',     color:'#f59e0b' },
+  ];
+
+  function courseProfileHTML(venue) {
+    if (!venue) return '';
+    const ht = venue.hidden_tags;
+    const sorted = [...DEMAND_META].sort((a, b) => (ht[b.key] || 0) - (ht[a.key] || 0));
+    const bars = sorted.map(d => `
+      <div class="cpb-row">
+        <span class="cpb-label" style="color:${d.color}">${d.label}</span>
+        <div class="cpb-bar"><div class="cpb-fill" style="width:${ht[d.key]}%;background:${d.color}"></div></div>
+      </div>`).join('');
+    const descriptors = (venue.user_descriptors || []).join(' · ');
+    return `<div class="course-profile-bar">
+      <div class="cpb-venue">${venue.display_name || venue.name}</div>
+      <div class="cpb-descriptors">${descriptors}</div>
+      <div class="cpb-demands">${bars}</div>
+    </div>`;
+  }
+
+  // ─────────────────────────────────────────────────────────────────────────────
+  // HTML BUILDERS
+  // ─────────────────────────────────────────────────────────────────────────────
+  function playerCardHTML(p, clickable = true, extraClass = '') {
+    const hero  = isHero(p) ? 'hero-card' : '';
+    const da    = clickable ? `data-pid="${p.id}"` : '';
+    const score = Math.round(compositeScore(p));
+    const label = TIER_LABELS[p.tier] || p.tier;
+    const bonus = heroBonusLabel(p);
+    return `<div class="player-card ${tcClass(p.tier)} ${hero} ${extraClass}" ${tcStyle(p.tier)} ${da}>
+      <div class="card-tier-badge">${label}</div>
+      <div class="card-name">${p.name}</div>
+      <div class="card-year">${p.year}</div>
+      <div class="card-sub">${p.nationality}</div>
+      <div class="card-rank">#${p.world_ranking} world ranking</div>
+      <div class="card-wins">${p.wins_that_year} win${p.wins_that_year !== 1 ? 's' : ''} · ${score} composite</div>
+      <div class="card-style-tags">${styleTagsHTML(p)}</div>
+      ${bonus ? `<div class="card-hero-bonus">${bonus}</div>` : ''}
+      ${p.flavor_text ? `<div class="card-flavor">${p.flavor_text}</div>` : ''}
+    </div>`;
+  }
+
+
+  // ─────────────────────────────────────────────────────────────────────────────
+  // RENDER DISPATCH
+  // ─────────────────────────────────────────────────────────────────────────────
+  function render() {
+    const p = G.phase;
+    if      (p === 'landing')      renderLanding();
+    else if (p === 'nationality')  renderNationality();
+    else if (p === 'venue_spinner')renderVenueSpinner();
+    else if (p === 'venue')        renderVenueReveal();
+    else if (p === 'captain')      renderCaptain();
+    else if (p === 'draft')        renderDraft();
+    else if (p === 'ai_reveal')    renderAIReveal();
+    else if (p === 'review')       renderReview();
+    else if (p === 'complete')     renderResults();
+    else renderLanding();
+  }
+
+  // ─────────────────────────────────────────────────────────────────────────────
+  // SCREEN: LANDING
+  // ─────────────────────────────────────────────────────────────────────────────
+  function renderLanding() {
+    const hasSave = !!loadSaved();
+    document.getElementById('app').innerHTML = `
+      <div class="landing-wrap fade-in">
+        <div class="landing-logo">FOURBALLS</div>
+        <div class="landing-rule"></div>
+        <div class="landing-tagline">Build Your Ryder Cup Dream Team</div>
+        <div class="landing-flavor">12 picks. One captain. 28 points to glory.</div>
+        <button class="btn btn-gold" id="new-game-btn">New Game →</button>
+        ${hasSave ? `<div class="landing-continue"><a id="continue-btn">Continue saved game</a></div>` : ''}
+      </div>`;
+
+    document.getElementById('new-game-btn').addEventListener('click', () => {
+      localStorage.removeItem(STORAGE_KEY);
+      G = initState();
+      G.phase = 'nationality';
+      save();
+      render();
+    });
+
+    document.getElementById('continue-btn')?.addEventListener('click', () => {
+      const saved = loadSaved();
+      if (saved) { G = saved; render(); }
+    });
+  }
+
+  // ─────────────────────────────────────────────────────────────────────────────
+  // SCREEN: NATIONALITY
+  // ─────────────────────────────────────────────────────────────────────────────
+  function renderNationality() {
+    document.getElementById('app').innerHTML = `
+      <div class="nation-wrap fade-in">
+        <div class="nation-eyebrow">Ryder Cup</div>
+        <div class="nation-title">Choose Your Side</div>
+        <div class="nation-cards">
+          <div class="nation-card usa" data-side="USA">
+            <div class="nation-flag">🇺🇸</div>
+            <div class="nation-name">USA</div>
+            <div class="nation-sub">United States</div>
+          </div>
+          <div class="nation-card eur" data-side="EUR">
+            <div class="nation-flag">🇪🇺</div>
+            <div class="nation-name">Europe</div>
+            <div class="nation-sub">European Team</div>
+          </div>
+        </div>
+      </div>`;
+
+    document.querySelectorAll('[data-side]').forEach(card => {
+      card.addEventListener('click', () => {
+        G.side  = card.dataset.side;
+        G.venue = VENUES[Math.floor(Math.random() * VENUES.length)];
+        G.phase = 'venue_spinner';
+        save();
+        render();
+      });
+    });
+  }
+
+  // ─────────────────────────────────────────────────────────────────────────────
+  // SCREEN: VENUE SPINNER
+  // ─────────────────────────────────────────────────────────────────────────────
+  function renderVenueSpinner() {
+    document.getElementById('app').innerHTML = `
+      <div class="spinner-screen fade-in">
+        <div class="spin-eyebrow">Drawing Your Venue</div>
+        <div class="spin-reel" id="spin-reel">${VENUES[0].name}</div>
+        <div class="spin-sub"  id="spin-sub">&nbsp;</div>
+      </div>`;
+
+    const reel = document.getElementById('spin-reel');
+    const sub  = document.getElementById('spin-sub');
+    let count = 0;
+    const maxCount = 22;
+
+    function tick() {
+      count++;
+      const v = VENUES[Math.floor(Math.random() * VENUES.length)];
+      reel.textContent = v.name;
+      sub.textContent  = v.display_name || '';
+
+      if (count < maxCount) {
+        const ms = 60 + Math.pow(count, 1.4) * 4;
+        setTimeout(tick, ms);
+      } else {
+        setTimeout(() => {
+          reel.textContent = G.venue.name;
+          sub.textContent  = G.venue.display_name || '';
+          reel.classList.add('landed');
+          setTimeout(() => {
+            G.phase = 'venue';
+            save();
+            render();
+          }, 1400);
+        }, 200);
+      }
+    }
+
+    setTimeout(tick, 120);
+  }
+
+  // ─────────────────────────────────────────────────────────────────────────────
+  // SCREEN: VENUE REVEAL
+  // ─────────────────────────────────────────────────────────────────────────────
+  function renderVenueReveal() {
+    const v = G.venue;
+    document.getElementById('app').innerHTML = `
+      <div class="venue-wrap fade-in">
+        <div style="font-size:11px;color:var(--text-muted);text-transform:uppercase;letter-spacing:.1em;margin-bottom:10px;">Your Venue</div>
+        <div class="venue-name">${v.name}</div>
+        <div class="venue-sub">${v.display_name}</div>
+        <div class="venue-badge">${v.course_type}</div>
+        <div class="venue-pills">${(v.user_descriptors || []).map(d => `<span class="pill">${d}</span>`).join('')}</div>
+        <div class="venue-flavor">"${v.flavor_text}"</div>
+        <button class="btn btn-gold" id="choose-captain-btn">Choose Your Captain →</button>
+      </div>`;
+
+    document.getElementById('choose-captain-btn').addEventListener('click', () => {
+      G.phase = 'captain';
+      G.captainCards = randomCaptains(G.side, 3);
+      save();
+      render();
+    });
+  }
+
+  // ─────────────────────────────────────────────────────────────────────────────
+  // SCREEN: CAPTAIN
+  // ─────────────────────────────────────────────────────────────────────────────
+  function renderCaptain() {
+    const caps = G.captainCards;
+    document.getElementById('app').innerHTML = `
+      <div class="captain-screen fade-in">
+        <div style="font-size:11px;color:var(--text-muted);text-transform:uppercase;letter-spacing:.1em;margin-bottom:8px;">Step 1 — Captain</div>
+        <div class="captain-title">Choose Your Captain</div>
+        <div style="font-size:13px;color:var(--text-muted)">Select the captain who will lead your ${G.side} team at ${G.venue.name}</div>
+        <div class="captain-cards">
+          ${caps.map(c => `
+            <div class="captain-card" data-cid="${c.id}">
+              <div class="cap-name">${c.name}</div>
+              <div class="cap-year">Captained ${c.year_captained}</div>
+              <div class="cap-bonus-line">+${c.bonus.foursomes_boost}% Foursomes win probability</div>
+              <div class="cap-bonus-line">+${c.bonus.fourball_boost}% Fourball win probability</div>
+              <div class="cap-bonus-line">+${c.bonus.singles_boost}% Singles win probability</div>
+              <div class="cap-bonus-line">&times;${c.bonus.chemistry_multiplier} Pairing chemistry</div>
+              <div class="cap-desc">${c.description}</div>
+            </div>`).join('')}
+        </div>
+      </div>`;
+
+    document.querySelectorAll('[data-cid]').forEach(el => {
+      el.addEventListener('click', () => {
+        G.captain = CAPTAINS.find(c => c.id === el.dataset.cid);
+        const pool = CAPTAINS.filter(c => c.nationality === opp(G.side));
+        G.aiCaptain = pool[Math.floor(Math.random() * pool.length)];
+        G.phase = 'draft';
+        G.currentRound = 1;
+        G.seenNames   = [];
+        G.aiSeenNames = [];
+        G.picks       = [];
+        G.aiPicks     = [];
+        G.pairings    = {
+          foursomes: [[null,null],[null,null],[null,null],[null,null]],
+          fourball:  [[null,null],[null,null],[null,null],[null,null]]
+        };
+        G.currentCards = generateAndTrackCards(G.side, 1, G.seenNames, 0);
+        save();
+        render();
+      });
+    });
+  }
+
+  // ─────────────────────────────────────────────────────────────────────────────
+  // SCREEN: DRAFT
+  // ─────────────────────────────────────────────────────────────────────────────
+  function renderDraft() {
+    const round = G.currentRound;
+    const cards = G.currentCards;
+
+    const picksHTML = G.picks.length
+      ? `<div style="padding:8px 14px 10px;border-top:1px solid var(--border);background:var(--surface);">
+           <div style="font-size:10px;text-transform:uppercase;letter-spacing:.06em;color:var(--text-dim);margin-bottom:6px;">
+             Drafted (${G.picks.length}/12)
+           </div>
+           <div style="display:flex;flex-wrap:wrap;gap:4px;">
+             ${G.picks.map(p => `<span class="psf-chip ${tcClass(p.tier)}" ${tcStyle(p.tier)}>${p.name}</span>`).join('')}
+           </div>
+         </div>`
+      : '';
+
+    document.getElementById('app').innerHTML = `
+      <div style="display:flex;flex-direction:column;min-height:100vh;">
+        <div class="page-header">
+          <span class="page-title">Fourballs</span>
+          <span class="ticker-score">Pick ${round} of 12</span>
+          <span style="flex:1"></span>
+          <span style="font-size:11px;color:var(--text-dim)">${G.side} · ${G.venue.name}</span>
+        </div>
+
+        ${courseProfileHTML(G.venue)}
+
+        <div class="pick-area">
+          <div class="pick-round-label">Round ${round} of 12 — Choose your player</div>
+          <div class="pick-cards-row">
+            ${cards.map(p => playerCardHTML(p, true)).join('')}
+          </div>
+        </div>
+
+        ${picksHTML}
+      </div>`;
+
+    document.querySelectorAll('[data-pid]').forEach(el => {
+      el.addEventListener('click', () => {
+        const p = PLAYERS.find(x => x.id === el.dataset.pid);
+        if (p) handlePickCard(p);
+      });
+    });
+  }
+
+  function handlePickCard(p) {
+    G.picks.push(p);
+
+    const aiHeroCount = G.aiPicks.filter(p => p.tier === 'hero').length;
+    const aiCards = generateAndTrackCards(opp(G.side), G.currentRound, G.aiSeenNames, aiHeroCount);
+    G.aiRoundCards = aiCards;
+    const aiPick = aiBestFromCards(aiCards);
+    G.aiRoundPick = aiPick;
+    if (aiPick) G.aiPicks.push(aiPick);
+
+    G.phase = 'ai_reveal';
+    save();
+    render();
+  }
+
+  // ─────────────────────────────────────────────────────────────────────────────
+  // SCREEN: AI REVEAL
+  // ─────────────────────────────────────────────────────────────────────────────
+  function renderAIReveal() {
+    const round   = G.currentRound;
+    const aiCards = G.aiRoundCards || [];
+    const aiPick  = G.aiRoundPick;
+    const myPick  = G.picks[G.picks.length - 1];
+    const isLast  = round >= 12;
+
+    const cardsHTML = aiCards.map(p => {
+      const picked   = aiPick && p.id === aiPick.id;
+      const wrapCls  = picked ? 'ai-picked' : 'ai-not-picked';
+      const badge    = picked ? '<div class="ai-picked-badge">Opponent picked</div>' : '';
+      return `<div class="ai-card-wrap ${wrapCls}">
+        ${badge}
+        ${playerCardHTML(p, false)}
+      </div>`;
+    }).join('');
+
+    document.getElementById('app').innerHTML = `
+      <div class="ai-reveal-screen fade-in">
+        <div class="ai-reveal-eyebrow">Round ${round} of 12</div>
+        <div class="ai-reveal-title">Opponent's Pick — ${opp(G.side)}</div>
+        <div class="ai-reveal-sub">Here's what they had to choose from</div>
+        ${myPick ? `<div class="ai-your-pick">Your pick: <strong>${myPick.name}</strong> (${myPick.year})</div>` : ''}
+        ${courseProfileHTML(G.venue)}
+        <div class="ai-reveal-cards">${cardsHTML || '<p style="color:var(--text-muted)">No options available</p>'}</div>
+        <button class="btn btn-gold" id="ai-continue-btn">
+          ${isLast ? 'See Your Pairings →' : `Continue to Round ${round + 1} →`}
+        </button>
+      </div>`;
+
+    document.getElementById('ai-continue-btn').addEventListener('click', advanceFromAIReveal);
+  }
+
+  function advanceFromAIReveal() {
+    const round = G.currentRound;
+    if (round >= 12) {
+      G.pairings   = resolveAutoPairings(G.picks);
+      G.aiPairings = resolveAutoPairings(G.aiPicks);
+      G.phase = 'review';
+      save();
+      render();
+    } else {
+      G.currentRound = round + 1;
+      const userHeroCount = G.picks.filter(p => p.tier === 'hero').length;
+      G.currentCards = generateAndTrackCards(G.side, G.currentRound, G.seenNames, userHeroCount);
+      G.phase = 'draft';
+      save();
+      render();
+    }
+  }
+
+
+  // ─────────────────────────────────────────────────────────────────────────────
+  // SCREEN: REVIEW
+  // ─────────────────────────────────────────────────────────────────────────────
+  function renderReview() {
+    const app = document.getElementById('app');
+
+    function pairListHTML(pairings, format) {
+      return pairings.map((pair, i) => {
+        const [p1, p2] = pair;
+        if (!p1 && !p2) return `<div class="chem-pair" style="opacity:.4"><span class="cp-names">Pair ${i+1} — empty</span></div>`;
+        let chemHTML = '';
+        if (p1 && p2) {
+          const score = calculatePairingChemistry(p1, p2, format);
+          chemHTML = `<div class="chem-pair">
+            <span class="chem-dot ${chemClass(score)}"></span>
+            <span class="cp-names">${p1.name} + ${p2.name}</span>
+            <span style="font-size:10px;color:var(--text-muted)">${score}%</span>
+          </div>`;
+        } else {
+          const only = p1 || p2;
+          chemHTML = `<div class="chem-pair">
+            <span class="cp-names">${only ? only.name : '—'} + (incomplete)</span>
+          </div>`;
+        }
+        return `<div style="margin-bottom:2px;">
+          <div style="font-size:9px;color:var(--text-dim);text-transform:uppercase;margin-bottom:1px;">Pair ${i+1}</div>
+          ${chemHTML}
+        </div>`;
+      }).join('');
+    }
+
+    function teamColHTML(pairings, captain, title) {
+      return `<div class="review-col-title">${title}</div>
+        ${captain ? `<div class="captain-summary" style="margin-bottom:12px;">
+          <div style="font-size:10px;color:var(--text-muted);text-transform:uppercase;letter-spacing:.06em;margin-bottom:3px;">Captain</div>
+          <div style="font-weight:700">${captain.name}</div>
+          <div style="font-size:11px;color:var(--text-muted)">${captain.year_captained}</div>
+        </div>` : ''}
+        <div class="review-slot-group">
+          <div class="review-slot-label">Foursomes Pairings</div>
+          ${pairListHTML(pairings.foursomes, 'foursomes')}
+        </div>
+        <div class="review-slot-group">
+          <div class="review-slot-label">Fourball Pairings</div>
+          ${pairListHTML(pairings.fourball, 'fourball')}
+        </div>`;
+    }
+
+    app.innerHTML = `
+      <div style="display:flex;flex-direction:column;min-height:100vh;">
+        <div class="page-header">
+          <span class="page-title">Fourballs</span>
+          <span style="flex:1"></span>
+          <span style="font-size:12px;color:var(--text-muted)">${G.venue.name}</span>
+        </div>
+        <div style="padding:8px 14px;background:var(--surface);border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;gap:12px;">
+          <span style="font-size:12px;color:var(--text-muted);">Auto-assigned pairings — re-roll or simulate</span>
+          <button class="btn btn-outline" id="rerandom-btn" style="font-size:12px;padding:6px 14px;">Re-randomize Pairings</button>
+        </div>
+        <div class="review-layout">
+          <div class="review-col">${teamColHTML(G.pairings, G.captain, 'Your Team (' + G.side + ')')}</div>
+          <div class="review-col">${teamColHTML(G.aiPairings, G.aiCaptain, 'Opponent (' + opp(G.side) + ')')}</div>
+        </div>
+        <div class="simulate-bar">
+          <button class="btn btn-gold" id="sim-btn">Simulate The Cup →</button>
+        </div>
+      </div>`;
+
+    document.getElementById('rerandom-btn').addEventListener('click', () => {
+      G.pairings = resolveRandomPairings(G.picks);
+      save();
+      renderReview();
+    });
+
+    document.getElementById('sim-btn').addEventListener('click', () => {
+      try {
+        const myTeam = {
+          foursomesPairs: G.pairings.foursomes,
+          fourballPairs:  G.pairings.fourball,
+          allPlayers:     G.picks
+        };
+        const aiTeam = {
+          foursomesPairs: G.aiPairings.foursomes,
+          fourballPairs:  G.aiPairings.fourball,
+          allPlayers:     G.aiPicks
+        };
+        G.results = simulateFullEvent(myTeam, aiTeam, G.venue, G.captain, G.aiCaptain);
+        G.phase = 'complete';
+        save();
+        renderResults();
+      } catch(e) {
+        console.error('Simulate error:', e);
+        alert('Simulation error: ' + e.message + '\n\nCheck the browser console for details.');
+      }
+    });
+  }
+
+  // ─────────────────────────────────────────────────────────────────────────────
+  // SCREEN: RESULTS
+  // ─────────────────────────────────────────────────────────────────────────────
+  function renderResults() {
+    const oppSide = opp(G.side);
+    document.getElementById('app').innerHTML = `
+      <div style="display:flex;flex-direction:column;min-height:100vh;">
+        <div class="page-header">
+          <span class="page-title">Fourballs</span>
+          <span class="ticker-score" id="live-score">${G.side} 0 — ${oppSide} 0</span>
+          <span style="flex:1"></span>
+          <span style="font-size:11px;color:var(--text-dim)">${G.venue.name}</span>
+        </div>
+        <div class="results-layout">
+          <div class="results-feed" id="rbody"></div>
+          <div class="results-sidebar">
+            <div class="score-panel">
+              <div class="sp-total-label">Total Score</div>
+              <div class="sp-total-score" id="sp-total">0 — 0</div>
+              <div class="sp-team-names"><span>${G.side}</span><span>${oppSide}</span></div>
+              <div class="sp-divider"></div>
+              <div class="sp-sess-label">Session</div>
+              <div class="sp-sess-name" id="sp-sess-name">—</div>
+              <div class="sp-sess-score" id="sp-sess-score">— — —</div>
+            </div>
+          </div>
+        </div>
+      </div>`;
+
+    doReveal(G.results);
+  }
+
+  async function doReveal(r) {
+    const body = document.getElementById('rbody');
+    let uPts = 0, aPts = 0;
+    let rowIdx = 0;
+    let sessU = 0, sessA = 0;
+
+    function updatePanel() {
+      const oppSide = opp(G.side);
+      const ticker  = document.getElementById('live-score');
+      if (ticker) ticker.textContent = `${G.side} ${uPts} — ${oppSide} ${aPts}`;
+      const spTotal = document.getElementById('sp-total');
+      if (spTotal) spTotal.textContent = `${uPts} — ${aPts}`;
+      const spSessScore = document.getElementById('sp-sess-score');
+      if (spSessScore) spSessScore.textContent = `${sessU} — ${sessA}`;
+    }
+
+    function startSession(name) {
+      sessU = 0; sessA = 0;
+      const el = document.getElementById('sp-sess-name');
+      if (el) el.textContent = name;
+      updatePanel();
+    }
+
+    function addAndTick(result) {
+      if (result === 'win')        { uPts += 1;   sessU += 1; }
+      else if (result === 'halve') { uPts += .5;  aPts += .5; sessU += .5; sessA += .5; }
+      else                         { aPts += 1;   sessA += 1; }
+      updatePanel();
+    }
+
+    // Prepend a new session block — newest content always on top
+    function prependBlock(html) {
+      body.insertAdjacentHTML('afterbegin', html);
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+
+    async function revealMatches(containerId, matches, msDelay) {
+      const cont = document.getElementById(containerId);
+      for (const m of matches) {
+        await delay(msDelay);
+        addAndTick(m.result);
+        const id = 'row-' + (++rowIdx);
+        cont.insertAdjacentHTML('afterbegin', `
+          <div class="match-row" id="${id}">
+            <div class="match-players">${m.myPlayers.filter(Boolean).join(' &amp; ')} <span style="color:var(--text-dim)">vs</span> ${m.oppPlayers.filter(Boolean).join(' &amp; ')}</div>
+            <div class="match-result ${rClass(m.result)}">${rLabel(m.result)}</div>
+            <div class="match-pts">+${m.points}</div>
+          </div>`);
+        await delay(40);
+        document.getElementById(id)?.classList.add('revealed');
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+      }
+    }
+
+    function showBadge(id) {
+      const el = document.getElementById(id);
+      if (el) { el.textContent = `${sessU} — ${sessA}`; el.classList.add('visible'); }
+    }
+
+    // ── FRIDAY FOURSOMES AM ──
+    startSession('Friday AM');
+    prependBlock(`<div class="session-block">
+      <div class="session-head-row">
+        <span class="session-header">Friday — Foursomes</span>
+        <span class="session-score-badge" id="sbadge-fri-am"></span>
+      </div>
+      <div class="sub-header">Morning Session</div>
+      <div id="sec-fri-am"></div>
+    </div>`);
+    await revealMatches('sec-fri-am', r.sessions.fridayAM, 1500);
+    showBadge('sbadge-fri-am');
+    await delay(900);
+
+    // ── FRIDAY FOURSOMES PM ──
+    startSession('Friday PM');
+    prependBlock(`<div class="session-block">
+      <div class="session-head-row">
+        <span class="session-header">Friday PM</span>
+        <span class="session-score-badge" id="sbadge-fri-pm"></span>
+      </div>
+      <div class="sub-header">Afternoon Session</div>
+      <div id="sec-fri-pm"></div>
+      <div id="sum-fri-pm" class="session-summary" style="display:none"></div>
+    </div>`);
+    await revealMatches('sec-fri-pm', r.sessions.fridayPM, 1500);
+    showBadge('sbadge-fri-pm');
+    const el1 = document.getElementById('sum-fri-pm');
+    if (el1) { el1.textContent = `After Friday: ${G.side} ${uPts} — ${opp(G.side)} ${aPts}`; el1.style.display = ''; el1.style.color = 'var(--gold)'; }
+    await delay(1200);
+
+    // ── SATURDAY FOURBALL AM ──
+    startSession('Saturday AM');
+    prependBlock(`<div class="session-block">
+      <div class="session-head-row">
+        <span class="session-header">Saturday — Fourball</span>
+        <span class="session-score-badge" id="sbadge-sat-am"></span>
+      </div>
+      <div class="sub-header">Morning Session</div>
+      <div id="sec-sat-am"></div>
+    </div>`);
+    await revealMatches('sec-sat-am', r.sessions.saturdayAM, 1500);
+    showBadge('sbadge-sat-am');
+    await delay(900);
+
+    // ── SATURDAY FOURBALL PM ──
+    startSession('Saturday PM');
+    prependBlock(`<div class="session-block">
+      <div class="session-head-row">
+        <span class="session-header">Saturday PM</span>
+        <span class="session-score-badge" id="sbadge-sat-pm"></span>
+      </div>
+      <div class="sub-header">Afternoon Session</div>
+      <div id="sec-sat-pm"></div>
+      <div id="sum-sat-pm" class="session-summary" style="display:none"></div>
+    </div>`);
+    await revealMatches('sec-sat-pm', r.sessions.saturdayPM, 1500);
+    showBadge('sbadge-sat-pm');
+    const el2 = document.getElementById('sum-sat-pm');
+    if (el2) { el2.textContent = `After Saturday: ${G.side} ${uPts} — ${opp(G.side)} ${aPts}`; el2.style.display = ''; el2.style.color = 'var(--gold)'; }
+    await delay(1200);
+
+    // ── SUNDAY SINGLES ──
+    startSession('Sunday Singles');
+    prependBlock(`<div class="session-block">
+      <div class="session-head-row">
+        <span class="session-header">Sunday — Singles</span>
+        <span class="session-score-badge" id="sbadge-sun"></span>
+      </div>
+      <div id="sec-sun"></div>
+    </div>`);
+    await delay(800);
+
+    for (let i = 0; i < r.sessions.sunday.length; i++) {
+      const m          = r.sessions.sunday[i];
+      const cupDecided = uPts > 14 || aPts > 14;
+      const msDelay    = cupDecided ? 700 : 2000;
+      const isClose    = !cupDecided && i >= 9 && ((14.5 - uPts) <= 1.5 || (14.5 - aPts) <= 1.5);
+
+      if (isClose) {
+        const dp = document.createElement('div');
+        dp.className = 'dramatic-pause'; dp.id = 'dp';
+        dp.textContent = `Match ${i + 1} — Everything on the line…`;
+        document.getElementById('sec-sun').prepend(dp);
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+        await delay(2800);
+        document.getElementById('dp')?.remove();
+      } else {
+        await delay(msDelay);
+      }
+
+      addAndTick(m.result);
+      const id = 'row-' + (++rowIdx);
+      const tiredTag      = '<span style="font-size:10px;color:var(--halve);opacity:.7">(tired)</span>';
+      const fatiguedNote  = m.fatigued    ? ' ' + tiredTag : '';
+      const oppFatiguedNote = m.oppFatigued ? ' ' + tiredTag : '';
+      document.getElementById('sec-sun').insertAdjacentHTML('afterbegin', `
+        <div class="match-row" id="${id}">
+          <span class="match-num">${i + 1}.</span>
+          <div class="match-players">${m.myPlayers[0]}${fatiguedNote} <span style="color:var(--text-dim)">vs</span> ${m.oppPlayers[0]}${oppFatiguedNote}</div>
+          <div class="match-result ${rClass(m.result)}">${rLabel(m.result)}</div>
+        </div>`);
+      await delay(40);
+      document.getElementById(id)?.classList.add('revealed');
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+
+    showBadge('sbadge-sun');
+    await delay(1000);
+    showFinalBanner(r, uPts, aPts);
+  }
+
+  function showFinalBanner(r, uPts, aPts) {
+    const body    = document.getElementById('rbody');
+    const oppSide = opp(G.side);
+    const w       = r.winner;
+
+    let bClass, bTitle, bSub;
+    if (w === 'user') {
+      bClass = 'banner-win';  bTitle = 'The Cup is Yours!';
+      bSub   = `${G.side} wins ${r.finalScore.user}–${r.finalScore.ai}`;
+    } else if (w === 'ai') {
+      bClass = 'banner-loss'; bTitle = 'Defeated';
+      bSub   = `${oppSide} wins ${r.finalScore.ai}–${r.finalScore.user}`;
+    } else {
+      bClass = 'banner-tie';  bTitle = 'The Cup is Shared';
+      bSub   = `${r.finalScore.user}–${r.finalScore.ai} — Holders retain the Ryder Cup`;
+    }
+
+    const allMy  = G.picks.filter(Boolean);
+    const allAI  = G.aiPicks.filter(Boolean);
+    const bestMy = allMy.reduce((b, p) => compositeScore(p) > compositeScore(b) ? p : b, allMy[0]);
+    const bestAI = allAI.reduce((b, p) => compositeScore(p) > compositeScore(b) ? p : b, allAI[0]);
+
+    const sessions = [r.sessions.fridayAM, r.sessions.fridayPM, r.sessions.saturdayAM, r.sessions.saturdayPM];
+    const sessWins = sessions.filter(s => s.filter(m=>m.result==='win').length > s.filter(m=>m.result==='loss').length).length;
+    const summary  = w === 'user'
+      ? `Won ${sessWins} of 4 team sessions at ${G.venue.name}`
+      : w === 'ai'
+      ? `Hard fought at ${G.venue.name} — fell short on the day`
+      : `A dramatic tie at ${G.venue.name} — the Cup is shared`;
+
+    const shareText = `${G.side} ${r.finalScore.user} — ${oppSide} ${r.finalScore.ai} | ${G.venue.name} | Captain: ${G.captain?.name} | MVP: ${bestMy?.name} | ${summary} #Fourballs`;
+
+    body.insertAdjacentHTML('afterbegin', `
+      <div class="result-banner ${bClass} fade-in">
+        <div class="banner-title">${bTitle}</div>
+        <div class="banner-sub">${bSub}</div>
+      </div>
+      <div class="share-card fade-in">
+        <h3>Match Summary</h3>
+        <p><strong>Final Score:</strong> ${G.side} ${r.finalScore.user} — ${oppSide} ${r.finalScore.ai}</p>
+        <p><strong>Venue:</strong> ${G.venue.name}</p>
+        <p><strong>Your Captain:</strong> ${G.captain?.name || '—'}</p>
+        <p><strong>Your Star:</strong> ${bestMy?.name} (${bestMy?.year})</p>
+        <p><strong>Their Star:</strong> ${bestAI?.name} (${bestAI?.year})</p>
+        <p style="color:var(--text-muted);font-style:italic;margin-top:6px">${summary}</p>
+        <div class="share-btns">
+          <button class="btn btn-outline" id="copy-btn">Copy Result</button>
+          <button class="btn btn-outline" id="share-btn" style="display:none">Share</button>
+          <button class="btn btn-red" id="newgame-btn">New Game</button>
+        </div>
+      </div>`);
+
+    document.getElementById('copy-btn').addEventListener('click', () => {
+      navigator.clipboard.writeText(shareText)
+        .then(() => { document.getElementById('copy-btn').textContent = 'Copied!'; })
+        .catch(() => { prompt('Copy this:', shareText); });
+    });
+
+    if (navigator.share) {
+      const sb = document.getElementById('share-btn');
+      sb.style.display = '';
+      sb.addEventListener('click', () => navigator.share({ title: 'Fourballs', text: shareText }).catch(()=>{}));
+    }
+
+    document.getElementById('newgame-btn').addEventListener('click', () => {
+      localStorage.removeItem(STORAGE_KEY);
+      G = initState();
+      save();
+      render();
+    });
+  }
+
+  // ─────────────────────────────────────────────────────────────────────────────
+  // INIT
+  // ─────────────────────────────────────────────────────────────────────────────
+  async function init() {
+    try {
+      const [venues, captains, players] = await Promise.all([
+        fetch('data/venues.json').then(r => r.json()),
+        fetch('data/captains.json').then(r => r.json()),
+        fetch('data/players.json').then(r => r.json()),
+      ]);
+      VENUES   = venues;
+      CAPTAINS = captains;
+      PLAYERS  = players;
+    } catch(err) {
+      document.getElementById('app').innerHTML = `
+        <div class="center-screen">
+          <h2>Open with a local web server</h2>
+          <p>This game loads data files that require a local server — it cannot run directly from the filesystem.</p>
+          <p style="margin-top:10px;">In VS Code, right-click <code>index.html</code> → <strong>Open with Live Server</strong>.</p>
+          <p style="margin-top:6px;">Or run: <code>npx serve .</code> in this folder.</p>
+          <p style="margin-top:10px;font-size:12px;color:var(--text-dim)">${err.message}</p>
+        </div>`;
+      return;
+    }
+
+    const saved = loadSaved();
+    if (saved && saved.phase !== 'landing') {
+      G = saved;
+    } else {
+      G = initState();
+      save();
+    }
+
+    render();
+  }
+
+  init();
+  </script>
+</body>
+</html>

@@ -1,0 +1,7 @@
+.claude/
+scripts/
+node_modules/
+PROMPT-PART1.md
+PROMPT-PART2.md
+MEMORY.md
+*.jsonl

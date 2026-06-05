@@ -1,0 +1,282 @@
+[
+  {
+    "id": "azinger_2008",
+    "name": "Paul Azinger",
+    "nationality": "USA",
+    "year_captained": 2008,
+    "bonus": {
+      "foursomes_boost": 7,
+      "fourball_boost": 3,
+      "singles_boost": 2,
+      "chemistry_multiplier": 1.12
+    },
+    "description": "Pod system pioneer. Built complementary pairings with surgical precision. Your foursomes chemistry scores get a significant boost.",
+    "flavor_text": "Azinger's 2008 Valhalla team is the gold standard of USA captaincy."
+  },
+  {
+    "id": "stricker_2021",
+    "name": "Steve Stricker",
+    "nationality": "USA",
+    "year_captained": 2021,
+    "bonus": {
+      "foursomes_boost": 4,
+      "fourball_boost": 4,
+      "singles_boost": 4,
+      "chemistry_multiplier": 1.07
+    },
+    "description": "Data-driven and balanced. No single format dominates — every session gets a lift. Best when your roster is well-rounded.",
+    "flavor_text": "Stricker's 2021 team won 19-9. Consistent excellence from wire to wire."
+  },
+  {
+    "id": "love_2012",
+    "name": "Davis Love III",
+    "nationality": "USA",
+    "year_captained": 2012,
+    "bonus": {
+      "foursomes_boost": 2,
+      "fourball_boost": 2,
+      "singles_boost": 6,
+      "chemistry_multiplier": 1.04
+    },
+    "description": "Veteran leadership and belief. His teams fight hardest on Sunday. Big singles boost when your back is against the wall.",
+    "flavor_text": "Led the USA comeback charge at Medinah. The 2012 team nearly pulled off the miracle."
+  },
+  {
+    "id": "love_2016",
+    "name": "Davis Love III",
+    "nationality": "USA",
+    "year_captained": 2016,
+    "bonus": {
+      "foursomes_boost": 3,
+      "fourball_boost": 4,
+      "singles_boost": 5,
+      "chemistry_multiplier": 1.05
+    },
+    "description": "Second-time captain with lessons learned. More balanced approach, still relies on Sunday singles to close the deal.",
+    "flavor_text": "Hazeltine 2016. Patrick Reed vs Rory McIlroy. USA won 17-11 in dominant fashion."
+  },
+  {
+    "id": "furyk_2018",
+    "name": "Jim Furyk",
+    "nationality": "USA",
+    "year_captained": 2018,
+    "bonus": {
+      "foursomes_boost": 3,
+      "fourball_boost": 3,
+      "singles_boost": 4,
+      "chemistry_multiplier": 1.06
+    },
+    "description": "Steady, process-focused, pressure-resistant. Your team's composure is rewarded with a consistent boost across all formats.",
+    "flavor_text": "The 2018 team fell short at Le Golf National but was never outclassed in spirit."
+  },
+  {
+    "id": "zjohnson_2023",
+    "name": "Zach Johnson",
+    "nationality": "USA",
+    "year_captained": 2023,
+    "bonus": {
+      "foursomes_boost": 2,
+      "fourball_boost": 6,
+      "singles_boost": 3,
+      "chemistry_multiplier": 1.09
+    },
+    "description": "Faith and composure under pressure. Fourball specialist — his teams thrive in the aggressive, go-for-broke format.",
+    "flavor_text": "Rome 2023. The wildcard selections defined his captaincy — high chemistry pairings key."
+  },
+  {
+    "id": "sutton_2004",
+    "name": "Hal Sutton",
+    "nationality": "USA",
+    "year_captained": 2004,
+    "bonus": {
+      "foursomes_boost": 7,
+      "fourball_boost": 2,
+      "singles_boost": 2,
+      "chemistry_multiplier": 0.88
+    },
+    "description": "Bold pairings, high risk-reward. Famous for pairing Tiger and Phil together. Massive foursomes upside — but chemistry backfires can hurt.",
+    "flavor_text": "Oakland Hills 2004 was a cautionary tale. Bold moves, catastrophic result. High variance captain."
+  },
+  {
+    "id": "lehman_2006",
+    "name": "Tom Lehman",
+    "nationality": "USA",
+    "year_captained": 2006,
+    "bonus": {
+      "foursomes_boost": 2,
+      "fourball_boost": 6,
+      "singles_boost": 3,
+      "chemistry_multiplier": 1.07
+    },
+    "description": "Motivator and fourball specialist. His teams light up in the aggressive format. Great when your roster is full of birdie-hunters.",
+    "flavor_text": "The 2006 team lost at The K Club but the fourball sessions were electric."
+  },
+  {
+    "id": "ballesteros_1997",
+    "name": "Seve Ballesteros",
+    "nationality": "EUR",
+    "year_captained": 1997,
+    "bonus": {
+      "foursomes_boost": 4,
+      "fourball_boost": 7,
+      "singles_boost": 2,
+      "chemistry_multiplier": 1.15
+    },
+    "description": "Pure fire. Maximum chemistry multiplier. The emotional engine of European golf. His fourball teams play inspired, creative, go-for-everything golf.",
+    "flavor_text": "Seve at Valderrama — fists pumping, crowd roaring. The most electric captain in Ryder Cup history."
+  },
+  {
+    "id": "torrance_2002",
+    "name": "Sam Torrance",
+    "nationality": "EUR",
+    "year_captained": 2002,
+    "bonus": {
+      "foursomes_boost": 3,
+      "fourball_boost": 3,
+      "singles_boost": 5,
+      "chemistry_multiplier": 1.07
+    },
+    "description": "Builder of belief. His teams bond deeply and fight on Sunday. Consistent boosts across the board with emphasis on singles grit.",
+    "flavor_text": "The Belfry 2002. Torrance masterminded a patient, clinical European win."
+  },
+  {
+    "id": "langer_2004",
+    "name": "Bernhard Langer",
+    "nationality": "EUR",
+    "year_captained": 2004,
+    "bonus": {
+      "foursomes_boost": 6,
+      "fourball_boost": 4,
+      "singles_boost": 3,
+      "chemistry_multiplier": 1.1
+    },
+    "description": "Disciplined, methodical, pressure-resistant. Foursomes specialist who builds structured teams. High floor, low variance.",
+    "flavor_text": "Oakland Hills 2004. 18.5-9.5. The most dominant European win in the modern era."
+  },
+  {
+    "id": "langer_2023",
+    "name": "Bernhard Langer",
+    "nationality": "EUR",
+    "year_captained": 2023,
+    "bonus": {
+      "foursomes_boost": 5,
+      "fourball_boost": 4,
+      "singles_boost": 4,
+      "chemistry_multiplier": 1.08
+    },
+    "description": "Sage leadership returning to the big stage. More balanced than his 2004 version — experience has taught him every session matters equally.",
+    "flavor_text": "Rome 2023. Langer brought calm authority to a new generation of European stars."
+  },
+  {
+    "id": "woosnam_2006",
+    "name": "Ian Woosnam",
+    "nationality": "EUR",
+    "year_captained": 2006,
+    "bonus": {
+      "foursomes_boost": 2,
+      "fourball_boost": 7,
+      "singles_boost": 2,
+      "chemistry_multiplier": 1.08
+    },
+    "description": "Aggressive and birdie-focused. The highest fourball boost available. If your team likes to attack pins, Woosie unleashes them.",
+    "flavor_text": "The K Club 2006. Darren Clarke played through grief. Europe won 18.5-9.5."
+  },
+  {
+    "id": "faldo_2008",
+    "name": "Nick Faldo",
+    "nationality": "EUR",
+    "year_captained": 2008,
+    "bonus": {
+      "foursomes_boost": 7,
+      "fourball_boost": 2,
+      "singles_boost": 3,
+      "chemistry_multiplier": 1.08
+    },
+    "description": "Analytical foursomes specialist. Six majors, six Ryder Cups played. Structures the team sheet like a chess grandmaster.",
+    "flavor_text": "Valhalla 2008. Faldo's picks were controversial but his foursomes logic was sound."
+  },
+  {
+    "id": "montgomerie_2010",
+    "name": "Colin Montgomerie",
+    "nationality": "EUR",
+    "year_captained": 2010,
+    "bonus": {
+      "foursomes_boost": 3,
+      "fourball_boost": 3,
+      "singles_boost": 7,
+      "chemistry_multiplier": 1.05
+    },
+    "description": "Home crowd energy and singles fire. Monty was born for the Ryder Cup. His teams play Sunday like their lives depend on it.",
+    "flavor_text": "Celtic Manor 2010. Three days of rain. Graeme McDowell holed the winning putt."
+  },
+  {
+    "id": "olazabal_2012",
+    "name": "Jose Maria Olazabal",
+    "nationality": "EUR",
+    "year_captained": 2012,
+    "bonus": {
+      "foursomes_boost": 3,
+      "fourball_boost": 5,
+      "singles_boost": 6,
+      "chemistry_multiplier": 1.12
+    },
+    "description": "Heart, legacy, and Seve's spirit. Massive chemistry multiplier. His wildcard choices carry extra inspiration — the team fights for more than a trophy.",
+    "flavor_text": "The Miracle at Medinah. Olazabal invoked Seve. Europe came back from 10-6 to win."
+  },
+  {
+    "id": "mcginley_2014",
+    "name": "Paul McGinley",
+    "nationality": "EUR",
+    "year_captained": 2014,
+    "bonus": {
+      "foursomes_boost": 5,
+      "fourball_boost": 5,
+      "singles_boost": 4,
+      "chemistry_multiplier": 1.13
+    },
+    "description": "Tactical genius and master of pairing chemistry. Highest chemistry multiplier in the European pool. Your pairings will click in ways that surprise you.",
+    "flavor_text": "Gleneagles 2014. McGinley's captaincy is studied in textbooks. Europe won comfortably."
+  },
+  {
+    "id": "clarke_2016",
+    "name": "Darren Clarke",
+    "nationality": "EUR",
+    "year_captained": 2016,
+    "bonus": {
+      "foursomes_boost": 4,
+      "fourball_boost": 4,
+      "singles_boost": 4,
+      "chemistry_multiplier": 1.03
+    },
+    "description": "Gritty, experienced, and links-hardened. Balanced across all formats. No weaknesses, no fireworks — just solid, dependable Ryder Cup craft.",
+    "flavor_text": "Hazeltine 2016. Clarke's team was outgunned by USA's depth. Still fought to the end."
+  },
+  {
+    "id": "bjorn_2018",
+    "name": "Thomas Bjorn",
+    "nationality": "EUR",
+    "year_captained": 2018,
+    "bonus": {
+      "foursomes_boost": 5,
+      "fourball_boost": 5,
+      "singles_boost": 4,
+      "chemistry_multiplier": 1.1
+    },
+    "description": "Detail-oriented and analytically balanced. Built the 2018 team around precision — the right format for Le Golf National. Excellent chemistry pairing instincts.",
+    "flavor_text": "Le Golf National 2018. Molinari 5-0. Fleetwood iconic. Europe won 17.5-10.5."
+  },
+  {
+    "id": "harrington_2021",
+    "name": "Padraig Harrington",
+    "nationality": "EUR",
+    "year_captained": 2021,
+    "bonus": {
+      "foursomes_boost": 3,
+      "fourball_boost": 6,
+      "singles_boost": 2,
+      "chemistry_multiplier": 1.07
+    },
+    "description": "Experimental and fourball-heavy. Loves sending his bombers after birdies. If your team has attack dogs in fourball slots, Padraig amplifies them.",
+    "flavor_text": "Whistling Straits 2021. Harrington's team was outclassed but fourball sessions were competitive."
+  }
+]

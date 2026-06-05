@@ -207,13 +207,9 @@ function _singlesOrder(players) {
 
 // ─── Simulate full event ──────────────────────────────────────────────────────
 // myTeam / opponentTeam shape:
-//   { foursomesPairs: [[p1,p2],...×4], fourballPairs: [[p1,p2],...×4], allPlayers: [...×12] }
-// Same pairings play both AM and PM sessions for their format.
-// Players in BOTH foursomesPairs and fourballPairs take a -2% fatigue penalty in singles.
-// Returns: { sessions, finalScore, totalPoints, winner }
-// myTeam / opponentTeam shape:
-//   { foursomesAMPairs, foursomesPMPairs, fourballAMPairs, fourballPMPairs: [[p1,p2]×4], allPlayers: [×12] }
-// Each session uses its own unique set of pairs — no pair repeats between AM and PM.
+//   { fridayAMPairs, saturdayAMPairs: foursomes sessions [[p1,p2]×4]
+//     fridayPMPairs, saturdayPMPairs: fourball  sessions [[p1,p2]×4]
+//     allPlayers: [×12] }
 // Players with 3+ team match appearances are fatigued: -2%/+2% singles adjustment.
 function simulateFullEvent(myTeam, opponentTeam, venue, myCaptain, aiCaptain) {
   // Apply hero boosts to pairs — never mutate source data
@@ -224,24 +220,24 @@ function simulateFullEvent(myTeam, opponentTeam, venue, myCaptain, aiCaptain) {
     };
   }
 
-  const myFsAM = myTeam.foursomesAMPairs.map(boostPair);
-  const myFsPM = myTeam.foursomesPMPairs.map(boostPair);
-  const myFbAM = myTeam.fourballAMPairs.map(boostPair);
-  const myFbPM = myTeam.fourballPMPairs.map(boostPair);
-  const myAll  = myTeam.allPlayers.map(applyHeroBoost);
+  const myFriAM  = myTeam.fridayAMPairs.map(boostPair);   // foursomes
+  const myFriPM  = myTeam.fridayPMPairs.map(boostPair);   // fourball
+  const mySatAM  = myTeam.saturdayAMPairs.map(boostPair); // foursomes
+  const mySatPM  = myTeam.saturdayPMPairs.map(boostPair); // fourball
+  const myAll    = myTeam.allPlayers.map(applyHeroBoost);
 
-  const oppFsAM = opponentTeam.foursomesAMPairs.map(boostPair);
-  const oppFsPM = opponentTeam.foursomesPMPairs.map(boostPair);
-  const oppFbAM = opponentTeam.fourballAMPairs.map(boostPair);
-  const oppFbPM = opponentTeam.fourballPMPairs.map(boostPair);
-  const oppAll  = opponentTeam.allPlayers.map(applyHeroBoost);
+  const oppFriAM  = opponentTeam.fridayAMPairs.map(boostPair);
+  const oppFriPM  = opponentTeam.fridayPMPairs.map(boostPair);
+  const oppSatAM  = opponentTeam.saturdayAMPairs.map(boostPair);
+  const oppSatPM  = opponentTeam.saturdayPMPairs.map(boostPair);
+  const oppAll    = opponentTeam.allPlayers.map(applyHeroBoost);
 
   // Count team match appearances per player — 3+ = fatigued in singles
   function countAppearances(team) {
     const counts = {};
     const allPairs = [
-      ...team.foursomesAMPairs, ...team.foursomesPMPairs,
-      ...team.fourballAMPairs,  ...team.fourballPMPairs
+      ...team.fridayAMPairs, ...team.fridayPMPairs,
+      ...team.saturdayAMPairs, ...team.saturdayPMPairs
     ];
     for (const pair of allPairs) {
       for (const p of pair) {
@@ -250,10 +246,10 @@ function simulateFullEvent(myTeam, opponentTeam, venue, myCaptain, aiCaptain) {
     }
     return counts;
   }
-  const myAppearances   = countAppearances(myTeam);
-  const oppAppearances  = countAppearances(opponentTeam);
-  const myFatiguedIds   = new Set(Object.entries(myAppearances).filter(([, c]) => c >= 3).map(([id]) => id));
-  const oppFatiguedIds  = new Set(Object.entries(oppAppearances).filter(([, c]) => c >= 3).map(([id]) => id));
+  const myAppearances  = countAppearances(myTeam);
+  const oppAppearances = countAppearances(opponentTeam);
+  const myFatiguedIds  = new Set(Object.entries(myAppearances).filter(([, c]) => c >= 3).map(([id]) => id));
+  const oppFatiguedIds = new Set(Object.entries(oppAppearances).filter(([, c]) => c >= 3).map(([id]) => id));
 
   const mySingles  = _singlesOrder(myAll);
   const oppSingles = _singlesOrder(oppAll);
@@ -284,10 +280,11 @@ function simulateFullEvent(myTeam, opponentTeam, venue, myCaptain, aiCaptain) {
     return results;
   }
 
-  const fridayAM   = playTeamSession(myFsAM, oppFsAM, 'foursomes');
-  const fridayPM   = playTeamSession(myFsPM, oppFsPM, 'foursomes');
-  const saturdayAM = playTeamSession(myFbAM, oppFbAM, 'fourball');
-  const saturdayPM = playTeamSession(myFbPM, oppFbPM, 'fourball');
+  // Correct Ryder Cup schedule: Fri AM = foursomes, Fri PM = fourball, Sat AM = foursomes, Sat PM = fourball
+  const fridayAM   = playTeamSession(myFriAM, oppFriAM, 'foursomes');
+  const fridayPM   = playTeamSession(myFriPM, oppFriPM, 'fourball');
+  const saturdayAM = playTeamSession(mySatAM, oppSatAM, 'foursomes');
+  const saturdayPM = playTeamSession(mySatPM, oppSatPM, 'fourball');
 
   const sunday = mySingles.map((myP, i) => {
     const oppP = oppSingles[i];

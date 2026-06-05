@@ -52,13 +52,13 @@ const captain = {
 };
 
 function makeTeam(players) {
-  // AM: top 8 paired; PM: top 4 cross-paired with bottom 4 (no pair repeats within format)
-  // Players 0-3 appear in both AM and PM = 4 team matches = fatigued in singles
+  // fridayAM/saturdayAM = foursomes; fridayPM/saturdayPM = fourball
+  // Players 0-3 appear in all 4 sessions = fatigued in singles
   return {
-    foursomesAMPairs: [[players[0], players[1]], [players[2], players[3]], [players[4], players[5]], [players[6], players[7]]],
-    foursomesPMPairs: [[players[0], players[8]], [players[1], players[9]], [players[2], players[10]], [players[3], players[11]]],
-    fourballAMPairs:  [[players[0], players[1]], [players[2], players[3]], [players[4], players[5]], [players[6], players[7]]],
-    fourballPMPairs:  [[players[0], players[8]], [players[1], players[9]], [players[2], players[10]], [players[3], players[11]]],
+    fridayAMPairs:   [[players[0], players[1]], [players[2], players[3]], [players[4], players[5]], [players[6], players[7]]],
+    saturdayAMPairs: [[players[0], players[8]], [players[1], players[9]], [players[2], players[10]], [players[3], players[11]]],
+    fridayPMPairs:   [[players[0], players[1]], [players[2], players[3]], [players[4], players[5]], [players[6], players[7]]],
+    saturdayPMPairs: [[players[0], players[8]], [players[1], players[9]], [players[2], players[10]], [players[3], players[11]]],
     allPlayers: players
   };
 }

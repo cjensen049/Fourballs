@@ -267,11 +267,34 @@ function generateFoursomePairings(players) { return _makePairings(players); }
 function generateFourballPairings(players)  { return _makePairings(players); }
 
 // ─── Singles order ────────────────────────────────────────────────────────────
-// Sort by composite score, distribute: best in slots 1, 6, 12 (captain logic)
-function _singlesOrder(players) {
+// Captain perk determines singles deployment strategy.
+// slots[i] = 0-indexed position assigned to the i-th ranked player.
+function _hasPerk(captain, type) {
+  return !!(captain && captain.perks && captain.perks.some(p => p.type === type));
+}
+
+function singlesOrder(players, captain = null) {
   const sorted = [...players].sort((a, b) => compositeScore(b) - compositeScore(a));
   const order  = new Array(12);
-  const slots  = [0, 5, 11, 1, 6, 10, 2, 7, 9, 3, 4, 8];
+
+  let slots;
+  if (_hasPerk(captain, 'rallying_cry')) {
+    // Back-load: best 4 close it out — pairs with rallying_cry +7% when trailing
+    slots = [11, 10, 9, 8, 0, 1, 2, 3, 4, 5, 6, 7];
+  } else if (_hasPerk(captain, 'home_fortress')) {
+    // Top-load: front the best players and build early momentum
+    slots = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11];
+  } else if (_hasPerk(captain, 'pressure_player')) {
+    // Anchor: best player closes at 12, next two provide bookends at 2 and 7
+    slots = [11, 1, 6, 0, 2, 3, 4, 5, 7, 8, 9, 10];
+  } else if (_hasPerk(captain, 'flamboyant')) {
+    // Mid-heavy: best 3 cluster in positions 4, 6, 8 — dominate the critical middle
+    slots = [5, 3, 7, 0, 1, 2, 4, 6, 8, 9, 10, 11];
+  } else {
+    // Default stagger: best→2nd, 2nd best→6th, 3rd→11th, fill the rest
+    slots = [1, 5, 10, 0, 2, 3, 4, 6, 7, 8, 9, 11];
+  }
+
   sorted.forEach((p, i) => { order[slots[i]] = p; });
   return order;
 }
@@ -319,8 +342,8 @@ function simulateFullEvent(myTeam, opponentTeam, venue, myCaptain, aiCaptain) {
   const myFatiguedIds  = new Set(Object.entries(myAppearances).filter(([, c]) => c >= 3).map(([id]) => id));
   const oppFatiguedIds = new Set(Object.entries(oppAppearances).filter(([, c]) => c >= 3).map(([id]) => id));
 
-  const mySingles  = _singlesOrder(myAll);
-  const oppSingles = _singlesOrder(oppAll);
+  const mySingles  = singlesOrder(myAll,  myCaptain);
+  const oppSingles = singlesOrder(oppAll, aiCaptain);
 
   const scores = { user: 0, ai: 0 };
   let userSessionsWon = 0, aiSessionsWon = 0;
@@ -451,6 +474,7 @@ if (typeof module !== 'undefined' && module.exports) {
     captainPerkBoost,
     calculateMatchProbability,
     simulateMatch,
+    singlesOrder,
     generateFoursomePairings,
     generateFourballPairings,
     simulateFullEvent

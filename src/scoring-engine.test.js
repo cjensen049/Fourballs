@@ -8,6 +8,7 @@ const {
   captainPerkBoost,
   calculateMatchProbability,
   simulateMatch,
+  singlesOrder,
   generateFoursomePairings,
   generateFourballPairings,
   simulateFullEvent
@@ -499,6 +500,69 @@ console.log('\nchemistry bond boost — match probability');
     assert(`bond combo ${i}: win <= 80`, prob.win <= 80);
     assert(`bond combo ${i}: loss >= 5`,  prob.loss >= 5);
   }
+}
+
+console.log('\nsinglesOrder — captain strategy');
+{
+  // 12 players with clearly ranked composites
+  const squad = Array.from({ length: 12 }, (_, i) =>
+    makeTestPlayer(i < 3 ? 'platinum' : i < 6 ? 'gold' : 'silver', {
+      id: `sq${i}`, name: `Squad${i}`,
+      stats: { driving_distance: 90-i*3, driving_accuracy: 85-i*2, greens_in_regulation: 88-i*2, scrambling: 80-i*2, birdie_rate: 85-i*3, pressure_index: 90-i*3 }
+    })
+  );
+
+  function posOf(order, id) { return order.findIndex(p => p.id === id) + 1; } // 1-indexed
+
+  const rallyingCap = { id:'rc', tier:'standard', chemistry_mult:1.0, perks:[{ type:'rallying_cry', label:'R', desc:'d' }], special:null };
+  const fortressCap = { id:'hf', tier:'standard', chemistry_mult:1.0, perks:[{ type:'home_fortress', label:'H', desc:'d' }], special:null };
+  const pressureCap = { id:'pp', tier:'standard', chemistry_mult:1.0, perks:[{ type:'pressure_player', label:'P', desc:'d' }], special:null };
+  const flambCap    = { id:'fl', tier:'standard', chemistry_mult:1.0, perks:[{ type:'flamboyant', label:'F', desc:'d' }], special:null };
+
+  // Default stagger: best player goes 2nd
+  const defOrder = singlesOrder(squad, null);
+  assert('default: best player in slot 2',  posOf(defOrder, 'sq0') === 2);
+  assert('default: 2nd best in slot 6',     posOf(defOrder, 'sq1') === 6);
+  assert('default: 3rd best in slot 11',    posOf(defOrder, 'sq2') === 11);
+  assert('default: returns 12 players',     defOrder.length === 12);
+  assert('default: no duplicate slots',     new Set(defOrder.map(p => p.id)).size === 12);
+
+  // Back-load (rallying_cry): best 4 in last 4 slots
+  const backOrder = singlesOrder(squad, rallyingCap);
+  assert('back-load: best player in slot 12', posOf(backOrder, 'sq0') === 12);
+  assert('back-load: 2nd best in slot 11',    posOf(backOrder, 'sq1') === 11);
+  assert('back-load: 3rd best in slot 10',    posOf(backOrder, 'sq2') === 10);
+  assert('back-load: 4th best in slot 9',     posOf(backOrder, 'sq3') === 9);
+  assert('back-load: no duplicates',          new Set(backOrder.map(p => p.id)).size === 12);
+
+  // Top-load (home_fortress): best 4 lead off
+  const topOrder = singlesOrder(squad, fortressCap);
+  assert('top-load: best player in slot 1',   posOf(topOrder, 'sq0') === 1);
+  assert('top-load: 2nd best in slot 2',      posOf(topOrder, 'sq1') === 2);
+  assert('top-load: 3rd best in slot 3',      posOf(topOrder, 'sq2') === 3);
+  assert('top-load: 4th best in slot 4',      posOf(topOrder, 'sq3') === 4);
+  assert('top-load: no duplicates',           new Set(topOrder.map(p => p.id)).size === 12);
+
+  // Anchor (pressure_player): best player closes at 12
+  const anchorOrder = singlesOrder(squad, pressureCap);
+  assert('anchor: best player in slot 12',    posOf(anchorOrder, 'sq0') === 12);
+  assert('anchor: 2nd best in slot 2',        posOf(anchorOrder, 'sq1') === 2);
+  assert('anchor: 3rd best in slot 7',        posOf(anchorOrder, 'sq2') === 7);
+  assert('anchor: no duplicates',             new Set(anchorOrder.map(p => p.id)).size === 12);
+
+  // Mid-heavy (flamboyant): best 3 in positions 4, 6, 8
+  const midOrder = singlesOrder(squad, flambCap);
+  assert('mid-heavy: best player in slot 6',  posOf(midOrder, 'sq0') === 6);
+  assert('mid-heavy: 2nd best in slot 4',     posOf(midOrder, 'sq1') === 4);
+  assert('mid-heavy: 3rd best in slot 8',     posOf(midOrder, 'sq2') === 8);
+  assert('mid-heavy: no duplicates',          new Set(midOrder.map(p => p.id)).size === 12);
+
+  // Multi-perk: rallying_cry wins over home_fortress (priority check)
+  const multiCap = { id:'mc', tier:'hero', chemistry_mult:1.0,
+    perks:[{ type:'home_fortress', label:'H', desc:'d' }, { type:'rallying_cry', label:'R', desc:'d' }], special:null };
+  const multiOrder = singlesOrder(squad, multiCap);
+  assert('multi-perk: rallying_cry takes priority over home_fortress',
+    posOf(multiOrder, 'sq0') === 12);
 }
 
 // ─── Summary ──────────────────────────────────────────────────────────────────

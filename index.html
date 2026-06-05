@@ -493,29 +493,36 @@
   function getTierMax(tier) { return TIER_MAX[tier] || 2; }
 
   // Step 2: assign total team appearances per player, summing to exactly 32.
-  // Returns null if roster capacity < 32.
+  // If standard caps are short, relaxes tier limits in order:
+  //   1. silver → 3, 2. bronze → 3, 3. gold → 4 (last resort).
   function _assignMatchCounts(picks) {
-    const cap = picks.reduce((s, p) => s + getTierMax(p.tier), 0);
-    if (cap < 32) return null;
+    const effMax = {};
+    picks.forEach(p => { effMax[p.id] = getTierMax(p.tier); });
+
+    const cap = () => picks.reduce((s, p) => s + effMax[p.id], 0);
+    if (cap() < 32) picks.forEach(p => { if (p.tier === 'silver')                         effMax[p.id] = 3; });
+    if (cap() < 32) picks.forEach(p => { if (p.tier === 'bronze')                         effMax[p.id] = 3; });
+    if (cap() < 32) picks.forEach(p => { if (p.tier === 'gold')                           effMax[p.id] = 4; });
+    if (cap() < 32) picks.forEach(p => { if (p.tier === 'hero' || p.tier === 'silver')    effMax[p.id] = 4; });
 
     const counts = {};
-    picks.forEach(p => { counts[p.id] = Math.min(2, getTierMax(p.tier)); });
+    picks.forEach(p => { counts[p.id] = Math.min(2, effMax[p.id]); });
     let need = 32 - picks.reduce((s, p) => s + counts[p.id], 0);
 
-    const byMax = [...picks].sort((a, b) => getTierMax(b.tier) - getTierMax(a.tier));
+    const byMax = [...picks].sort((a, b) => effMax[b.id] - effMax[a.id]);
     for (const p of byMax) {
       if (need <= 0) break;
-      const add = Math.min(getTierMax(p.tier) - counts[p.id], need);
+      const add = Math.min(effMax[p.id] - counts[p.id], need);
       counts[p.id] += add;
       need -= add;
     }
-    return need === 0 ? counts : null;
+    return { counts, effMax };
   }
 
   // Split each player's count between foursomes (fs) and fourball (fb).
   // Extra match goes to the format where their format_fit is higher.
   // Balance loop corrects sums to exactly 16 each.
-  function _splitFormatCounts(picks, matchCounts) {
+  function _splitFormatCounts(picks, matchCounts, effMax) {
     const fs = {}, fb = {};
     picks.forEach(p => {
       const tot  = matchCounts[p.id];
@@ -533,7 +540,7 @@
       for (const p of picks) {
         if (fsT === 16) break;
         if (!cond(p)) continue;
-        const ok = from[p.id] > 0 && to[p.id] < getTierMax(p.tier);
+        const ok = from[p.id] > 0 && to[p.id] < effMax[p.id];
         if (ok) { from[p.id]--; to[p.id]++; fsT += (from === fs ? -1 : 1); }
       }
     }
@@ -602,10 +609,9 @@
 
   // Compute one complete pairing option using a given seed.
   function _computeOneOption(picks, seed) {
-    const counts = _assignMatchCounts(picks);
-    if (!counts) return null;
+    const { counts, effMax } = _assignMatchCounts(picks);
 
-    const { fs, fb } = _splitFormatCounts(picks, counts);
+    const { fs, fb } = _splitFormatCounts(picks, counts, effMax);
     const [fridayAM, saturdayAM] = _generateFormatSessions(picks, fs, 'foursomes', seed);
     const [fridayPM, saturdayPM] = _generateFormatSessions(picks, fb, 'fourball',  seed);
 

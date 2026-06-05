@@ -169,9 +169,10 @@
     .chem-pair { display: flex; align-items: center; gap: 6px; padding: 4px 8px; background: var(--surface2); border-radius: 4px; margin-bottom: 3px; font-size: 11px; }
     .chem-pair .cp-names { flex: 1; }
     .chem-dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
-    .chem-strong { background: var(--win); }
-    .chem-neutral { background: #4a4a4a; }
-    .chem-weak    { background: #e6a817; }
+    .chem-strong  { background: var(--win); }
+    .chem-neutral { background: #eab308; }
+    .chem-weak    { background: #ef4444; }
+    .card-chem-dot { position: absolute; top: 7px; left: 7px; width: 9px; height: 9px; border-radius: 50%; border: 1px solid rgba(0,0,0,0.25); }
     .captain-summary { background: var(--surface2); border: 1px solid var(--border); border-radius: var(--radius); padding: 10px 12px; margin-top: 10px; font-size: 12px; }
     .simulate-bar { padding: 16px 16px 32px; text-align: center; border-top: 1px solid var(--border); }
 
@@ -657,7 +658,7 @@
   function tcClass(tier) { return `tc-${tier || 'bronze'}`; }
   function isHero(p)     { return p.tier === 'hero'; }
   function delay(ms)     { return new Promise(r => setTimeout(r, ms)); }
-  function chemClass(s)  { return s >= 75 ? 'chem-strong' : s >= 52 ? 'chem-neutral' : 'chem-weak'; }
+  function chemClass(s)  { return s >= 72 ? 'chem-strong' : s >= 55 ? 'chem-neutral' : 'chem-weak'; }
   function rClass(r)     { return r === 'win' ? 'r-win' : r === 'loss' ? 'r-loss' : 'r-half'; }
   function rLabel(r)     { return r === 'win' ? 'W' : r === 'loss' ? 'L' : 'H'; }
 
@@ -853,12 +854,13 @@
   // ─────────────────────────────────────────────────────────────────────────────
   // HTML BUILDERS
   // ─────────────────────────────────────────────────────────────────────────────
-  function playerCardHTML(p, clickable = true, extraClass = '') {
+  function playerCardHTML(p, clickable = true, extraClass = '', chemDotHTML = '') {
     const hero  = isHero(p) ? 'hero-card' : '';
     const da    = clickable ? `data-pid="${p.id}"` : '';
     const bonus = heroBonusLabel(p);
     return `<div class="player-card ${tcClass(p.tier)} ${hero} ${extraClass}" ${tcStyle(p.tier)} ${da}>
       <div class="card-tier-badge"></div>
+      ${chemDotHTML}
       <div class="card-name">${p.name}</div>
       <div class="card-year">${p.year}</div>
       ${bonus ? `<div class="card-hero-bonus">${bonus}</div>` : ''}
@@ -1112,7 +1114,18 @@
         <div class="pick-area">
           <div class="pick-round-label">Round ${round} of 12 — Choose</div>
           <div class="pick-cards-row">
-            ${cards.map(p => playerCardHTML(p, true)).join('')}
+            ${cards.map(p => {
+              let chemDotHTML = '';
+              if (G.picks.length >= 2) {
+                const scores = G.picks.flatMap(ep => [
+                  calculatePairingChemistry(p, ep, 'foursomes'),
+                  calculatePairingChemistry(p, ep, 'fourball')
+                ]);
+                const avg = Math.round(scores.reduce((a, b) => a + b, 0) / scores.length);
+                chemDotHTML = `<div class="card-chem-dot ${chemClass(avg)}" title="Avg team chemistry: ${avg}"></div>`;
+              }
+              return playerCardHTML(p, true, '', chemDotHTML);
+            }).join('')}
           </div>
         </div>
       </div>`;

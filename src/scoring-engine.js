@@ -57,26 +57,30 @@ function hasSharedVenueConnection(p1, p2, venue) {
 }
 
 // ─── Pairing chemistry ────────────────────────────────────────────────────────
-// Returns 0–100.
-// Foursomes: rewards accuracy, complementary power/accuracy, similar consistency.
-// Fourball:  rewards at least one highly aggressive birdie-hunter.
-// Both: +5 bonus when both players have 3+ Ryder Cup appearances.
+// Returns 0–100. Designed to spread ~40–90 so pairing decisions actually matter.
+// Foursomes: weakest-link accuracy floor, consistency mismatch penalty, power bonus.
+// Fourball:  avg aggression (not max) so a defensive player genuinely hurts the pair.
+// Both: +5 bonus when both players have 3+ Ryder Cup appearances (year-filtered).
 function calculatePairingChemistry(p1, p2, format, venue = null) {
   const st1 = p1.style_tags, st2 = p2.style_tags;
   const s1  = p1.stats,      s2  = p2.stats;
 
   let base;
   if (format === 'foursomes') {
-    const accuracy    = (st1.accuracy + st2.accuracy) / 2;
-    const complement  = (Math.max(st1.power, st2.power) + Math.max(st1.accuracy, st2.accuracy)) / 2;
-    const consistency = Math.max(0, 100 - Math.abs(st1.consistency - st2.consistency));
-    const pressure    = (s1.pressure_index + s2.pressure_index) / 2;
-    base = accuracy * 0.30 + complement * 0.30 + consistency * 0.20 + pressure * 0.20;
+    // Weakest-link accuracy: alternating shots punish the inaccurate player hard
+    const accuracyFloor = Math.min(st1.accuracy, st2.accuracy);
+    // Consistency gap > 5 is a liability — styles must mesh
+    const conPenalty    = Math.max(0, Math.abs(st1.consistency - st2.consistency) - 5) * 2;
+    // Power bonus: beneficial but not defining
+    const powerBonus    = Math.max(0, ((st1.power + st2.power) / 2 - 65) * 0.3);
+    const pressure      = (s1.pressure_index + s2.pressure_index) / 2;
+    base = accuracyFloor * 0.40 + pressure * 0.25 + powerBonus - conPenalty * 0.30 + 15;
   } else if (format === 'fourball') {
-    const maxAgg  = Math.max(st1.aggression, st2.aggression);
+    // Both players hunt independently — avg aggression matters, not just the peak
+    const avgAgg  = (st1.aggression + st2.aggression) / 2;
     const avgBird = (s1.birdie_rate + s2.birdie_rate) / 2;
     const pressure = (s1.pressure_index + s2.pressure_index) / 2;
-    base = maxAgg * 0.45 + avgBird * 0.35 + pressure * 0.20;
+    base = avgAgg * 0.40 + avgBird * 0.35 + pressure * 0.25;
   } else {
     base = (s1.pressure_index + s2.pressure_index) / 2;
   }
@@ -147,7 +151,7 @@ function calculateMatchProbability(myPlayer, oppPlayer, venue, format, captain, 
     const aiCaptainMult  = (aiCaptain && aiCaptain.chemistry_mult) || (aiCaptain && aiCaptain.bonus && aiCaptain.bonus.chemistry_multiplier) || 1;
     const myChem  = myPartner  ? Math.min(100, calculatePairingChemistry(myPlayer, myPartner, format, venue)  * myCaptainMult)  : 50;
     const oppChem = oppPartner ? Math.min(100, calculatePairingChemistry(oppPlayer, oppPartner, format, venue) * aiCaptainMult)  : 50;
-    totalSwing += Math.min(6, Math.max(-6, (myChem - oppChem) / 100 * 6));
+    totalSwing += Math.min(10, Math.max(-10, (myChem - oppChem) / 100 * 10));
 
     // Bond/venue bonuses applied directly — bypasses chemistry scale cap but flows through ±30 total cap
     const myBondSwing  = Math.min(14,

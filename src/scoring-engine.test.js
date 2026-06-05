@@ -473,6 +473,79 @@ console.log('\ncalculatePairingChemistry — RC experience bonus');
   assert('optional venue param does not change chemistry score', withVenue === withoutVenue);
 }
 
+console.log('\ncalculatePairingChemistry — formula spread and penalties');
+{
+  // Foursomes accuracy floor: matched pair (both accurate) vs mismatched pair (one low-accuracy)
+  const highAccPlayer = makeTestPlayer('gold', {
+    id: 'ha1', name: 'HighAcc1',
+    style_tags: { power:72, accuracy:88, aggression:65, consistency:80, match_play_affinity:75 },
+    stats: { driving_distance:70, driving_accuracy:88, greens_in_regulation:85, scrambling:78, birdie_rate:72, pressure_index:78 }
+  });
+  const lowAccPlayer = makeTestPlayer('bronze', {
+    id: 'la1', name: 'LowAcc1',
+    style_tags: { power:72, accuracy:52, aggression:65, consistency:80, match_play_affinity:65 },
+    stats: { driving_distance:70, driving_accuracy:52, greens_in_regulation:55, scrambling:65, birdie_rate:60, pressure_index:68 }
+  });
+
+  const mismatchFsChem = calculatePairingChemistry(highAccPlayer, lowAccPlayer, 'foursomes');
+  const matchedFsChem  = calculatePairingChemistry(highAccPlayer, highAccPlayer, 'foursomes');
+  assert('foursomes: matched accuracy pair scores higher than mismatched', matchedFsChem > mismatchFsChem);
+  assert('foursomes: accuracy floor creates real spread (gap > 10)',        matchedFsChem - mismatchFsChem > 10);
+  assert('foursomes: platinum+bronze mismatched pair does not exceed 75',  mismatchFsChem <= 75);
+
+  // Foursomes consistency mismatch penalty
+  const inconsistentPlayer = makeTestPlayer('gold', {
+    id: 'ic1', name: 'Inconsistent1',
+    style_tags: { power:72, accuracy:80, aggression:65, consistency:52, match_play_affinity:70 },
+    stats: { driving_distance:72, driving_accuracy:80, greens_in_regulation:78, scrambling:72, birdie_rate:72, pressure_index:75 }
+  });
+  const consistentPlayer = makeTestPlayer('gold', {
+    id: 'co1', name: 'Consistent1',
+    style_tags: { power:72, accuracy:80, aggression:65, consistency:85, match_play_affinity:76 },
+    stats: { driving_distance:72, driving_accuracy:80, greens_in_regulation:78, scrambling:72, birdie_rate:72, pressure_index:75 }
+  });
+  const partner85Con = makeTestPlayer('gold', {
+    id: 'p85', name: 'Partner85',
+    style_tags: { power:72, accuracy:80, aggression:65, consistency:85, match_play_affinity:76 },
+    stats: { driving_distance:72, driving_accuracy:80, greens_in_regulation:78, scrambling:72, birdie_rate:72, pressure_index:75 }
+  });
+
+  const conMismatch = calculatePairingChemistry(inconsistentPlayer, partner85Con, 'foursomes');
+  const conMatch    = calculatePairingChemistry(consistentPlayer,   partner85Con, 'foursomes');
+  assert('foursomes: consistency mismatch lowers chemistry vs matched pair', conMismatch < conMatch);
+  assert('foursomes: consistency mismatch penalty applies meaningfully (gap > 5)', conMatch - conMismatch > 5);
+
+  // Fourball: avg aggression (not max) — defensive player genuinely hurts the pair
+  const aggressiveFbPlayer = makeTestPlayer('gold', {
+    id: 'aggfb1', name: 'AggFB1',
+    style_tags: { power:75, accuracy:72, aggression:85, consistency:72, match_play_affinity:78 },
+    stats: { driving_distance:78, driving_accuracy:72, greens_in_regulation:75, scrambling:72, birdie_rate:82, pressure_index:78 }
+  });
+  const defensiveFbPlayer = makeTestPlayer('gold', {
+    id: 'deffb1', name: 'DefFB1',
+    style_tags: { power:72, accuracy:80, aggression:42, consistency:88, match_play_affinity:72 },
+    stats: { driving_distance:70, driving_accuracy:80, greens_in_regulation:78, scrambling:80, birdie_rate:58, pressure_index:72 }
+  });
+  const aggressiveFbPartner = makeTestPlayer('gold', {
+    id: 'aggfb2', name: 'AggFB2',
+    style_tags: { power:72, accuracy:70, aggression:82, consistency:68, match_play_affinity:76 },
+    stats: { driving_distance:75, driving_accuracy:70, greens_in_regulation:72, scrambling:70, birdie_rate:80, pressure_index:76 }
+  });
+
+  const twoAggFb = calculatePairingChemistry(aggressiveFbPlayer, aggressiveFbPartner, 'fourball');
+  const mixedFb  = calculatePairingChemistry(aggressiveFbPlayer, defensiveFbPlayer,   'fourball');
+  assert('fourball: two aggressive players outscore aggressive+defensive pair', twoAggFb > mixedFb);
+  assert('fourball: avg aggression creates real spread (gap > 8)',               twoAggFb - mixedFb > 8);
+
+  // Range: bronze+bronze pair should score below 70 (not clustering at 90+)
+  const bronzePairChem = calculatePairingChemistry(playerB, playerB, 'foursomes');
+  assert('foursomes: bronze+bronze pair scores below 70', bronzePairChem < 70);
+
+  // Cross-tier: platinum + bronze mismatched in foursomes
+  const crossTierChem = calculatePairingChemistry(playerA, playerB, 'foursomes');
+  assert('foursomes: platinum+bronze mismatched pair scores below 65', crossTierChem < 65);
+}
+
 console.log('\nchemistry bond boost — match probability');
 {
   // Bonded pair vs same players unbonded in opposite slots

@@ -100,9 +100,12 @@
     .course-profile-bar { background: rgba(255,255,255,.03); border-bottom: 1px solid var(--border); padding: 6px 12px; display: flex; align-items: center; gap: 10px; flex-shrink: 0; }
     .cpb-venue { font-size: 11px; font-weight: 700; color: var(--gold); white-space: nowrap; flex-shrink: 0; }
     .cpb-sep { color: var(--text-dim); font-size: 10px; flex-shrink: 0; }
-    .cpb-icon-row { display: flex; gap: 3px; align-items: center; flex-wrap: nowrap; overflow: hidden; }
+    .cpb-icon-row { display: flex; gap: 3px; align-items: center; flex-wrap: nowrap; overflow: hidden; flex: 1; min-width: 0; }
     .cpb-icon-chip { display: flex; align-items: center; gap: 3px; font-size: 9px; font-weight: 700; text-transform: uppercase; letter-spacing: .02em; white-space: nowrap; padding: 2px 6px; background: rgba(255,255,255,.05); border-radius: 3px; }
     .cpb-icon-chip .attr-icon-svg { width: 11px; height: 11px; }
+    .cpb-cap-mini { margin-left: auto; flex-shrink: 0; display: flex; align-items: center; gap: 5px; border: 1px solid; border-radius: 4px; padding: 2px 8px 2px 5px; }
+    .cpb-cap-tier { font-size: 8px; font-weight: 900; text-transform: uppercase; letter-spacing: .04em; }
+    .cpb-cap-name { font-size: 10px; font-weight: 700; color: var(--text); white-space: nowrap; }
 
     /* ── DRAFT LAYOUT ── */
     /* 4 grid rows: header / course-strip / team-board(grows) / pick-area */
@@ -126,7 +129,7 @@
     .ai-reveal-eyebrow { font-size: 11px; text-transform: uppercase; letter-spacing: .12em; color: var(--text-muted); margin-bottom: 6px; }
     .ai-reveal-title { font-size: 26px; font-weight: 700; margin-bottom: 8px; }
     .ai-reveal-sub { font-size: 13px; color: var(--text-muted); margin-bottom: 24px; }
-    .ai-reveal-cards { display: flex; gap: 12px; justify-content: center; flex-wrap: wrap; margin-bottom: 28px; }
+    .ai-reveal-cards { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; width: 100%; max-width: 500px; margin: 16px auto 0; }
     .ai-card-wrap { position: relative; }
     .ai-card-wrap.ai-picked .player-card { border-color: #e53935 !important; box-shadow: 0 0 18px rgba(229,57,53,.35); cursor: default; }
     .ai-card-wrap.ai-not-picked .player-card { opacity: .35; cursor: default; pointer-events: none; }
@@ -138,13 +141,21 @@
     /* ── CAPTAIN SCREEN ── */
     .captain-screen { display: flex; flex-direction: column; align-items: center; padding: 32px 16px 48px; background: radial-gradient(ellipse at 50% 0%, #1a0a2a 0%, var(--bg) 70%); min-height: 100vh; }
     .captain-title { font-size: 32px; font-weight: 800; color: var(--gold); text-align: center; margin-bottom: 6px; }
-    .captain-cards { display: flex; gap: 14px; justify-content: center; flex-wrap: wrap; margin-top: 24px; }
-    .captain-card  { background: var(--surface2); border: 1px solid var(--border); border-radius: var(--radius); padding: 18px; width: 240px; cursor: pointer; transition: border-color .15s, transform .15s; }
-    .captain-card:hover { border-color: var(--gold); transform: translateY(-3px); box-shadow: 0 6px 24px rgba(0,0,0,.4); }
-    .cap-name { font-size: 17px; font-weight: 700; }
-    .cap-year { font-size: 11px; color: var(--text-muted); margin-bottom: 10px; }
-    .cap-bonus-line { font-size: 12px; color: var(--green-bright); margin-bottom: 2px; }
-    .cap-desc { font-size: 11px; color: var(--text-muted); margin-top: 10px; font-style: italic; line-height: 1.4; }
+    .captain-cards { display: flex; gap: 16px; justify-content: center; flex-wrap: wrap; margin-top: 24px; }
+    .captain-card  { border: 1px solid; border-radius: var(--radius); padding: 18px 16px; width: 250px; cursor: pointer; transition: transform .15s, box-shadow .15s; }
+    .captain-card:hover { transform: translateY(-4px); box-shadow: 0 8px 28px rgba(0,0,0,.5); }
+    .cap-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; }
+    .cap-tier-badge { font-size: 9px; font-weight: 800; text-transform: uppercase; letter-spacing: .08em; border: 1px solid; border-radius: 3px; padding: 2px 6px; }
+    .cap-years { font-size: 10px; color: var(--text-muted); }
+    .cap-name { font-size: 18px; font-weight: 800; line-height: 1.15; margin-bottom: 6px; }
+    .cap-tagline { font-size: 11px; color: var(--text-muted); font-style: italic; line-height: 1.4; margin-bottom: 12px; }
+    .cap-perks { display: flex; flex-direction: column; gap: 5px; margin-bottom: 8px; }
+    .cap-perk-pill { background: rgba(255,255,255,.05); border-radius: 4px; padding: 5px 8px; }
+    .cap-perk-label { font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: .04em; color: var(--gold); display: block; margin-bottom: 1px; }
+    .cap-perk-desc  { font-size: 10px; color: var(--text-dim); }
+    .cap-special-box { background: rgba(201,168,76,.1); border: 1px solid rgba(201,168,76,.35); border-radius: 4px; padding: 7px 9px; margin-top: 8px; }
+    .cap-special-label { font-size: 10px; font-weight: 800; color: var(--gold); text-transform: uppercase; letter-spacing: .05em; margin-bottom: 2px; }
+    .cap-special-desc  { font-size: 10px; color: rgba(201,168,76,.8); line-height: 1.35; }
 
 
     /* ── REVIEW SCREEN ── */
@@ -234,8 +245,8 @@
     .picks-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 5px; padding: 6px 12px 8px; }
     /* Square filled card */
     .player-picked { background: color-mix(in srgb, var(--tc, #444) 18%, var(--surface2)); border-radius: 6px; border-left: 3px solid var(--tc, #444); padding: 6px 7px; aspect-ratio: 1 / 1; display: flex; flex-direction: column; overflow: hidden; }
-    .pp-name { font-size: 10px; font-weight: 700; line-height: 1.2; }
-    .pp-year { font-size: 9px; color: var(--gold); margin-top: 1px; }
+    .pp-name { font-size: 13px; font-weight: 700; line-height: 1.2; }
+    .pp-year { font-size: 11px; color: var(--gold); margin-top: 1px; }
     /* Empty slot placeholder */
     .pick-slot-empty { aspect-ratio: 1 / 1; border: 1px dashed rgba(255,255,255,.1); border-radius: 6px; display: flex; align-items: center; justify-content: center; }
     .pse-num { font-size: 11px; color: var(--text-dim); font-weight: 600; }
@@ -661,9 +672,47 @@
   }
 
   function randomCaptains(nat, n) {
-    return [...CAPTAINS.filter(c => c.nationality === nat)]
-      .sort(() => Math.random() - .5)
-      .slice(0, n);
+    const pool = CAPTAINS.filter(c => c.nationality === nat);
+    const byTier = {
+      legendary: pool.filter(c => c.tier === 'legendary'),
+      hero:      pool.filter(c => c.tier === 'hero'),
+      standard:  pool.filter(c => c.tier === 'standard')
+    };
+    const results = [];
+    const used = new Set();
+    let legendaryUsed = false;
+
+    for (let i = 0; i < n; i++) {
+      const r = Math.random() * 100;
+      let candidates = null;
+
+      if (!legendaryUsed && r < 5) {
+        candidates = byTier.legendary.filter(c => !used.has(c.id));
+        if (candidates.length) legendaryUsed = true;
+        else candidates = null;
+      }
+      if (!candidates) {
+        candidates = (r < 25) ? byTier.hero.filter(c => !used.has(c.id)) : null;
+        if (!candidates || !candidates.length) candidates = byTier.standard.filter(c => !used.has(c.id));
+        if (!candidates.length) candidates = pool.filter(c => !used.has(c.id));
+      }
+
+      if (!candidates.length) break;
+      const pick = candidates[Math.floor(Math.random() * candidates.length)];
+      results.push(pick);
+      used.add(pick.id);
+    }
+    return results;
+  }
+
+  function drawAICaptain(nat) {
+    const pool = CAPTAINS.filter(c => c.nationality === nat);
+    const r = Math.random() * 100;
+    let candidates = r < 5   ? pool.filter(c => c.tier === 'legendary') :
+                     r < 25  ? pool.filter(c => c.tier === 'hero')      :
+                               pool.filter(c => c.tier === 'standard');
+    if (!candidates.length) candidates = pool;
+    return candidates[Math.floor(Math.random() * candidates.length)];
   }
 
   // Returns up to 2 style tags for a player, mapped to the same labels as course demands
@@ -770,21 +819,28 @@
   // Maps DEMAND_META keys to ATTR_META entries for icon reuse
   const DEMAND_TO_ATTR = { power_weight:'power', accuracy_weight:'accurate', short_game_weight:'shortgame', wind_factor:'consistent', pressure_factor:'clutch' };
 
-  function courseProfileHTML(venue) {
+  function courseProfileHTML(venue, captain) {
     if (!venue) return '';
     const ht     = venue.hidden_tags;
     const sorted = [...DEMAND_META].sort((a, b) => (ht[b.key] || 0) - (ht[a.key] || 0));
-    const chips  = sorted.map(d => {
+    const chips  = sorted.slice(0, 3).map(d => {
       const attrKey = DEMAND_TO_ATTR[d.key];
       const attr    = ATTR_META.find(a => a.key === attrKey);
       const svg     = attr ? attr.svg : '';
       const label   = attr ? attr.label : d.label;
       return `<span class="cpb-icon-chip" style="color:${d.color}">${svg}${label}</span>`;
     }).join('');
+    const capColor = captain ? ({ legendary:'#c9a84c', hero:'#c084fc', standard:'#22c55e' }[captain.tier] || '#22c55e') : null;
+    const capHTML  = captain ? `
+      <div class="cpb-cap-mini" style="border-color:${capColor}">
+        <span class="cpb-cap-tier" style="color:${capColor}">${captain.tier[0].toUpperCase()}</span>
+        <span class="cpb-cap-name">${captain.name}</span>
+      </div>` : '';
     return `<div class="course-profile-bar">
       <span class="cpb-venue">${venue.display_name || venue.name}</span>
       <span class="cpb-sep">·</span>
       <div class="cpb-icon-row">${chips}</div>
+      ${capHTML}
     </div>`;
   }
 
@@ -953,32 +1009,54 @@
   // ─────────────────────────────────────────────────────────────────────────────
   // SCREEN: CAPTAIN
   // ─────────────────────────────────────────────────────────────────────────────
+  function captainCardHTML(c) {
+    const TC = {
+      legendary: { bg: 'rgba(201,168,76,.1)',   border: 'rgba(201,168,76,.45)', badge: '#c9a84c' },
+      hero:      { bg: 'rgba(192,132,252,.07)', border: 'rgba(192,132,252,.35)', badge: '#c084fc' },
+      standard:  { bg: 'rgba(34,197,94,.05)',   border: 'rgba(34,197,94,.2)',   badge: '#22c55e' }
+    }[c.tier] || { bg: 'var(--surface2)', border: 'var(--border)', badge: 'var(--gold)' };
+
+    const yearsStr = (c.years || []).join(', ');
+    const perksHTML = (c.perks || []).map(p => `
+      <div class="cap-perk-pill">
+        <span class="cap-perk-label">${p.label}</span>
+        <span class="cap-perk-desc">${p.desc}</span>
+      </div>`).join('');
+    const specialHTML = c.special ? `
+      <div class="cap-special-box">
+        <div class="cap-special-label">★ ${c.special.label}</div>
+        <div class="cap-special-desc">${c.special.desc}</div>
+      </div>` : '';
+
+    return `
+      <div class="captain-card" data-cid="${c.id}" style="background:${TC.bg};border-color:${TC.border}">
+        <div class="cap-header">
+          <span class="cap-tier-badge" style="color:${TC.badge};border-color:${TC.badge}">${c.tier}</span>
+          <span class="cap-years">${yearsStr}</span>
+        </div>
+        <div class="cap-name">${c.name}</div>
+        <div class="cap-tagline">${c.tagline}</div>
+        <div class="cap-perks">${perksHTML}</div>
+        ${specialHTML}
+      </div>`;
+  }
+
   function renderCaptain() {
     const caps = G.captainCards;
     document.getElementById('app').innerHTML = `
       <div class="captain-screen fade-in">
         <div style="font-size:11px;color:var(--text-muted);text-transform:uppercase;letter-spacing:.1em;margin-bottom:8px;">Step 1 — Captain</div>
         <div class="captain-title">Choose Your Captain</div>
-        <div style="font-size:13px;color:var(--text-muted)">Select the captain who will lead your ${G.side} team at ${G.venue.name}</div>
+        <div style="font-size:13px;color:var(--text-muted);margin-bottom:4px;">Select the captain who will lead your ${G.side} team at ${G.venue.name}</div>
         <div class="captain-cards">
-          ${caps.map(c => `
-            <div class="captain-card" data-cid="${c.id}">
-              <div class="cap-name">${c.name}</div>
-              <div class="cap-year">Captained ${c.year_captained}</div>
-              <div class="cap-bonus-line">+${c.bonus.foursomes_boost}% Foursomes win probability</div>
-              <div class="cap-bonus-line">+${c.bonus.fourball_boost}% Fourball win probability</div>
-              <div class="cap-bonus-line">+${c.bonus.singles_boost}% Singles win probability</div>
-              <div class="cap-bonus-line">&times;${c.bonus.chemistry_multiplier} Pairing chemistry</div>
-              <div class="cap-desc">${c.description}</div>
-            </div>`).join('')}
+          ${caps.map(captainCardHTML).join('')}
         </div>
       </div>`;
 
     document.querySelectorAll('[data-cid]').forEach(el => {
       el.addEventListener('click', () => {
         G.captain = CAPTAINS.find(c => c.id === el.dataset.cid);
-        const pool = CAPTAINS.filter(c => c.nationality === opp(G.side));
-        G.aiCaptain = pool[Math.floor(Math.random() * pool.length)];
+        G.aiCaptain = drawAICaptain(opp(G.side));
         G.phase = 'draft';
         G.currentRound = 1;
         G.seenNames   = [];
@@ -1018,7 +1096,7 @@
           <span style="font-size:11px;color:var(--text-dim)">${G.side}</span>
         </div>
 
-        ${courseProfileHTML(G.venue)}
+        ${courseProfileHTML(G.venue, G.captain)}
 
         <div class="draft-team-area">
           <div style="padding:4px 12px 2px;font-size:9px;text-transform:uppercase;letter-spacing:.07em;color:var(--text-dim);">Your Squad — ${G.picks.length}/12</div>
@@ -1085,7 +1163,7 @@
         <button class="btn btn-gold" id="ai-continue-btn" style="margin:8px 0 4px;">
           ${isLast ? 'See Your Pairings →' : `Continue to Round ${round + 1} →`}
         </button>
-        ${courseProfileHTML(G.venue)}
+        ${courseProfileHTML(G.venue, G.captain)}
         <div class="ai-reveal-cards">${cardsHTML || '<p style="color:var(--text-muted)">No options available</p>'}</div>
       </div>`;
 
@@ -1145,7 +1223,7 @@
         ${captain ? `<div class="captain-summary" style="margin-bottom:12px;">
           <div style="font-size:10px;color:var(--text-muted);text-transform:uppercase;letter-spacing:.06em;margin-bottom:3px;">Captain</div>
           <div style="font-weight:700">${captain.name}</div>
-          <div style="font-size:11px;color:var(--text-muted)">${captain.year_captained}</div>
+          <div style="font-size:11px;color:var(--text-muted)">${(captain.years || []).join(', ')}</div>
         </div>` : ''}
         <div class="review-slot-group">
           <div class="review-slot-label">Friday AM — Foursomes</div>

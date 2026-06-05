@@ -105,11 +105,13 @@
     .cpb-icon-chip .attr-icon-svg { width: 11px; height: 11px; }
 
     /* ── DRAFT LAYOUT ── */
-    .draft-full { display: flex; flex-direction: column; height: 100vh; overflow: hidden; }
-    .draft-team-area { flex: 1; overflow-y: auto; min-height: 0; }
+    /* 4 grid rows: header / course-strip / team-board(grows) / pick-area */
+    /* 100dvh = real visible viewport on mobile (accounts for address bar) */
+    .draft-full { display: grid; grid-template-rows: auto auto 1fr auto; height: 100vh; height: 100dvh; overflow: hidden; }
+    .draft-team-area { overflow-y: auto; min-height: 0; }
 
     /* ── DRAFT PICK AREA ── */
-    .pick-area { padding: 8px 12px 10px; background: var(--surface); border-top: 1px solid var(--border); flex-shrink: 0; }
+    .pick-area { padding: 8px 12px 10px; background: var(--surface); border-top: 1px solid var(--border); }
     .pick-round-label { font-size: 11px; color: var(--text-muted); margin-bottom: 6px; text-transform: uppercase; letter-spacing: .05em; }
     /* Always 3 columns — no mobile collapse */
     .pick-cards-row { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }

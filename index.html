@@ -88,8 +88,8 @@
     .player-card.selected { border-color: var(--green-bright) !important; box-shadow: 0 0 12px rgba(76,175,80,.35); }
     .player-card.hero-card { animation: hero-glow 2s ease-in-out infinite; }
     @keyframes hero-glow { 0%,100% { box-shadow: 0 0 8px rgba(123,45,139,.35); } 50% { box-shadow: 0 0 22px rgba(123,45,139,.7); } }
-    .card-name  { font-size: 13px; font-weight: 700; line-height: 1.2; padding-right: 18px; }
-    .card-year  { font-size: 10px; color: var(--gold); font-weight: 600; margin-top: 1px; }
+    .card-name  { font-size: 16px; font-weight: 700; line-height: 1.15; padding-right: 18px; }
+    .card-year  { font-size: 12px; color: var(--gold); font-weight: 600; margin-top: 3px; }
     .card-hero-bonus { margin-top: auto; font-size: 9px; font-weight: 700; color: var(--hero, #38bdf8); letter-spacing: .03em; text-transform: uppercase; }
     .card-tier-badge { position: absolute; top: 7px; right: 7px; width: 8px; height: 8px; border-radius: 50%; background: var(--tc, #888); }
 
@@ -97,17 +97,19 @@
     .card-tier-badge { position: absolute; top: 8px; right: 8px; font-size: 9px; font-weight: 800; text-transform: uppercase; letter-spacing: .04em; padding: 2px 6px; border-radius: 3px; background: rgba(0,0,0,.45); color: var(--tc, #888); border: 1px solid var(--tc, #888); }
 
     /* ── COURSE PROFILE BAR ── */
-    .course-profile-bar { background: rgba(255,255,255,.04); border: 1px solid var(--border); border-radius: var(--radius); padding: 10px 14px; margin: 0 14px 10px; }
-    .cpb-venue { font-size: 12px; font-weight: 700; color: var(--gold); margin-bottom: 2px; }
-    .cpb-descriptors { font-size: 10px; color: var(--text-muted); margin-bottom: 8px; letter-spacing: .03em; text-transform: uppercase; }
-    .cpb-demands { display: flex; flex-direction: column; gap: 4px; }
-    .cpb-row { display: flex; align-items: center; gap: 8px; }
-    .cpb-label { font-size: 9px; font-weight: 700; text-transform: uppercase; letter-spacing: .04em; width: 72px; flex-shrink: 0; }
-    .cpb-bar { flex: 1; height: 5px; background: rgba(255,255,255,.08); border-radius: 3px; overflow: hidden; }
-    .cpb-fill { height: 100%; border-radius: 3px; transition: width .3s; }
+    .course-profile-bar { background: rgba(255,255,255,.03); border-bottom: 1px solid var(--border); padding: 6px 12px; display: flex; align-items: center; gap: 10px; flex-shrink: 0; }
+    .cpb-venue { font-size: 11px; font-weight: 700; color: var(--gold); white-space: nowrap; flex-shrink: 0; }
+    .cpb-sep { color: var(--text-dim); font-size: 10px; flex-shrink: 0; }
+    .cpb-icon-row { display: flex; gap: 3px; align-items: center; flex-wrap: nowrap; overflow: hidden; }
+    .cpb-icon-chip { display: flex; align-items: center; gap: 3px; font-size: 9px; font-weight: 700; text-transform: uppercase; letter-spacing: .02em; white-space: nowrap; padding: 2px 6px; background: rgba(255,255,255,.05); border-radius: 3px; }
+    .cpb-icon-chip .attr-icon-svg { width: 11px; height: 11px; }
+
+    /* ── DRAFT LAYOUT ── */
+    .draft-full { display: flex; flex-direction: column; height: 100vh; overflow: hidden; }
+    .draft-team-area { flex: 1; overflow-y: auto; min-height: 0; }
 
     /* ── DRAFT PICK AREA ── */
-    .pick-area { padding: 8px 14px 10px; background: var(--surface); border-top: 1px solid var(--border); }
+    .pick-area { padding: 8px 12px 10px; background: var(--surface); border-top: 1px solid var(--border); flex-shrink: 0; }
     .pick-round-label { font-size: 11px; color: var(--text-muted); margin-bottom: 6px; text-transform: uppercase; letter-spacing: .05em; }
     /* Always 3 columns — no mobile collapse */
     .pick-cards-row { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
@@ -763,20 +765,24 @@
     { key:'pressure_factor',   label:'Clutch',     cls:'cst-clutch',     color:'#f59e0b' },
   ];
 
+  // Maps DEMAND_META keys to ATTR_META entries for icon reuse
+  const DEMAND_TO_ATTR = { power_weight:'power', accuracy_weight:'accurate', short_game_weight:'shortgame', wind_factor:'consistent', pressure_factor:'clutch' };
+
   function courseProfileHTML(venue) {
     if (!venue) return '';
-    const ht = venue.hidden_tags;
+    const ht     = venue.hidden_tags;
     const sorted = [...DEMAND_META].sort((a, b) => (ht[b.key] || 0) - (ht[a.key] || 0));
-    const bars = sorted.map(d => `
-      <div class="cpb-row">
-        <span class="cpb-label" style="color:${d.color}">${d.label}</span>
-        <div class="cpb-bar"><div class="cpb-fill" style="width:${ht[d.key]}%;background:${d.color}"></div></div>
-      </div>`).join('');
-    const descriptors = (venue.user_descriptors || []).join(' · ');
+    const chips  = sorted.map(d => {
+      const attrKey = DEMAND_TO_ATTR[d.key];
+      const attr    = ATTR_META.find(a => a.key === attrKey);
+      const svg     = attr ? attr.svg : '';
+      const label   = attr ? attr.label : d.label;
+      return `<span class="cpb-icon-chip" style="color:${d.color}">${svg}${label}</span>`;
+    }).join('');
     return `<div class="course-profile-bar">
-      <div class="cpb-venue">${venue.display_name || venue.name}</div>
-      <div class="cpb-descriptors">${descriptors}</div>
-      <div class="cpb-demands">${bars}</div>
+      <span class="cpb-venue">${venue.display_name || venue.name}</span>
+      <span class="cpb-sep">·</span>
+      <div class="cpb-icon-row">${chips}</div>
     </div>`;
   }
 
@@ -1002,18 +1008,20 @@
     ).join('');
 
     document.getElementById('app').innerHTML = `
-      <div style="display:flex;flex-direction:column;min-height:100vh;">
+      <div class="draft-full">
         <div class="page-header">
           <span class="page-title">Fourballs</span>
           <span class="ticker-score">Pick ${round} of 12</span>
           <span style="flex:1"></span>
-          <span style="font-size:11px;color:var(--text-dim)">${G.side} · ${G.venue.name}</span>
+          <span style="font-size:11px;color:var(--text-dim)">${G.side}</span>
         </div>
 
         ${courseProfileHTML(G.venue)}
 
-        <div style="padding:4px 12px 0;font-size:9px;text-transform:uppercase;letter-spacing:.07em;color:var(--text-dim);">Your Squad — ${G.picks.length}/12</div>
-        <div class="picks-grid">${slotsHTML}</div>
+        <div class="draft-team-area">
+          <div style="padding:4px 12px 2px;font-size:9px;text-transform:uppercase;letter-spacing:.07em;color:var(--text-dim);">Your Squad — ${G.picks.length}/12</div>
+          <div class="picks-grid">${slotsHTML}</div>
+        </div>
 
         <div class="pick-area">
           <div class="pick-round-label">Round ${round} of 12 — Choose</div>

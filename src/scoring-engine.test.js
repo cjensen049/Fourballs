@@ -244,6 +244,50 @@ console.log('\nsimulateFullEvent — points always sum to 28');
   }
 }
 
+console.log('\ncalculateMatchProbability — zero-sum constraint (50 combos)');
+{
+  const aiCaptain = {
+    id: 'ai_captain',
+    bonus: { foursomes_boost:4, fourball_boost:3, singles_boost:2, chemistry_multiplier:1.05 }
+  };
+
+  const venuePairs = [powerVenue, linksVenue];
+  const formats    = ['foursomes', 'fourball', 'singles'];
+  const partners   = [playerA, playerB, null];
+
+  for (let i = 0; i < 50; i++) {
+    const myP   = i % 3 === 0 ? playerA : i % 3 === 1 ? playerB : heroPlayer;
+    const oppP  = i % 2 === 0 ? playerB : playerA;
+    const ven   = venuePairs[i % 2];
+    const fmt   = formats[i % 3];
+    const cap   = i % 2 === 0 ? captain : null;
+    const aiCap = i % 3 === 0 ? aiCaptain : null;
+    const myPart  = fmt !== 'singles' ? partners[i % 3] : null;
+    const oppPart = fmt !== 'singles' ? partners[(i + 1) % 3] : null;
+
+    const prob = calculateMatchProbability(myP, oppP, ven, fmt, cap, myPart, aiCap, oppPart);
+
+    const sum = prob.win + prob.halve + prob.loss;
+    assert(`combo ${i}: win+halve+loss === 100 (got ${sum.toFixed(1)})`, Math.abs(sum - 100) < 0.2);
+    assert(`combo ${i}: win >= 5`,   prob.win  >= 5);
+    assert(`combo ${i}: loss >= 5`,  prob.loss >= 5);
+    assert(`combo ${i}: win <= 80`,  prob.win  <= 80);
+    assert(`combo ${i}: halve === 10`, Math.abs(prob.halve - 10) < 0.1);
+  }
+
+  // Zero-sum: swapping my/opp should invert the advantage
+  const strong = calculateMatchProbability(playerA, playerB, powerVenue, 'singles', captain, null, aiCaptain);
+  const weak   = calculateMatchProbability(playerB, playerA, powerVenue, 'singles', aiCaptain, null, captain);
+  assert('zero-sum: strong win > 45', strong.win > 45);
+  assert('zero-sum: weak win < 45',   weak.win   < 45);
+  assert('zero-sum: win probabilities sum near 90', Math.abs((strong.win + weak.win) - 90) < 2);
+
+  // Equal players with equal captains should produce near-base probabilities
+  const balanced = calculateMatchProbability(playerA, playerA, powerVenue, 'singles', captain, null, captain);
+  assertApprox('balanced match: win near 45', balanced.win, 45, 5);
+  assertApprox('balanced match: loss near 45', balanced.loss, 45, 5);
+}
+
 // ─── Summary ──────────────────────────────────────────────────────────────────
 console.log(`\n${'─'.repeat(50)}`);
 console.log(`Results: ${passed} passed, ${failed} failed`);

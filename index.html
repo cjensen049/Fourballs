@@ -232,6 +232,53 @@
     .center-screen code { background: var(--surface2); padding: 2px 6px; border-radius: 4px; font-size: 13px; }
     .fade-in { animation: fadein .3s ease-out; }
     @keyframes fadein { from { opacity:0; transform:translateY(6px); } to { opacity:1; transform:none; } }
+
+    /* ── ATTRIBUTE BARS (draft selection cards) ── */
+    .attr-bars { margin-top: 8px; display: flex; flex-direction: column; gap: 3px; }
+    .attr-row { display: flex; align-items: center; gap: 6px; }
+    .attr-label { font-size: 9px; font-weight: 700; text-transform: uppercase; letter-spacing: .04em; width: 60px; flex-shrink: 0; }
+    .attr-bar { flex: 1; height: 4px; background: rgba(255,255,255,.08); border-radius: 2px; overflow: hidden; }
+    .attr-fill { height: 100%; border-radius: 2px; }
+
+    /* ── PICKED PLAYER MINI-CARDS (team board during draft) ── */
+    .picks-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 5px; padding: 6px 14px 10px; }
+    @media (max-width: 560px) { .picks-grid { grid-template-columns: repeat(2, 1fr); } }
+    .player-picked { background: color-mix(in srgb, var(--tc, #444) 15%, var(--surface2)); border-radius: 6px; border-left: 3px solid var(--tc, #444); padding: 7px 9px; }
+    .pp-name { font-size: 11px; font-weight: 700; line-height: 1.2; }
+    .pp-year { font-size: 10px; color: var(--gold); margin-top: 1px; }
+    .pp-tags { display: flex; gap: 2px; margin-top: 4px; flex-wrap: wrap; }
+
+    /* ── HELP BUTTON (persistent ?) ── */
+    .help-btn { position: fixed; bottom: 16px; right: 16px; z-index: 90; width: 38px; height: 38px; border-radius: 50%; background: var(--surface2); border: 1px solid var(--border); color: var(--text-muted); font-size: 17px; font-weight: 700; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: background .15s, border-color .15s; box-shadow: 0 2px 10px rgba(0,0,0,.4); }
+    .help-btn:hover { background: var(--surface3); border-color: var(--green); color: var(--text); }
+
+    /* ── HELP MODAL ── */
+    .modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,.78); z-index: 100; display: flex; align-items: center; justify-content: center; padding: 20px; }
+    .help-modal { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); max-width: 520px; width: 100%; max-height: 88vh; overflow-y: auto; padding: 20px; }
+    .help-modal-hdr { display: flex; align-items: center; justify-content: space-between; margin-bottom: 16px; }
+    .help-modal-title { font-size: 18px; font-weight: 800; color: var(--gold); }
+    .help-modal-close { background: none; border: none; color: var(--text-muted); font-size: 22px; cursor: pointer; padding: 0 4px; line-height: 1; }
+    .help-modal-close:hover { color: var(--text); }
+    .help-section-title { font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: .09em; color: var(--text-muted); margin: 14px 0 8px; border-bottom: 1px solid var(--border); padding-bottom: 4px; }
+    .tier-table { width: 100%; border-collapse: collapse; font-size: 12px; }
+    .tier-table th, .tier-table td { padding: 5px 7px; border: 1px solid var(--border); text-align: center; }
+    .tier-table th { background: var(--surface2); color: var(--text-muted); font-size: 10px; text-transform: uppercase; letter-spacing: .04em; }
+    .tier-table td:first-child { text-align: left; color: var(--text-muted); }
+    .how-to-list { list-style: none; display: flex; flex-direction: column; gap: 8px; margin: 0; padding: 0; }
+    .how-to-list li { font-size: 13px; color: var(--text); padding-left: 18px; position: relative; line-height: 1.45; }
+    .how-to-list li::before { content: '→'; position: absolute; left: 0; color: var(--gold); font-size: 11px; top: 2px; }
+
+    /* ── TUTORIAL OVERLAY ── */
+    .tutorial-overlay { position: fixed; inset: 0; background: rgba(0,0,0,.85); z-index: 200; display: flex; align-items: center; justify-content: center; padding: 20px; }
+    .tutorial-card { background: var(--surface); border: 1px solid var(--green); border-radius: var(--radius); max-width: 420px; width: 100%; padding: 24px; animation: fadein .25s ease-out; }
+    .tut-eyebrow { font-size: 10px; text-transform: uppercase; letter-spacing: .1em; color: var(--text-muted); margin-bottom: 6px; }
+    .tut-title { font-size: 22px; font-weight: 800; color: var(--gold); margin-bottom: 10px; }
+    .tut-body { font-size: 14px; color: var(--text); line-height: 1.55; margin-bottom: 20px; }
+    .tut-dots { display: flex; gap: 6px; justify-content: center; margin-bottom: 18px; }
+    .tut-dot { width: 7px; height: 7px; border-radius: 50%; background: var(--border); transition: background .2s; }
+    .tut-dot.active { background: var(--gold); }
+    .tut-actions { display: flex; gap: 10px; }
+    .tut-actions .btn { flex: 1; font-size: 14px; padding: 10px; }
   </style>
 </head>
 <body>
@@ -540,6 +587,33 @@
     return tags.map(t => `<span class="card-style-tag cst-${t}">${STYLE_TAG_LABELS[t]}</span>`).join('');
   }
 
+  const ATTR_META = [
+    { label: 'Power',      fn: s => s.driving_distance,                                                    color: '#f97316' },
+    { label: 'Accurate',   fn: s => Math.round(s.driving_accuracy * 0.55 + s.greens_in_regulation * 0.45), color: '#38bdf8' },
+    { label: 'Short Game', fn: s => s.scrambling,                                                          color: '#4ade80' },
+    { label: 'Clutch',     fn: s => s.pressure_index,                                                      color: '#f59e0b' },
+    { label: 'Consistent', fn: s => Math.min(s.driving_accuracy, s.scrambling),                            color: '#a78bfa' },
+  ];
+
+  function playerAttrBarsHTML(p) {
+    const s = p.stats;
+    const scored = ATTR_META.map(a => ({ ...a, val: a.fn(s) })).sort((a, b) => b.val - a.val);
+    return `<div class="attr-bars">${scored.slice(0, 3).map(a =>
+      `<div class="attr-row">
+        <span class="attr-label" style="color:${a.color}">${a.label}</span>
+        <div class="attr-bar"><div class="attr-fill" style="width:${a.val}%;background:${a.color}"></div></div>
+      </div>`
+    ).join('')}</div>`;
+  }
+
+  function playerPickedHTML(p) {
+    return `<div class="player-picked ${tcClass(p.tier)}" ${tcStyle(p.tier)}>
+      <div class="pp-name">${p.name}</div>
+      <div class="pp-year">${p.year}</div>
+      <div class="pp-tags">${styleTagsHTML(p)}</div>
+    </div>`;
+  }
+
   // Course demand bars — sorted by weight, top 5
   // Labels intentionally match the player style tag labels so the connection is obvious
   const DEMAND_META = [
@@ -573,17 +647,13 @@
   function playerCardHTML(p, clickable = true, extraClass = '') {
     const hero  = isHero(p) ? 'hero-card' : '';
     const da    = clickable ? `data-pid="${p.id}"` : '';
-    const score = Math.round(compositeScore(p));
     const label = TIER_LABELS[p.tier] || p.tier;
     const bonus = heroBonusLabel(p);
     return `<div class="player-card ${tcClass(p.tier)} ${hero} ${extraClass}" ${tcStyle(p.tier)} ${da}>
       <div class="card-tier-badge">${label}</div>
       <div class="card-name">${p.name}</div>
       <div class="card-year">${p.year}</div>
-      <div class="card-sub">${p.nationality}</div>
-      <div class="card-rank">#${p.world_ranking} world ranking</div>
-      <div class="card-wins">${p.wins_that_year} win${p.wins_that_year !== 1 ? 's' : ''} this year</div>
-      <div class="card-style-tags">${styleTagsHTML(p)}</div>
+      ${playerAttrBarsHTML(p)}
       ${bonus ? `<div class="card-hero-bonus">${bonus}</div>` : ''}
       ${p.flavor_text ? `<div class="card-flavor">${p.flavor_text}</div>` : ''}
     </div>`;
@@ -789,12 +859,12 @@
     const cards = G.currentCards;
 
     const picksHTML = G.picks.length
-      ? `<div style="padding:8px 14px 10px;border-top:1px solid var(--border);background:var(--surface);">
-           <div style="font-size:10px;text-transform:uppercase;letter-spacing:.06em;color:var(--text-dim);margin-bottom:6px;">
+      ? `<div style="border-top:1px solid var(--border);background:var(--surface);">
+           <div style="padding:8px 14px 2px;font-size:10px;text-transform:uppercase;letter-spacing:.06em;color:var(--text-dim);">
              Drafted (${G.picks.length}/12)
            </div>
-           <div style="display:flex;flex-wrap:wrap;gap:4px;">
-             ${G.picks.map(p => `<span class="psf-chip ${tcClass(p.tier)}" ${tcStyle(p.tier)}>${p.name}</span>`).join('')}
+           <div class="picks-grid">
+             ${G.picks.map(p => playerPickedHTML(p)).join('')}
            </div>
          </div>`
       : '';
@@ -1176,9 +1246,9 @@
 
       addAndTick(m.result);
       const id = 'row-' + (++rowIdx);
-      const tiredTag      = '<span style="font-size:10px;color:var(--halve);opacity:.7">(tired)</span>';
-      const fatiguedNote  = m.fatigued    ? ' ' + tiredTag : '';
-      const oppFatiguedNote = m.oppFatigued ? ' ' + tiredTag : '';
+      const fatiguedTag     = '<span style="font-size:10px;color:var(--halve);opacity:.7">(fatigued)</span>';
+      const fatiguedNote    = m.fatigued    ? ' ' + fatiguedTag : '';
+      const oppFatiguedNote = m.oppFatigued ? ' ' + fatiguedTag : '';
       document.getElementById('sec-sun').insertAdjacentHTML('afterbegin', `
         <div class="match-row" id="${id}">
           <span class="match-num">${i + 1}.</span>
@@ -1268,6 +1338,164 @@
   }
 
   // ─────────────────────────────────────────────────────────────────────────────
+  // TUTORIAL
+  // ─────────────────────────────────────────────────────────────────────────────
+  const TUTORIAL_STEPS = [
+    {
+      title: 'Pick Your Side',
+      body: 'Choose USA or Europe. Your opponent AI drafts simultaneously from the other side and builds their own squad.'
+    },
+    {
+      title: 'Venue Reveal',
+      body: 'Your venue is drawn randomly before the draft. The course profile bar shows what it demands — build your team to match it.'
+    },
+    {
+      title: 'Captain First',
+      body: 'Pick your captain before you know who you\'ll draft. Their bonus applies all week, and some captains have special affinity with certain players — choose wisely.'
+    },
+    {
+      title: 'Draft Cards',
+      body: '3 players from across all Ryder Cup years appear each round. Earlier picks lean elite, later picks are more of a gamble — but a Hero card can land any round.'
+    },
+    {
+      title: 'Pairings',
+      body: 'After round 12, pairings are auto-assigned by chemistry and strength. Hit Re-randomize on the review screen to explore different matchups until you find a lineup you trust.'
+    },
+    {
+      title: 'Simulate',
+      body: 'Lock in your lineup and simulate the full Ryder Cup. Friday, Saturday, then Sunday singles — one match at a time. Running score updates after every session.'
+    },
+    {
+      title: 'Tap ? anytime',
+      body: 'The ? button in the bottom-right shows this tutorial again plus the full tier probability table so you always know your odds.'
+    }
+  ];
+
+  let _tutStep = 0;
+
+  function showTutorial(startStep = 0) {
+    _tutStep = startStep;
+    _renderTutorial();
+  }
+
+  function _renderTutorial() {
+    document.getElementById('tutorial-overlay')?.remove();
+    const step   = TUTORIAL_STEPS[_tutStep];
+    const total  = TUTORIAL_STEPS.length;
+    const isLast = _tutStep === total - 1;
+    const dots   = TUTORIAL_STEPS.map((_, i) =>
+      `<div class="tut-dot${i === _tutStep ? ' active' : ''}"></div>`
+    ).join('');
+
+    const div = document.createElement('div');
+    div.className = 'tutorial-overlay';
+    div.id = 'tutorial-overlay';
+    div.innerHTML = `
+      <div class="tutorial-card">
+        <div class="tut-eyebrow">Step ${_tutStep + 1} of ${total}</div>
+        <div class="tut-title">${step.title}</div>
+        <div class="tut-body">${step.body}</div>
+        <div class="tut-dots">${dots}</div>
+        <div class="tut-actions">
+          <button class="btn btn-outline" id="tut-skip">Skip</button>
+          <button class="btn btn-gold" id="tut-next">${isLast ? 'Done ✓' : 'Next →'}</button>
+        </div>
+      </div>`;
+    document.body.appendChild(div);
+
+    document.getElementById('tut-skip').addEventListener('click', closeTutorial);
+    document.getElementById('tut-next').addEventListener('click', () => {
+      if (isLast) closeTutorial();
+      else { _tutStep++; _renderTutorial(); }
+    });
+  }
+
+  function closeTutorial() {
+    document.getElementById('tutorial-overlay')?.remove();
+    localStorage.setItem('tutorial_seen', '1');
+  }
+
+  // ─────────────────────────────────────────────────────────────────────────────
+  // HELP MODAL
+  // ─────────────────────────────────────────────────────────────────────────────
+  function showHelpModal() {
+    document.getElementById('help-modal-overlay')?.remove();
+    const tierRows = [
+      ['1–2',   '80%', '15%', '0%',  '0%',  '5%'],
+      ['3–4',   '15%', '65%', '15%', '0%',  '5%'],
+      ['5–6',   '5%',  '40%', '45%', '5%',  '5%'],
+      ['7–8',   '0%',  '15%', '55%', '25%', '5%'],
+      ['9–10',  '0%',  '0%',  '25%', '70%', '5%'],
+      ['11–12', '0%',  '0%',  '5%',  '90%', '5%'],
+    ];
+    const tableRows = tierRows.map(([pick, pl, go, si, br, he]) => `
+      <tr>
+        <td>Pick ${pick}</td>
+        <td style="color:#c084fc">${pl}</td>
+        <td style="color:#c9a84c">${go}</td>
+        <td style="color:#94a3b8">${si}</td>
+        <td style="color:#a0522d">${br}</td>
+        <td style="color:#38bdf8">${he}</td>
+      </tr>`).join('');
+
+    const div = document.createElement('div');
+    div.className = 'modal-overlay';
+    div.id = 'help-modal-overlay';
+    div.innerHTML = `
+      <div class="help-modal">
+        <div class="help-modal-hdr">
+          <div class="help-modal-title">Fourballs — Help</div>
+          <button class="help-modal-close" id="help-close">×</button>
+        </div>
+
+        <div class="help-section-title">Tier Odds Per Pick</div>
+        <p style="font-size:12px;color:var(--text-muted);margin-bottom:8px;">Hero probability drops to 1% after your first hero, 0% after two.</p>
+        <table class="tier-table">
+          <thead>
+            <tr>
+              <th>Pick</th>
+              <th style="color:#c084fc">Platinum</th>
+              <th style="color:#c9a84c">Gold</th>
+              <th style="color:#94a3b8">Silver</th>
+              <th style="color:#a0522d">Bronze</th>
+              <th style="color:#38bdf8">Hero</th>
+            </tr>
+          </thead>
+          <tbody>${tableRows}</tbody>
+        </table>
+
+        <div class="help-section-title">How to Play</div>
+        <ul class="how-to-list">
+          <li><strong>Captain first</strong> — pick before the draft; their bonus applies all week</li>
+          <li><strong>12 rounds</strong> — 3 players from any Ryder Cup year appear per round</li>
+          <li><strong>Earlier = better</strong> — picks 1–4 lean Platinum/Gold; picks 9–12 lean Bronze</li>
+          <li><strong>Hero cards</strong> — can appear any round; special abilities shown on the card</li>
+          <li><strong>Auto-pairings</strong> — assigned after round 12; Re-randomize to try new matchups</li>
+          <li><strong>Fatigue</strong> — players in both Foursomes and Fourball pairs get a singles penalty</li>
+          <li><strong>28 points total</strong> — first to 14.5 wins the Ryder Cup</li>
+        </ul>
+
+        <div style="margin-top:18px;display:flex;gap:10px;">
+          <button class="btn btn-outline" id="help-show-tutorial" style="font-size:13px;padding:8px 16px;">Show Tutorial</button>
+          <button class="btn btn-outline" id="help-close-btn" style="font-size:13px;padding:8px 16px;flex:1">Close</button>
+        </div>
+      </div>`;
+    document.body.appendChild(div);
+
+    document.getElementById('help-close').addEventListener('click', closeHelpModal);
+    document.getElementById('help-close-btn').addEventListener('click', closeHelpModal);
+    document.getElementById('help-show-tutorial').addEventListener('click', () => {
+      closeHelpModal();
+      showTutorial(0);
+    });
+    div.addEventListener('click', e => { if (e.target === div) closeHelpModal(); });
+  }
+
+  function closeHelpModal() {
+    document.getElementById('help-modal-overlay')?.remove();
+  }
+
+  // ─────────────────────────────────────────────────────────────────────────────
   // INIT
   // ─────────────────────────────────────────────────────────────────────────────
   async function init() {
@@ -1292,6 +1520,15 @@
       return;
     }
 
+    // Inject persistent help button
+    const helpBtn = document.createElement('button');
+    helpBtn.className = 'help-btn';
+    helpBtn.id = 'global-help-btn';
+    helpBtn.textContent = '?';
+    helpBtn.title = 'Help & Tier Odds';
+    helpBtn.addEventListener('click', showHelpModal);
+    document.body.appendChild(helpBtn);
+
     const saved = loadSaved();
     if (saved && saved.phase !== 'landing') {
       G = saved;
@@ -1301,6 +1538,11 @@
     }
 
     render();
+
+    // Show tutorial on first visit, after the screen renders
+    if (!localStorage.getItem('tutorial_seen')) {
+      setTimeout(() => showTutorial(0), 600);
+    }
   }
 
   init();

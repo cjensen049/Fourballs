@@ -349,7 +349,7 @@ function singlesOrder(players, captain = null) {
 //   { fridayAMPairs, saturdayAMPairs: foursomes [[p1,p2]×4]
 //     fridayPMPairs, saturdayPMPairs: fourball  [[p1,p2]×4]
 //     allPlayers: [×12] }
-// Players with 3+ team match appearances are fatigued in singles (−2%/+2%).
+// Players with 4 team match appearances (all sessions) are fatigued in singles (−2%/+2%).
 // Concession special: if user captain has it, user was leading entering singles,
 // but lost overall — result is clamped to 14-14 tie.
 function simulateFullEvent(myTeam, opponentTeam, venue, myCaptain, aiCaptain) {
@@ -384,8 +384,8 @@ function simulateFullEvent(myTeam, opponentTeam, venue, myCaptain, aiCaptain) {
   }
   const myAppearances  = countAppearances(myTeam);
   const oppAppearances = countAppearances(opponentTeam);
-  const myFatiguedIds  = new Set(Object.entries(myAppearances).filter(([, c]) => c >= 3).map(([id]) => id));
-  const oppFatiguedIds = new Set(Object.entries(oppAppearances).filter(([, c]) => c >= 3).map(([id]) => id));
+  const myFatiguedIds  = new Set(Object.entries(myAppearances).filter(([, c]) => c >= 4).map(([id]) => id));
+  const oppFatiguedIds = new Set(Object.entries(oppAppearances).filter(([, c]) => c >= 4).map(([id]) => id));
 
   const mySingles  = singlesOrder(myAll,  myCaptain);
   const oppSingles = singlesOrder(oppAll, aiCaptain);

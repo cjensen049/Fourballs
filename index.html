@@ -226,6 +226,35 @@
     .dramatic-pause { text-align: center; padding: 18px; color: var(--gold); font-style: italic; font-size: 14px; animation: dpulse 1s ease-in-out infinite; }
     @keyframes dpulse { 0%,100% { opacity: .5; } 50% { opacity: 1; } }
 
+    /* ── RC SCOREBOARD (results) ── */
+    .rc-board { max-width: 600px; margin: 0 auto; padding-bottom: 56px; }
+    .rc-score-hdr { display: grid; grid-template-columns: 1fr auto 1fr; align-items: center; background: var(--surface2); padding: 12px 16px; text-align: center; position: sticky; top: 48px; z-index: 10; border-bottom: 2px solid var(--border); }
+    .rc-side-name { font-size: 10px; text-transform: uppercase; letter-spacing: .12em; color: var(--text-muted); font-weight: 700; margin-bottom: 4px; }
+    .rc-side-score { font-size: 38px; font-weight: 900; line-height: 1; color: var(--text); transition: color .4s; }
+    .rc-side-score.lead { color: var(--win); }
+    .rc-side-score.trail { color: var(--text-dim); }
+    .rc-vs-sep { font-size: 11px; color: var(--text-dim); font-weight: 700; letter-spacing: .06em; padding: 0 8px; }
+    .rc-sess { border-bottom: 1px solid var(--border); }
+    .rc-sess-head { display: flex; justify-content: space-between; align-items: center; padding: 9px 14px 7px; background: rgba(255,255,255,.025); }
+    .rc-sess-title { font-size: 13px; font-weight: 800; color: var(--gold); }
+    .rc-sess-score { font-size: 11px; color: var(--text-muted); opacity: 0; transition: opacity .6s; font-weight: 700; }
+    .rc-sess-score.vis { opacity: 1; }
+    .rc-match { display: grid; grid-template-columns: 1fr 28px 1fr; gap: 4px; align-items: center; padding: 7px 14px; border-bottom: 1px solid rgba(255,255,255,.04); font-size: 12px; line-height: 1.35; opacity: 0; transform: translateY(4px); transition: opacity .3s, transform .3s; }
+    .rc-match.vis { opacity: 1; transform: none; }
+    .rc-match .my { text-align: right; }
+    .rc-match .opp { text-align: left; }
+    .rc-match .mid { text-align: center; font-weight: 800; font-size: 14px; }
+    .rc-match.win .my  { color: var(--win); font-weight: 700; }
+    .rc-match.win .mid { color: var(--win); }
+    .rc-match.win .opp { color: var(--text-dim); }
+    .rc-match.loss .opp { color: var(--loss); font-weight: 700; }
+    .rc-match.loss .mid { color: var(--loss); }
+    .rc-match.loss .my  { color: var(--text-dim); }
+    .rc-match.halve .my, .rc-match.halve .opp, .rc-match.halve .mid { color: var(--halve); }
+    .rc-sing-num { font-size: 9px; color: var(--text-dim); margin-right: 3px; }
+    .rc-tired { font-size: 9px; color: var(--halve); opacity: .7; }
+    .rc-day-summary { padding: 7px 14px; font-size: 11px; color: var(--gold); font-style: italic; text-align: center; background: rgba(201,168,76,.04); }
+
     /* ── UTILS ── */
     .spinner { width: 14px; height: 14px; border: 2px solid var(--border); border-top-color: var(--green-bright); border-radius: 50%; animation: spin .7s linear infinite; flex-shrink: 0; }
     @keyframes spin { to { transform: rotate(360deg); } }
@@ -1274,10 +1303,13 @@
     const optLabel      = optCount > 1 ? `Option ${(G.pairingIndex || 0) + 1} of ${optCount}` : '';
     const hasCapErr     = !G.pairings.fridayAM || G.pairings.fridayAM.length === 0;
 
+    const fatiguedList = fatiguedNames.length > 1
+      ? fatiguedNames.slice(0, -1).join(', ') + ' and ' + fatiguedNames[fatiguedNames.length - 1]
+      : fatiguedNames[0] || '';
     const fatigueWarning = fatiguedNames.length ? `
       <div style="padding:6px 14px;background:rgba(201,168,76,.08);border-bottom:1px solid rgba(201,168,76,.2);font-size:11px;">
         <span style="color:var(--gold);font-weight:700;">⚠ Fatigue: </span>
-        <span style="color:var(--text-muted)">${fatiguedNames.map(n => `${n} plays all 4 team sessions and enters Sunday fatigued.`).join(' ')}</span>
+        <span style="color:var(--text-muted)">${fatiguedList} ${fatiguedNames.length === 1 ? 'is' : 'are'} fatigued heading into Sunday singles.</span>
       </div>` : '';
 
     const capError = hasCapErr ? `
@@ -1353,197 +1385,146 @@
       <div style="display:flex;flex-direction:column;min-height:100vh;">
         <div class="page-header">
           <span class="page-title">Fourballs</span>
-          <span class="ticker-score" id="live-score">${G.side} 0 — ${oppSide} 0</span>
           <span style="flex:1"></span>
           <span style="font-size:11px;color:var(--text-dim)">${G.venue.name}</span>
         </div>
-        <div class="results-layout">
-          <div class="results-feed" id="rbody"></div>
-          <div class="results-sidebar">
-            <div class="score-panel">
-              <div class="sp-total-label">Total Score</div>
-              <div class="sp-total-score" id="sp-total">0 — 0</div>
-              <div class="sp-team-names"><span>${G.side}</span><span>${oppSide}</span></div>
-              <div class="sp-divider"></div>
-              <div class="sp-sess-label">Session</div>
-              <div class="sp-sess-name" id="sp-sess-name">—</div>
-              <div class="sp-sess-score" id="sp-sess-score">— — —</div>
+        <div class="rc-board">
+          <div class="rc-score-hdr">
+            <div>
+              <div class="rc-side-name">${G.side}</div>
+              <div class="rc-side-score" id="rc-my-score">0</div>
+            </div>
+            <div class="rc-vs-sep">vs</div>
+            <div>
+              <div class="rc-side-name">${oppSide}</div>
+              <div class="rc-side-score" id="rc-opp-score">0</div>
             </div>
           </div>
+          <div id="rbody"></div>
         </div>
       </div>`;
-
     doReveal(G.results);
   }
 
   async function doReveal(r) {
     const body = document.getElementById('rbody');
-    let uPts = 0, aPts = 0;
-    let rowIdx = 0;
-    let sessU = 0, sessA = 0;
+    let uPts = 0, aPts = 0, sessU = 0, sessA = 0, rowIdx = 0;
 
-    function updatePanel() {
-      const oppSide = opp(G.side);
-      const ticker  = document.getElementById('live-score');
-      if (ticker) ticker.textContent = `${G.side} ${uPts} — ${oppSide} ${aPts}`;
-      const spTotal = document.getElementById('sp-total');
-      if (spTotal) spTotal.textContent = `${uPts} — ${aPts}`;
-      const spSessScore = document.getElementById('sp-sess-score');
-      if (spSessScore) spSessScore.textContent = `${sessU} — ${sessA}`;
+    function fmtPts(p) { return p % 1 === 0 ? String(p) : p.toFixed(1); }
+
+    function updateScoreHeader() {
+      const myEl  = document.getElementById('rc-my-score');
+      const oppEl = document.getElementById('rc-opp-score');
+      if (!myEl || !oppEl) return;
+      myEl.textContent  = fmtPts(uPts);
+      oppEl.textContent = fmtPts(aPts);
+      myEl.className  = 'rc-side-score' + (uPts > aPts ? ' lead' : uPts < aPts ? ' trail' : '');
+      oppEl.className = 'rc-side-score' + (aPts > uPts ? ' lead' : aPts < uPts ? ' trail' : '');
     }
 
-    function startSession(name) {
-      sessU = 0; sessA = 0;
-      const el = document.getElementById('sp-sess-name');
-      if (el) el.textContent = name;
-      updatePanel();
-    }
-
-    function addAndTick(result) {
+    function tick(result) {
       if (result === 'win')        { uPts += 1;   sessU += 1; }
       else if (result === 'halve') { uPts += .5;  aPts += .5; sessU += .5; sessA += .5; }
       else                         { aPts += 1;   sessA += 1; }
-      updatePanel();
+      updateScoreHeader();
     }
 
-    // Prepend a new session block — newest content always on top
-    function prependBlock(html) {
-      body.insertAdjacentHTML('afterbegin', html);
-      window.scrollTo({ top: 0, behavior: 'smooth' });
+    function startSess() { sessU = 0; sessA = 0; }
+
+    function appendSessBlock(title, badgeId, contId) {
+      body.insertAdjacentHTML('beforeend', `
+        <div class="rc-sess">
+          <div class="rc-sess-head">
+            <span class="rc-sess-title">${title}</span>
+            <span class="rc-sess-score" id="${badgeId}"></span>
+          </div>
+          <div id="${contId}"></div>
+        </div>`);
     }
 
-    async function revealMatches(containerId, matches, msDelay) {
-      const cont = document.getElementById(containerId);
-      for (const m of matches) {
-        await delay(msDelay);
-        addAndTick(m.result);
-        const id = 'row-' + (++rowIdx);
-        cont.insertAdjacentHTML('afterbegin', `
-          <div class="match-row" id="${id}">
-            <div class="match-players">${m.myPlayers.filter(Boolean).join(' &amp; ')} <span style="color:var(--text-dim)">vs</span> ${m.oppPlayers.filter(Boolean).join(' &amp; ')}</div>
-            <div class="match-result ${rClass(m.result)}">${rLabel(m.result)}</div>
-            <div class="match-pts">+${m.points}</div>
-          </div>`);
-        await delay(40);
-        document.getElementById(id)?.classList.add('revealed');
-        window.scrollTo({ top: 0, behavior: 'smooth' });
-      }
-    }
-
-    function showBadge(id) {
+    function showSessBadge(id) {
       const el = document.getElementById(id);
-      if (el) { el.textContent = `${sessU} — ${sessA}`; el.classList.add('visible'); }
+      if (el) { el.textContent = `${fmtPts(sessU)}–${fmtPts(sessA)}`; el.classList.add('vis'); }
     }
 
-    // ── FRIDAY FOURSOMES AM ──
-    startSession('Friday AM');
-    prependBlock(`<div class="session-block">
-      <div class="session-head-row">
-        <span class="session-header">Friday — Foursomes</span>
-        <span class="session-score-badge" id="sbadge-fri-am"></span>
-      </div>
-      <div class="sub-header">Morning Session</div>
-      <div id="sec-fri-am"></div>
-    </div>`);
-    await revealMatches('sec-fri-am', r.sessions.fridayAM, 1500);
-    showBadge('sbadge-fri-am');
+    async function revealMatch(contId, m, ms, singlesNum = null) {
+      await delay(ms);
+      tick(m.result);
+      const id   = 'rc-' + (++rowIdx);
+      const cls  = m.result === 'win' ? 'win' : m.result === 'loss' ? 'loss' : 'halve';
+      const myNames  = m.myPlayers.filter(Boolean).join(' &amp; ');
+      const oppNames = m.oppPlayers.filter(Boolean).join(' &amp; ');
+      const numHtml  = singlesNum != null ? `<span class="rc-sing-num">${singlesNum}.</span>` : '';
+      const tiredMy  = m.fatigued    ? ' <span class="rc-tired">(f)</span>' : '';
+      const tiredOpp = m.oppFatigued ? ' <span class="rc-tired">(f)</span>' : '';
+      document.getElementById(contId)?.insertAdjacentHTML('beforeend', `
+        <div class="rc-match ${cls}" id="${id}">
+          <div class="my">${numHtml}${myNames}${tiredMy}</div>
+          <div class="mid">${rLabel(m.result)}</div>
+          <div class="opp">${oppNames}${tiredOpp}</div>
+        </div>`);
+      await delay(40);
+      document.getElementById(id)?.classList.add('vis');
+      document.getElementById(id)?.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+    }
+
+    // ── FRIDAY FOURSOMES ──
+    startSess();
+    appendSessBlock('Friday — Foursomes', 'sb-fri-am', 'sc-fri-am');
+    for (const m of r.sessions.fridayAM) await revealMatch('sc-fri-am', m, 1200);
+    showSessBadge('sb-fri-am');
+    await delay(700);
+
+    // ── FRIDAY FOURBALL ──
+    startSess();
+    appendSessBlock('Friday — Fourball', 'sb-fri-pm', 'sc-fri-pm');
+    for (const m of r.sessions.fridayPM) await revealMatch('sc-fri-pm', m, 1200);
+    showSessBadge('sb-fri-pm');
+    body.insertAdjacentHTML('beforeend',
+      `<div class="rc-day-summary">After Friday — ${G.side} ${fmtPts(uPts)} · ${opp(G.side)} ${fmtPts(aPts)}</div>`);
     await delay(900);
 
-    // ── FRIDAY FOURBALL PM ──
-    startSession('Friday PM');
-    prependBlock(`<div class="session-block">
-      <div class="session-head-row">
-        <span class="session-header">Friday — Fourball</span>
-        <span class="session-score-badge" id="sbadge-fri-pm"></span>
-      </div>
-      <div class="sub-header">Afternoon Session</div>
-      <div id="sec-fri-pm"></div>
-      <div id="sum-fri-pm" class="session-summary" style="display:none"></div>
-    </div>`);
-    await revealMatches('sec-fri-pm', r.sessions.fridayPM, 1500);
-    showBadge('sbadge-fri-pm');
-    const el1 = document.getElementById('sum-fri-pm');
-    if (el1) { el1.textContent = `After Friday: ${G.side} ${uPts} — ${opp(G.side)} ${aPts}`; el1.style.display = ''; el1.style.color = 'var(--gold)'; }
-    await delay(1200);
+    // ── SATURDAY FOURSOMES ──
+    startSess();
+    appendSessBlock('Saturday — Foursomes', 'sb-sat-am', 'sc-sat-am');
+    for (const m of r.sessions.saturdayAM) await revealMatch('sc-sat-am', m, 1200);
+    showSessBadge('sb-sat-am');
+    await delay(700);
 
-    // ── SATURDAY FOURSOMES AM ──
-    startSession('Saturday AM');
-    prependBlock(`<div class="session-block">
-      <div class="session-head-row">
-        <span class="session-header">Saturday — Foursomes</span>
-        <span class="session-score-badge" id="sbadge-sat-am"></span>
-      </div>
-      <div class="sub-header">Morning Session</div>
-      <div id="sec-sat-am"></div>
-    </div>`);
-    await revealMatches('sec-sat-am', r.sessions.saturdayAM, 1500);
-    showBadge('sbadge-sat-am');
-    await delay(900);
-
-    // ── SATURDAY FOURBALL PM ──
-    startSession('Saturday PM');
-    prependBlock(`<div class="session-block">
-      <div class="session-head-row">
-        <span class="session-header">Saturday — Fourball</span>
-        <span class="session-score-badge" id="sbadge-sat-pm"></span>
-      </div>
-      <div class="sub-header">Afternoon Session</div>
-      <div id="sec-sat-pm"></div>
-      <div id="sum-sat-pm" class="session-summary" style="display:none"></div>
-    </div>`);
-    await revealMatches('sec-sat-pm', r.sessions.saturdayPM, 1500);
-    showBadge('sbadge-sat-pm');
-    const el2 = document.getElementById('sum-sat-pm');
-    if (el2) { el2.textContent = `After Saturday: ${G.side} ${uPts} — ${opp(G.side)} ${aPts}`; el2.style.display = ''; el2.style.color = 'var(--gold)'; }
-    await delay(1200);
+    // ── SATURDAY FOURBALL ──
+    startSess();
+    appendSessBlock('Saturday — Fourball', 'sb-sat-pm', 'sc-sat-pm');
+    for (const m of r.sessions.saturdayPM) await revealMatch('sc-sat-pm', m, 1200);
+    showSessBadge('sb-sat-pm');
+    body.insertAdjacentHTML('beforeend',
+      `<div class="rc-day-summary">After Saturday — ${G.side} ${fmtPts(uPts)} · ${opp(G.side)} ${fmtPts(aPts)}</div>`);
+    await delay(1000);
 
     // ── SUNDAY SINGLES ──
-    startSession('Sunday Singles');
-    prependBlock(`<div class="session-block">
-      <div class="session-head-row">
-        <span class="session-header">Sunday — Singles</span>
-        <span class="session-score-badge" id="sbadge-sun"></span>
-      </div>
-      <div id="sec-sun"></div>
-    </div>`);
-    await delay(800);
+    startSess();
+    appendSessBlock('Sunday — Singles', 'sb-sun', 'sc-sun');
+    await delay(600);
 
     for (let i = 0; i < r.sessions.sunday.length; i++) {
       const m          = r.sessions.sunday[i];
       const cupDecided = uPts > 14 || aPts > 14;
-      const msDelay    = cupDecided ? 700 : 2000;
-      const isClose    = !cupDecided && i >= 9 && ((14.5 - uPts) <= 1.5 || (14.5 - aPts) <= 1.5);
+      const msDelay    = cupDecided ? 500 : 1800;
+      const isClose    = !cupDecided && i >= 8 && ((14.5 - uPts) <= 2 || (14.5 - aPts) <= 2);
 
       if (isClose) {
-        const dp = document.createElement('div');
-        dp.className = 'dramatic-pause'; dp.id = 'dp';
-        dp.textContent = `Match ${i + 1} — Everything on the line…`;
-        document.getElementById('sec-sun').prepend(dp);
-        window.scrollTo({ top: 0, behavior: 'smooth' });
-        await delay(2800);
-        document.getElementById('dp')?.remove();
-      } else {
-        await delay(msDelay);
+        const dpId = 'dp-' + i;
+        document.getElementById('sc-sun')?.insertAdjacentHTML('beforeend',
+          `<div class="dramatic-pause" id="${dpId}">Match ${i + 1} — Everything on the line…</div>`);
+        document.getElementById(dpId)?.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+        await delay(2500);
+        document.getElementById(dpId)?.remove();
       }
 
-      addAndTick(m.result);
-      const id = 'row-' + (++rowIdx);
-      const fatiguedTag     = '<span style="font-size:10px;color:var(--halve);opacity:.7">(fatigued)</span>';
-      const fatiguedNote    = m.fatigued    ? ' ' + fatiguedTag : '';
-      const oppFatiguedNote = m.oppFatigued ? ' ' + fatiguedTag : '';
-      document.getElementById('sec-sun').insertAdjacentHTML('afterbegin', `
-        <div class="match-row" id="${id}">
-          <span class="match-num">${i + 1}.</span>
-          <div class="match-players">${m.myPlayers[0]}${fatiguedNote} <span style="color:var(--text-dim)">vs</span> ${m.oppPlayers[0]}${oppFatiguedNote}</div>
-          <div class="match-result ${rClass(m.result)}">${rLabel(m.result)}</div>
-        </div>`);
-      await delay(40);
-      document.getElementById(id)?.classList.add('revealed');
-      window.scrollTo({ top: 0, behavior: 'smooth' });
+      await revealMatch('sc-sun', m, isClose ? 0 : msDelay, i + 1);
     }
 
-    showBadge('sbadge-sun');
-    await delay(1000);
+    showSessBadge('sb-sun');
+    await delay(800);
     showFinalBanner(r, uPts, aPts);
   }
 
@@ -1551,6 +1532,12 @@
     const body    = document.getElementById('rbody');
     const oppSide = opp(G.side);
     const w       = r.winner;
+
+    // Highlight winner's score in header
+    const myEl  = document.getElementById('rc-my-score');
+    const oppEl = document.getElementById('rc-opp-score');
+    if (w === 'user' && myEl)  myEl.style.color  = 'var(--win)';
+    if (w === 'ai'   && oppEl) oppEl.style.color = 'var(--loss)';
 
     let bClass, bTitle, bSub;
     if (w === 'user') {
@@ -1579,12 +1566,12 @@
 
     const shareText = `${G.side} ${r.finalScore.user} — ${oppSide} ${r.finalScore.ai} | ${G.venue.name} | Captain: ${G.captain?.name} | MVP: ${bestMy?.name} | ${summary} #Fourballs`;
 
-    body.insertAdjacentHTML('afterbegin', `
-      <div class="result-banner ${bClass} fade-in">
+    body.insertAdjacentHTML('beforeend', `
+      <div class="result-banner ${bClass} fade-in" style="margin:16px 14px 0;">
         <div class="banner-title">${bTitle}</div>
         <div class="banner-sub">${bSub}</div>
       </div>
-      <div class="share-card fade-in">
+      <div class="share-card fade-in" style="margin:0 14px 16px;">
         <h3>Match Summary</h3>
         <p><strong>Final Score:</strong> ${G.side} ${r.finalScore.user} — ${oppSide} ${r.finalScore.ai}</p>
         <p><strong>Venue:</strong> ${G.venue.name}</p>

@@ -308,6 +308,37 @@
     /* ── TUTORIAL OVERLAY ── */
     .tutorial-overlay { position: fixed; inset: 0; background: rgba(0,0,0,.85); z-index: 200; display: flex; align-items: center; justify-content: center; padding: 20px; }
     .tutorial-card { background: var(--surface); border: 1px solid var(--green); border-radius: var(--radius); max-width: 420px; width: 100%; padding: 24px; animation: fadein .25s ease-out; }
+
+    /* ── MODE TOGGLE (nationality screen) ── */
+    .mode-toggle { display: flex; border: 1px solid var(--border); border-radius: 8px; overflow: hidden; margin: 0 auto 6px; width: fit-content; }
+    .mode-btn { padding: 7px 20px; font-size: 13px; font-weight: 600; background: transparent; color: var(--text-muted); border: none; cursor: pointer; transition: all .18s; }
+    .mode-btn.active { background: var(--gold); color: #111; }
+    .mode-desc-text { text-align: center; font-size: 11px; color: var(--text-dim); min-height: 16px; }
+
+    /* ── ADVANCED PAIRING SCREEN ── */
+    .adv-section { margin-bottom: 22px; }
+    .adv-sect-title { font-size: 13px; font-weight: 700; color: var(--text); padding-bottom: 6px; border-bottom: 1px solid var(--border); margin-bottom: 4px; }
+    .adv-sect-sub { font-size: 11px; color: var(--text-dim); margin-bottom: 10px; }
+    .adv-pair-row { display: grid; grid-template-columns: 18px 1fr 18px 1fr auto; align-items: center; gap: 5px; margin-bottom: 7px; }
+    .adv-pair-num { font-size: 11px; color: var(--text-dim); text-align: right; font-weight: 600; }
+    .adv-plus { font-size: 13px; color: var(--text-dim); text-align: center; }
+    .adv-chem { display: flex; align-items: center; gap: 4px; min-width: 88px; }
+    .adv-slot { padding: 7px 9px; border-radius: 6px; border: 1px dashed var(--border); font-size: 12px; cursor: pointer; min-height: 34px; display: flex; align-items: center; transition: border-color .15s; }
+    .adv-slot.empty { color: var(--text-dim); justify-content: center; font-size: 11px; }
+    .adv-slot.empty:hover { border-color: var(--gold); color: var(--gold); }
+    .adv-slot.filled { border-style: solid; justify-content: space-between; gap: 4px; }
+    .adv-slot-name { font-weight: 600; color: var(--text); flex: 1; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; font-size: 12px; }
+    .adv-slot-x { font-size: 15px; color: var(--text-dim); cursor: pointer; line-height: 1; padding: 0 2px; flex-shrink: 0; }
+    .adv-slot-x:hover { color: var(--loss); }
+    .adv-badge { font-size: 9px; color: var(--gold); background: rgba(201,168,76,.15); border: 1px solid rgba(201,168,76,.3); border-radius: 3px; padding: 1px 4px; }
+
+    /* ── PLAYER PICKER MODAL ── */
+    .adv-overlay { position: fixed; inset: 0; background: rgba(0,0,0,.72); z-index: 50; display: flex; align-items: flex-end; }
+    .adv-modal { background: var(--surface2); border-top: 2px solid var(--border); width: 100%; max-height: 72vh; overflow-y: auto; padding: 16px 14px 28px; border-radius: 14px 14px 0 0; }
+    .adv-modal-title { font-size: 13px; font-weight: 700; margin-bottom: 12px; text-align: center; color: var(--text-muted); }
+    .adv-modal-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
+    .adv-pick-card { padding: 9px 8px; background: var(--surface); border: 1px solid var(--border); border-radius: 8px; cursor: pointer; transition: border-color .15s, background .15s; text-align: center; }
+    .adv-pick-card:hover { border-color: var(--gold); }
     .tut-eyebrow { font-size: 10px; text-transform: uppercase; letter-spacing: .1em; color: var(--text-muted); margin-bottom: 6px; }
     .tut-title { font-size: 22px; font-weight: 800; color: var(--gold); margin-bottom: 10px; }
     .tut-body { font-size: 14px; color: var(--text); line-height: 1.55; margin-bottom: 20px; }
@@ -375,6 +406,7 @@
     return {
       _version: STORAGE_VERSION,
       phase: 'landing',
+      mode: 'standard',
       side: null,
       venue: null,
       picks: [],
@@ -682,6 +714,18 @@
     return options.length ? options : [{ fridayAM: [], fridayPM: [], saturdayAM: [], saturdayPM: [], _score: 0, _fatiguedIds: [] }];
   }
 
+  // Given user-picked AM pairs, find the best PM pairing from the same players (avoiding AM repeats).
+  function _buildPMFromAMPairs(amPairs, format) {
+    const players = amPairs.flat().filter(Boolean);
+    if (players.length < 2) return amPairs;
+    const usedKeys = new Set(amPairs.map(([a,b]) => a && b ? _pairKey(a,b) : null).filter(Boolean));
+    const matchings = _perfectMatchings(players);
+    const valid = matchings.filter(m => m.every(([a,b]) => !usedKeys.has(_pairKey(a,b))));
+    const pool = valid.length ? valid : matchings;
+    if (!pool.length) return amPairs;
+    return pool.reduce((b, m) => _scoreMatching(m, format) > _scoreMatching(b, format) ? m : b, pool[0]);
+  }
+
   // ─────────────────────────────────────────────────────────────────────────────
   // HELPERS
   // ─────────────────────────────────────────────────────────────────────────────
@@ -952,10 +996,18 @@
   // SCREEN: NATIONALITY
   // ─────────────────────────────────────────────────────────────────────────────
   function renderNationality() {
+    const curMode = G.mode || 'standard';
     document.getElementById('app').innerHTML = `
       <div class="nation-wrap fade-in">
         <div class="nation-eyebrow">Ryder Cup</div>
         <div class="nation-title">Choose Your Side</div>
+        <div style="margin-bottom:22px;text-align:center;">
+          <div class="mode-toggle">
+            <button class="mode-btn ${curMode==='standard'?'active':''}" data-mode="standard">Standard</button>
+            <button class="mode-btn ${curMode==='advanced'?'active':''}" data-mode="advanced">Advanced</button>
+          </div>
+          <div class="mode-desc-text" id="mode-desc">${curMode==='advanced'?'Manual pairings + chemistry detail':'Auto-assigned pairings'}</div>
+        </div>
         <div class="nation-cards">
           <div class="nation-card usa" data-side="USA">
             <div class="nation-flag">🇺🇸</div>
@@ -969,6 +1021,15 @@
           </div>
         </div>
       </div>`;
+
+    document.querySelectorAll('.mode-btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        G.mode = btn.dataset.mode;
+        document.querySelectorAll('.mode-btn').forEach(b => b.classList.toggle('active', b.dataset.mode === G.mode));
+        document.getElementById('mode-desc').textContent =
+          G.mode === 'advanced' ? 'Manual pairings + chemistry detail' : 'Auto-assigned pairings';
+      });
+    });
 
     document.querySelectorAll('[data-side]').forEach(card => {
       card.addEventListener('click', () => {
@@ -1235,7 +1296,7 @@
       G.aiPairings = aiOpts[0] || { fridayAM: [], fridayPM: [], saturdayAM: [], saturdayPM: [] };
       G.phase = 'review';
       save();
-      render();
+      if (G.mode === 'advanced') { renderAdvancedPairing(); } else { render(); }
     } else {
       G.currentRound = round + 1;
       const userHeroCount = G.picks.filter(p => p.tier === 'hero').length;
@@ -1248,6 +1309,222 @@
 
 
   // ─────────────────────────────────────────────────────────────────────────────
+  // SCREEN: ADVANCED PAIRING (manual pair selection — all 4 sessions)
+  // ─────────────────────────────────────────────────────────────────────────────
+  function renderAdvancedPairing() {
+    const app   = document.getElementById('app');
+    const picks = G.picks.filter(Boolean);
+
+    const SESS_META = {
+      friAM: { label: 'Friday — Foursomes',  sub: 'Alternating shots · accuracy &amp; consistency win', fmt: 'foursomes', key: 'fridayAM'   },
+      satAM: { label: 'Saturday — Foursomes', sub: 'Alternating shots · accuracy &amp; consistency win', fmt: 'foursomes', key: 'saturdayAM' },
+      friPM: { label: 'Friday — Fourball',   sub: 'Best ball · aggression &amp; birdie rate win',       fmt: 'fourball',  key: 'fridayPM'   },
+      satPM: { label: 'Saturday — Fourball', sub: 'Best ball · aggression &amp; birdie rate win',       fmt: 'fourball',  key: 'saturdayPM' }
+    };
+    const SESS_ORDER = ['friAM', 'satAM', 'friPM', 'satPM'];
+
+    // Pre-fill from existing pairings (all 4 sessions)
+    function srcPairs(key) {
+      const arr = G.pairings[key];
+      if (arr && arr.length) return arr.map(([a,b]) => [a||null, b||null]);
+      const opt = G.pairingOptions[0];
+      return opt && opt[key] ? opt[key].map(([a,b]) => [a||null, b||null]) : [[null,null],[null,null],[null,null],[null,null]];
+    }
+
+    const slots = {
+      friAM: srcPairs('fridayAM'),
+      satAM: srcPairs('saturdayAM'),
+      friPM: srcPairs('fridayPM'),
+      satPM: srcPairs('saturdayPM')
+    };
+
+    // Count how many of the 4 sessions this player appears in (max 4 = fatigued)
+    function playerSessions(p) {
+      return SESS_ORDER.filter(s => slots[s].some(([a,b]) => (a&&a.id===p.id)||(b&&b.id===p.id))).length;
+    }
+
+    function isComplete() {
+      return SESS_ORDER.every(s => slots[s].every(([a,b]) => a && b));
+    }
+
+    function chemDisplay(p1, p2, fmt) {
+      if (!p1 || !p2) return '<span style="font-size:11px;color:var(--text-dim);">—</span>';
+      const score  = calculatePairingChemistry(p1, p2, fmt);
+      const bond   = hasBond(p1, p2);
+      const vc     = hasSharedVenueConnection(p1, p2, G.venue);
+      const badges = [bond&&'<span class="adv-badge">Bond</span>', vc&&'<span class="adv-badge">Venue</span>'].filter(Boolean).join('');
+      return `<span class="chem-dot ${chemClass(score)}" style="flex-shrink:0;"></span>
+              <span style="font-size:11px;color:var(--text-muted);margin-left:4px;">${score}%</span>
+              ${badges}`;
+    }
+
+    function slotHTML(sess, pi, si) {
+      const p = slots[sess][pi][si];
+      if (p) {
+        const tc    = TIER_COLORS[p.tier] || '#555';
+        const tired = playerSessions(p) >= 4;
+        return `<div class="adv-slot filled" data-sess="${sess}" data-pi="${pi}" data-si="${si}"
+                     style="border-color:${tc}55;background:${tc}15;">
+                  <span class="adv-slot-name">${p.name}</span>
+                  ${tired ? '<span title="Fatigued in singles" style="font-size:10px;color:var(--gold);">⚡</span>' : ''}
+                  <span class="adv-slot-x" data-sess="${sess}" data-pi="${pi}" data-si="${si}">×</span>
+                </div>`;
+      }
+      return `<div class="adv-slot empty" data-sess="${sess}" data-pi="${pi}" data-si="${si}">Pick +</div>`;
+    }
+
+    function pairRowHTML(sess, pi) {
+      const [p1,p2] = slots[sess][pi];
+      const fmt     = SESS_META[sess].fmt;
+      return `<div class="adv-pair-row">
+        <span class="adv-pair-num">${pi+1}</span>
+        ${slotHTML(sess,pi,0)}
+        <span class="adv-plus">+</span>
+        ${slotHTML(sess,pi,1)}
+        <div class="adv-chem">${chemDisplay(p1,p2,fmt)}</div>
+      </div>`;
+    }
+
+    function boardHTML() {
+      return SESS_ORDER.map(sess => {
+        const { label, sub } = SESS_META[sess];
+        return `<div class="adv-section">
+          <div class="adv-sect-title">${label}</div>
+          <div class="adv-sect-sub">${sub}</div>
+          ${[0,1,2,3].map(i => pairRowHTML(sess,i)).join('')}
+        </div>`;
+      }).join('') +
+      `<div style="margin-top:4px;font-size:11px;color:var(--text-dim);text-align:center;padding-bottom:8px;">
+        Players in all 4 sessions are fatigued in singles &nbsp;·&nbsp; <span style="color:var(--gold);">⚡</span> = fatigued
+      </div>`;
+    }
+
+    function pickerHTML(sess, pi, si) {
+      const partner  = slots[sess][pi][1-si];
+      const current  = slots[sess][pi][si];
+      const fmt      = SESS_META[sess].fmt;
+      return `
+        <div class="adv-overlay" id="adv-overlay">
+          <div class="adv-modal">
+            <div class="adv-modal-title">${partner ? `Paired with ${partner.name}` : 'Select a player'}</div>
+            <div class="adv-modal-grid">
+              ${picks.map(p => {
+                const isPartner   = partner && partner.id === p.id;
+                const isCurrent   = current && current.id === p.id;
+                const chem        = partner ? calculatePairingChemistry(partner, p, fmt) : null;
+                const chemCls     = chem !== null ? chemClass(chem) : '';
+                const sessCount   = playerSessions(p);
+                const alreadySess = slots[sess].some(([a,b]) => (a&&a.id===p.id)||(b&&b.id===p.id));
+                const wouldTire   = !isCurrent && !alreadySess && sessCount + 1 >= 4;
+                return `<div class="adv-pick-card" data-pid="${p.id}"
+                             style="${isPartner ? 'opacity:.3;pointer-events:none;' : ''}${isCurrent ? 'border-color:var(--gold);background:rgba(201,168,76,.12);' : ''}">
+                  <div style="font-size:12px;font-weight:700;color:var(--text);">${p.name}</div>
+                  <div style="font-size:10px;color:var(--text-muted);margin-bottom:4px;">${p.year}</div>
+                  ${chem!==null ? `<div style="display:flex;align-items:center;justify-content:center;gap:4px;">
+                    <span class="chem-dot ${chemCls}" style="width:7px;height:7px;flex-shrink:0;"></span>
+                    <span style="font-size:10px;color:var(--text-muted);">${chem}%</span>
+                  </div>` : ''}
+                  ${wouldTire ? '<div style="font-size:9px;color:var(--gold);margin-top:3px;">⚡ Tired</div>' : ''}
+                </div>`;
+              }).join('')}
+            </div>
+            <button class="btn btn-outline" id="adv-cancel" style="width:100%;margin-top:14px;font-size:13px;">Cancel</button>
+          </div>
+        </div>`;
+    }
+
+    function redraw() {
+      document.getElementById('adv-board').innerHTML = boardHTML();
+      const btn = document.getElementById('adv-confirm');
+      if (btn) btn.disabled = !isComplete();
+      attachEvents();
+    }
+
+    function attachEvents() {
+      document.querySelectorAll('.adv-slot.empty').forEach(el => {
+        el.addEventListener('click', () => openPicker(el.dataset.sess, +el.dataset.pi, +el.dataset.si));
+      });
+      document.querySelectorAll('.adv-slot.filled').forEach(el => {
+        el.addEventListener('click', e => {
+          if (!e.target.classList.contains('adv-slot-x'))
+            openPicker(el.dataset.sess, +el.dataset.pi, +el.dataset.si);
+        });
+      });
+      document.querySelectorAll('.adv-slot-x').forEach(el => {
+        el.addEventListener('click', e => {
+          e.stopPropagation();
+          slots[el.dataset.sess][+el.dataset.pi][+el.dataset.si] = null;
+          redraw();
+        });
+      });
+    }
+
+    function openPicker(sess, pi, si) {
+      const wrap = document.getElementById('adv-picker-wrap');
+      wrap.innerHTML = pickerHTML(sess, pi, si);
+      document.getElementById('adv-cancel').addEventListener('click', () => { wrap.innerHTML = ''; });
+      document.getElementById('adv-overlay').addEventListener('click', e => {
+        if (e.target.id === 'adv-overlay') wrap.innerHTML = '';
+      });
+      document.querySelectorAll('.adv-pick-card').forEach(card => {
+        card.addEventListener('click', () => {
+          if (card.style.pointerEvents === 'none') return;
+          const p = picks.find(pl => pl.id === card.dataset.pid);
+          if (p) {
+            slots[sess][pi][si] = p;
+            wrap.innerHTML = '';
+            redraw();
+          }
+        });
+      });
+    }
+
+    function confirmPairings() {
+      const allPairs = SESS_ORDER.flatMap(s => slots[s]);
+      const appearances = {};
+      for (const [p1,p2] of allPairs) {
+        if (p1) appearances[p1.id] = (appearances[p1.id]||0) + 1;
+        if (p2) appearances[p2.id] = (appearances[p2.id]||0) + 1;
+      }
+      const fatiguedIds = picks.filter(p => (appearances[p.id]||0) >= 4).map(p => p.id);
+
+      G.pairings      = {
+        fridayAM:   slots.friAM.map(([a,b]) => [a,b]),
+        saturdayAM: slots.satAM.map(([a,b]) => [a,b]),
+        fridayPM:   slots.friPM.map(([a,b]) => [a,b]),
+        saturdayPM: slots.satPM.map(([a,b]) => [a,b]),
+        _fatiguedIds: fatiguedIds
+      };
+      G.pairingOptions = [G.pairings];
+      G.pairingIndex   = 0;
+      save();
+      renderReview();
+    }
+
+    app.innerHTML = `
+      <div style="display:flex;flex-direction:column;min-height:100vh;">
+        <div class="page-header">
+          <span class="page-title">Fourballs</span>
+          <span style="flex:1"></span>
+          <span style="font-size:12px;color:var(--text-muted)">${G.venue.name}</span>
+        </div>
+        <div style="padding:8px 14px;background:var(--surface);border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;gap:10px;">
+          <div>
+            <div style="font-size:14px;font-weight:700;">Set Your Pairings</div>
+            <div style="font-size:11px;color:var(--text-dim);">Pick all 16 pairs across 4 sessions</div>
+          </div>
+          <button class="btn btn-gold" id="adv-confirm" style="padding:9px 18px;font-size:14px;" ${isComplete()?'':'disabled'}>Confirm →</button>
+        </div>
+        <div style="flex:1;overflow-y:auto;padding:12px 14px 40px;">
+          <div id="adv-board">${boardHTML()}</div>
+        </div>
+      </div>
+      <div id="adv-picker-wrap"></div>`;
+
+    attachEvents();
+    document.getElementById('adv-confirm').addEventListener('click', confirmPairings);
+  }
+
   // SCREEN: REVIEW
   // ─────────────────────────────────────────────────────────────────────────────
   function renderReview() {
@@ -1327,8 +1604,11 @@
         <div style="padding:8px 14px;background:var(--surface);border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap;">
           <button class="btn btn-gold" id="sim-btn" style="font-size:15px;padding:10px 22px;">Simulate The Cup →</button>
           <div style="display:flex;align-items:center;gap:8px;">
-            ${optLabel ? `<span style="font-size:10px;color:var(--text-dim)">${optLabel}</span>` : ''}
-            <button class="btn btn-outline" id="rerandom-btn" style="font-size:12px;padding:6px 14px;">Reshuffle Pairings</button>
+            ${G.mode === 'advanced'
+              ? `<button class="btn btn-outline" id="rerandom-btn" style="font-size:12px;padding:6px 14px;">Edit Pairings</button>`
+              : `${optLabel ? `<span style="font-size:10px;color:var(--text-dim)">${optLabel}</span>` : ''}
+                 <button class="btn btn-outline" id="rerandom-btn" style="font-size:12px;padding:6px 14px;">Reshuffle Pairings</button>`
+            }
           </div>
         </div>
         ${capError}
@@ -1340,13 +1620,17 @@
       </div>`;
 
     document.getElementById('rerandom-btn').addEventListener('click', () => {
-      const opts = G.pairingOptions || [];
-      if (opts.length > 1) {
-        G.pairingIndex = ((G.pairingIndex || 0) + 1) % opts.length;
-        G.pairings = opts[G.pairingIndex];
+      if (G.mode === 'advanced') {
+        renderAdvancedPairing();
+      } else {
+        const opts = G.pairingOptions || [];
+        if (opts.length > 1) {
+          G.pairingIndex = ((G.pairingIndex || 0) + 1) % opts.length;
+          G.pairings = opts[G.pairingIndex];
+        }
+        save();
+        renderReview();
       }
-      save();
-      renderReview();
     });
 
     document.getElementById('sim-btn').addEventListener('click', () => {
@@ -1432,7 +1716,7 @@
     function startSess() { sessU = 0; sessA = 0; }
 
     function appendSessBlock(title, badgeId, contId) {
-      body.insertAdjacentHTML('beforeend', `
+      body.insertAdjacentHTML('afterbegin', `
         <div class="rc-sess">
           <div class="rc-sess-head">
             <span class="rc-sess-title">${title}</span>
@@ -1480,7 +1764,7 @@
     appendSessBlock('Friday — Fourball', 'sb-fri-pm', 'sc-fri-pm');
     for (const m of r.sessions.fridayPM) await revealMatch('sc-fri-pm', m, 1200);
     showSessBadge('sb-fri-pm');
-    body.insertAdjacentHTML('beforeend',
+    body.firstElementChild.insertAdjacentHTML('afterend',
       `<div class="rc-day-summary">After Friday — ${G.side} ${fmtPts(uPts)} · ${opp(G.side)} ${fmtPts(aPts)}</div>`);
     await delay(900);
 
@@ -1496,7 +1780,7 @@
     appendSessBlock('Saturday — Fourball', 'sb-sat-pm', 'sc-sat-pm');
     for (const m of r.sessions.saturdayPM) await revealMatch('sc-sat-pm', m, 1200);
     showSessBadge('sb-sat-pm');
-    body.insertAdjacentHTML('beforeend',
+    body.firstElementChild.insertAdjacentHTML('afterend',
       `<div class="rc-day-summary">After Saturday — ${G.side} ${fmtPts(uPts)} · ${opp(G.side)} ${fmtPts(aPts)}</div>`);
     await delay(1000);
 
@@ -1566,7 +1850,7 @@
 
     const shareText = `${G.side} ${r.finalScore.user} — ${oppSide} ${r.finalScore.ai} | ${G.venue.name} | Captain: ${G.captain?.name} | MVP: ${bestMy?.name} | ${summary} #Fourballs`;
 
-    body.insertAdjacentHTML('beforeend', `
+    body.insertAdjacentHTML('afterbegin', `
       <div class="result-banner ${bClass} fade-in" style="margin:16px 14px 0;">
         <div class="banner-title">${bTitle}</div>
         <div class="banner-sub">${bSub}</div>

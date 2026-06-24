@@ -23,7 +23,28 @@ be documented with a known solution.
 
 ## Active Errors
 
-None yet. Project not yet in build phase.
+### [ERROR-001] A few players' ryder_cup_record looks doubled on their 2024 entry
+- **Status:** Open (not fixed — discovered while adding new 2024/2025 entries, out of
+  scope for the captain-pool/venue prompt that was in progress)
+- **Discovered:** 2026-06-22, while adding 2024/2025 player-year entries
+  (scripts/add_2024_2025_players.js)
+- **Symptom:** Rory McIlroy's record is `{won:17,lost:14,halved:5}` on every entry
+  2010-2023, but his 2024 AND 2025 entries both show `{won:20,lost:9,halved:3}` — same
+  pattern on Tommy Fleetwood (`6-5-2` → `7-4-1` at 2024) and Xander Schauffele
+  (`3-3-0` → `4-4-2` at 2024). Other players who got 2024 entries in the same batch
+  (Hovland, Scheffler) correctly kept their record unchanged from 2023. No real Ryder
+  Cup happened in 2024, so a record change between a player's 2023 and 2024 entry isn't
+  expected for anyone.
+- **Root Cause:** Unknown — likely an ad-hoc manual edit from whichever session added
+  the original 2024/2025 entries (recap_2026_06_04e), not a systemic bug in any
+  function. Inconsistent across players (some bumped, some not), so it doesn't look
+  intentional.
+- **Resolution:** Not fixed. New 2024/2025 entries added in this session
+  (scripts/add_2024_2025_players.js) deliberately carry forward each player's
+  unchanged prior record rather than inventing a bump, to avoid adding more of this
+  inconsistency.
+- **Affected Files:** data/players.json (Rory McIlroy 2024/2025, Tommy Fleetwood 2024,
+  Xander Schauffele 2024 entries)
 
 ---
 

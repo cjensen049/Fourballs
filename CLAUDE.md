@@ -20,9 +20,24 @@ and a dramatic session-by-session results reveal.
 ## Project Structure
 ```
 /data/
-  players.json          # ~407 player-year entries (204 USA / 203 EUR, 2000–2025)
-  venues.json           # All Ryder Cup venues with hidden course tags
-  captains.json         # Legendary captains with bonus structures
+  players.json          # ~682 player-year entries (USA/EUR, 1999–2025). Most Ryder
+                         # Cup years (1999, 2002-2025) now carry full real rosters via
+                         # `made_team` (true/false — actually made that year's real
+                         # team vs. was in contention/strong tour year but didn't);
+                         # null on entries where this hasn't been researched. Shown in
+                         # UI as a small "✓ Made the Team" badge (playerCardHTML /
+                         # playerPickedHTML) — not yet wired into draft odds or
+                         # chemistry, may feed a chemistry boost later.
+  venues.json           # 19 Ryder Cup venues (real history, pre-2000 included for
+                         # flavor) with hidden course tags — 7 hidden_tags dimensions:
+                         # power/accuracy/short_game/wind/pressure/putting/consistency
+  captains.json         # Captains with bonus structures. `tier` (hero/platinum/gold/
+                         # silver/bronze) drives the in-draft pool — intentionally
+                         # bottom-heavy (hero:2, platinum:3, gold:7, silver:15,
+                         # bronze:9 of 36) since most real captains were unremarkable
+                         # picks. `prestige` (legendary/hero/standard) is the older
+                         # 3-value scale, now display-only (card color treatment) —
+                         # no longer drives any draw logic.
 /src/
   scoring-engine.js     # Pure JS module, no UI dependencies
   scoring-engine.test.js
@@ -36,11 +51,12 @@ ERROR.md                # Known issues and resolutions
 1. Landing page — "Start New Game" button
 2. Nationality selection — user picks USA or EUR
 3. Venue spinner — animated slot-machine draw from venues.json, reveals selected venue
-4. Captain selection — pick captain before you know who you'll draft (see Captain Pick below)
-5. Draft — 12 rounds of player selection
-6. AI reveal after each round — see what the AI saw and who they picked
-7. Auto-assigned pairings → Review screen
-8. Simulation → Results
+4. Draft — 13 rounds: 12 player slots + 1 dedicated captain slot, captain selection
+   happens inside the draft itself (see Captain Pick below) — there is no standalone
+   pre-draft captain screen
+5. AI reveal after each round — see what the AI saw and who they picked
+6. Auto-assigned pairings → Review screen
+7. Simulation → Results
 
 ## Venue
 - One venue drawn randomly at game start from venues.json, revealed via animated spinner
@@ -48,28 +64,78 @@ ERROR.md                # Known issues and resolutions
 - Venue is shown with user-friendly descriptors (e.g. "Power Course", "Links Test")
   mapped from hidden tags — do not expose raw tag values
 - Course profile bar displayed during draft and AI reveal: shows venue name,
-  user_descriptors, and 5 demand bars (Power / Accurate / Short Game / Consistent / Clutch)
-  using the same colors as player style tag chips
+  user_descriptors, and the top-3 demand chips (from courseProfileHTML's DEMAND_META,
+  still Power / Accurate / Short Game / Consistent / Clutch — 5 labels only) using the
+  same colors as player style tag chips
+- `hidden_tags` has 7 dimensions: power_weight, accuracy_weight, short_game_weight,
+  wind_factor, pressure_factor, putting_weight, consistency_weight. The last two are
+  additive (added for venue-archetype mapping support) and are NOT yet wired into any
+  UI — `DEMAND_META`'s "Consistent" chip still reuses `wind_factor` as a proxy (a
+  pre-existing simplification from before these fields existed, since the widget only
+  has 5 slots for 5 player style tags). Wiring the real `consistency_weight`/
+  `putting_weight` fields into the UI is intentionally left to whichever future pass
+  needs them (e.g. the venue-archetype work) — do not assume they're displayed anywhere
+  yet.
+- `user_descriptors` are derived from a venue's hidden_tags relative to the rest of the
+  pool (top dimensions where the venue ranks in roughly the top 40% across all venues,
+  not just its own internal top-3 — pressure_factor in particular is high for nearly
+  every venue, so naive per-venue ranking degenerates into "High Pressure Venue"
+  everywhere). No single descriptor should exceed ~40% of the venue pool. `course_type`
+  (links/heathland) contributes "Links Test"/"Heathland Challenge" directly rather than
+  through a numeric dimension; "Birdie Fest"/"Home Crowd Advantage" are hand-assigned
+  narrative tags, not derived from any tag score.
 
-## Captain Pick (Before Draft)
-- After venue reveal, user picks their captain from 3 random captains (matching chosen nationality)
-- Each captain card shows name, year captained, and full bonus breakdown
-- Bonuses are clearly communicated — no hidden captain effects
-- Captain is locked in before draft begins
-- Captain affinity with specific players is applied during simulation
+## Captain Pick (Inside the Draft)
+- No standalone captain screen. The draft is 13 rounds: 12 player slots + 1 dedicated
+  captain slot. Taking a captain does NOT consume a player slot — the draft always
+  runs the full 13 rounds regardless of which round the captain is taken in.
+- Each round's 3 card slots roll a tier first (same graduated odds table as below),
+  then draw at random from players AND captains combined at that tier (filtered to
+  the user's nationality) — a captain is just another card that can show up in any
+  tier bucket, not a separately-weighted system.
+- Captains have a `tier` field (hero/platinum/gold/silver/bronze) on the same scale
+  as players, used only for this combined draw. Their original 3-value classification
+  (legendary/hero/standard) is preserved as `prestige` and still drives the captain
+  card's color treatment.
+- Once the human takes a captain, `G.captain` is set and captains stop appearing in
+  the human's future rounds for that draft.
+- If round 13 is reached with no captain taken (all 12 player slots full), it is
+  overridden to show exactly 3 low-tier (silver/bronze) captains only — guarantees a
+  captain by draft's end; waiting costs a weaker captain, never a player slot.
+- Captains shown as round options are NOT added to the permanent "seen" exclusion
+  list the way players are (see uniqueness rule below) — the captain pool is small
+  (4–9 per tier per side) and would be exhausted before round 13 if treated the same.
+- Each captain card shows name, year(s) captained, and full bonus breakdown.
+  Bonuses are clearly communicated — no hidden captain effects.
+- Captain affinity with specific players is applied during simulation.
+- **The AI drafts its own captain through this exact same mechanism, in parallel.**
+  There is no separate one-shot AI captain draw. Every human round triggers one AI
+  action via `generateRoundCardsFor(opp(side), aiPicks, aiCaptain, aiSeenNames)` —
+  same combined player+captain tier draw, same low-tier-only forced fallback once
+  the AI has 12 players and still no captain. AI picks a captain mid-draft if a
+  hero/platinum-tier captain shows up alongside lower-tier players (see
+  `aiBestFromCards` Rule 1.5); otherwise it keeps prioritizing hero players and
+  chemistry the way it always has. The AI stops acting once it has 12 players AND
+  a captain — it may finish before or after the human's round 13.
 
-## Draft (Rounds 1–12)
-- Each round: 3 player cards shown, drawn from ANY year (2000–2025) based on tier weighting
+## Draft (13 Rounds: 12 Players + 1 Captain)
+- Each round: 3 cards shown — usually players, occasionally a captain (see above) —
+  drawn from ANY year (1999–2025) based on tier weighting
 - No year is announced — the year is displayed on each player card
 - Player uniqueness: once a player (by name) appears in any round's options, they cannot
-  appear again in a subsequent round — prevents repeat Montgomeries / Johnsons
-- Players shown match the user's chosen nationality (USA or EUR)
+  appear again in a subsequent round — prevents repeat Montgomeries / Johnsons.
+  Captains are exempt from this rule (see Captain Pick above).
+- Cards shown match the user's chosen nationality (USA or EUR)
 - After user picks, show AI round: display the 3 options the AI saw (opposing nationality,
-  same round tier weighting) and highlight which player the AI selected
+  same tier weighting, players only) and highlight which player the AI selected. AI drafts
+  exactly 12 players total — once it reaches 12, it stops drafting even if the human's
+  draft continues (e.g. the human's round-13 captain-only round).
 - AI pick priority: (1) always draft a hero if one is available, (2) otherwise optimize
   for pairing chemistry potential with its existing picks, (3) fallback to highest composite
   score when no existing picks (round 1 only)
-- Each of the 3 draft cards rolls its tier independently (per-card tier rolling)
+- Each of the 3 draft cards rolls its tier independently (per-card tier rolling). Tier
+  odds are keyed off how many players the human has picked so far, not the round number,
+  so taking the captain early never skips or repeats a row in the table below.
 
 ### Player Cards (Draft)
 - Show: player name (bold), year badge, tier color indicator (border + background tint),
@@ -113,7 +179,8 @@ tier probabilities are naturally weighted higher without manual adjustment.
 - Heroes are NOT labeled as Hero tier to the user — tier color badge only
 
 ## Pairing Assignment
-- After round 12, pairings are auto-assigned using resolveAIPairings logic
+- Once the draft completes (12 player slots + captain slot both filled, always round
+  13), pairings are auto-assigned using resolveAIPairings logic
 - User sees the Review screen with auto-generated foursomes pairs and fourball pairs
 - "Re-randomize Pairings" button in review screen header shuffles and regenerates
 - No manual pairing screen — auto-assignment only

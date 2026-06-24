@@ -6,13 +6,19 @@
     "location": "USA",
     "display_name": "Kiawah Island, 1991",
     "course_type": "links",
-    "user_descriptors": ["Links Test", "Wind Is A Factor", "Power Course"],
+    "user_descriptors": [
+      "Links Test",
+      "Wind Is A Factor",
+      "Power Course"
+    ],
     "hidden_tags": {
       "power_weight": 80,
       "accuracy_weight": 70,
       "short_game_weight": 60,
       "wind_factor": 85,
-      "pressure_factor": 90
+      "pressure_factor": 90,
+      "putting_weight": 55,
+      "consistency_weight": 75
     },
     "flavor_text": "The War by the Shore. Ocean winds make every iron decision a gamble."
   },
@@ -23,13 +29,19 @@
     "location": "EUR",
     "display_name": "The Belfry, 1993",
     "course_type": "parkland",
-    "user_descriptors": ["Precision Required", "High Pressure Venue", "Short Game Test"],
+    "user_descriptors": [
+      "Short Game Test",
+      "Precision Required",
+      "High Pressure Venue"
+    ],
     "hidden_tags": {
       "power_weight": 55,
       "accuracy_weight": 80,
       "short_game_weight": 80,
       "wind_factor": 30,
-      "pressure_factor": 85
+      "pressure_factor": 85,
+      "putting_weight": 60,
+      "consistency_weight": 75
     },
     "flavor_text": "Water on the 18th. Every approach matters. Europe's fortress."
   },
@@ -40,13 +52,19 @@
     "location": "USA",
     "display_name": "Oak Hill, 1995",
     "course_type": "parkland",
-    "user_descriptors": ["Precision Required", "Short Game Test", "High Pressure Venue"],
+    "user_descriptors": [
+      "Demands Consistency",
+      "Precision Required",
+      "Short Game Test"
+    ],
     "hidden_tags": {
       "power_weight": 55,
       "accuracy_weight": 82,
       "short_game_weight": 78,
       "wind_factor": 25,
-      "pressure_factor": 80
+      "pressure_factor": 80,
+      "putting_weight": 65,
+      "consistency_weight": 80
     },
     "flavor_text": "Classic American parkland. Narrow fairways, thick rough. Ball-striking paradise."
   },
@@ -57,13 +75,19 @@
     "location": "EUR",
     "display_name": "Valderrama, 1997",
     "course_type": "parkland",
-    "user_descriptors": ["Precision Required", "Short Game Test", "High Pressure Venue"],
+    "user_descriptors": [
+      "Putting Premium",
+      "Demands Consistency",
+      "Precision Required"
+    ],
     "hidden_tags": {
       "power_weight": 40,
       "accuracy_weight": 92,
       "short_game_weight": 88,
       "wind_factor": 35,
-      "pressure_factor": 90
+      "pressure_factor": 90,
+      "putting_weight": 80,
+      "consistency_weight": 90
     },
     "flavor_text": "Seve's home. Tight cork oaks punish every wayward shot. Precision or pain."
   },
@@ -74,13 +98,19 @@
     "location": "USA",
     "display_name": "Brookline, 1999",
     "course_type": "parkland",
-    "user_descriptors": ["Precision Required", "High Pressure Venue", "Short Game Test"],
+    "user_descriptors": [
+      "High Pressure Venue",
+      "Precision Required",
+      "Putting Premium"
+    ],
     "hidden_tags": {
       "power_weight": 50,
       "accuracy_weight": 80,
       "short_game_weight": 75,
       "wind_factor": 30,
-      "pressure_factor": 95
+      "pressure_factor": 95,
+      "putting_weight": 65,
+      "consistency_weight": 75
     },
     "flavor_text": "The greatest comeback in Ryder Cup history happened here. Electric atmosphere."
   },
@@ -91,13 +121,19 @@
     "location": "EUR",
     "display_name": "The Belfry, 2002",
     "course_type": "parkland",
-    "user_descriptors": ["Precision Required", "High Pressure Venue", "Short Game Test"],
+    "user_descriptors": [
+      "Short Game Test",
+      "Precision Required",
+      "High Pressure Venue"
+    ],
     "hidden_tags": {
       "power_weight": 55,
       "accuracy_weight": 80,
       "short_game_weight": 80,
       "wind_factor": 30,
-      "pressure_factor": 85
+      "pressure_factor": 85,
+      "putting_weight": 60,
+      "consistency_weight": 75
     },
     "flavor_text": "Delayed a year by 9/11. Europe reclaimed the Cup in emotional fashion."
   },
@@ -108,13 +144,19 @@
     "location": "USA",
     "display_name": "Oakland Hills, 2004",
     "course_type": "parkland",
-    "user_descriptors": ["Precision Required", "Short Game Test", "High Pressure Venue"],
+    "user_descriptors": [
+      "Demands Consistency",
+      "Precision Required",
+      "Short Game Test"
+    ],
     "hidden_tags": {
       "power_weight": 50,
       "accuracy_weight": 85,
       "short_game_weight": 82,
       "wind_factor": 20,
-      "pressure_factor": 80
+      "pressure_factor": 80,
+      "putting_weight": 60,
+      "consistency_weight": 88
     },
     "flavor_text": "The Monster. Narrow, punishing, unforgiving. Europe routed USA 18.5-9.5."
   },
@@ -125,13 +167,18 @@
     "location": "EUR",
     "display_name": "The K Club, 2006",
     "course_type": "parkland",
-    "user_descriptors": ["Short Game Test", "High Pressure Venue"],
+    "user_descriptors": [
+      "Short Game Test",
+      "Power Course"
+    ],
     "hidden_tags": {
       "power_weight": 65,
       "accuracy_weight": 68,
       "short_game_weight": 80,
       "wind_factor": 35,
-      "pressure_factor": 78
+      "pressure_factor": 78,
+      "putting_weight": 50,
+      "consistency_weight": 55
     },
     "flavor_text": "Ireland roared. Harrington, Clarke, Garcia. Europe won in a landslide."
   },
@@ -142,13 +189,18 @@
     "location": "USA",
     "display_name": "Valhalla, 2008",
     "course_type": "parkland",
-    "user_descriptors": ["Power Course", "Birdie Fest", "High Pressure Venue"],
+    "user_descriptors": [
+      "Birdie Fest",
+      "Power Course"
+    ],
     "hidden_tags": {
       "power_weight": 82,
       "accuracy_weight": 60,
       "short_game_weight": 65,
       "wind_factor": 25,
-      "pressure_factor": 80
+      "pressure_factor": 80,
+      "putting_weight": 50,
+      "consistency_weight": 45
     },
     "flavor_text": "Azinger's pods. Boo Weekley riding the 1st fairway. USA wins in Kentucky."
   },
@@ -159,13 +211,19 @@
     "location": "EUR",
     "display_name": "Celtic Manor, 2010",
     "course_type": "parkland",
-    "user_descriptors": ["Precision Required", "Wind Is A Factor"],
+    "user_descriptors": [
+      "Wind Is A Factor",
+      "High Pressure Venue",
+      "Short Game Test"
+    ],
     "hidden_tags": {
       "power_weight": 60,
       "accuracy_weight": 78,
       "short_game_weight": 72,
       "wind_factor": 65,
-      "pressure_factor": 75
+      "pressure_factor": 75,
+      "putting_weight": 55,
+      "consistency_weight": 65
     },
     "flavor_text": "Three days of rain, three days of drama. Graeme McDowell's singles clincher."
   },
@@ -176,13 +234,19 @@
     "location": "USA",
     "display_name": "Medinah, 2012",
     "course_type": "parkland",
-    "user_descriptors": ["Power Course", "High Pressure Venue", "Birdie Fest"],
+    "user_descriptors": [
+      "Birdie Fest",
+      "Power Course",
+      "High Pressure Venue"
+    ],
     "hidden_tags": {
       "power_weight": 78,
       "accuracy_weight": 62,
       "short_game_weight": 68,
       "wind_factor": 20,
-      "pressure_factor": 88
+      "pressure_factor": 88,
+      "putting_weight": 65,
+      "consistency_weight": 70
     },
     "flavor_text": "The Miracle at Medinah. Europe trailed 10-6 heading into Sunday. Ian Poulter happened."
   },
@@ -193,13 +257,19 @@
     "location": "EUR",
     "display_name": "Gleneagles, 2014",
     "course_type": "heathland",
-    "user_descriptors": ["Heathland Challenge", "Wind Is A Factor", "High Pressure Venue"],
+    "user_descriptors": [
+      "Heathland Challenge",
+      "Wind Is A Factor",
+      "Putting Premium"
+    ],
     "hidden_tags": {
       "power_weight": 65,
       "accuracy_weight": 72,
       "short_game_weight": 70,
       "wind_factor": 68,
-      "pressure_factor": 82
+      "pressure_factor": 82,
+      "putting_weight": 70,
+      "consistency_weight": 60
     },
     "flavor_text": "McGinley's masterclass. Scotland in autumn. Europe comfortable winners."
   },
@@ -210,13 +280,19 @@
     "location": "USA",
     "display_name": "Hazeltine, 2016",
     "course_type": "parkland",
-    "user_descriptors": ["Power Course", "Home Crowd Advantage", "Birdie Fest"],
+    "user_descriptors": [
+      "Birdie Fest",
+      "Home Crowd Advantage",
+      "Power Course"
+    ],
     "hidden_tags": {
       "power_weight": 88,
       "accuracy_weight": 55,
       "short_game_weight": 65,
       "wind_factor": 22,
-      "pressure_factor": 80
+      "pressure_factor": 80,
+      "putting_weight": 50,
+      "consistency_weight": 45
     },
     "flavor_text": "Wide fairways reward big hitters. USA fortress energy. Patrick Reed iconic."
   },
@@ -226,14 +302,20 @@
     "year": 2018,
     "location": "EUR",
     "display_name": "Le Golf National, 2018",
-    "course_type": "parkland",
-    "user_descriptors": ["Precision Required", "Short Game Test", "High Pressure Venue"],
+    "course_type": "links",
+    "user_descriptors": [
+      "Links Test",
+      "Demands Consistency",
+      "Precision Required"
+    ],
     "hidden_tags": {
       "power_weight": 55,
       "accuracy_weight": 85,
       "short_game_weight": 82,
       "wind_factor": 45,
-      "pressure_factor": 88
+      "pressure_factor": 88,
+      "putting_weight": 70,
+      "consistency_weight": 85
     },
     "flavor_text": "Water everywhere. Paris roared. Molinari went 5-0. Europe's home court."
   },
@@ -244,13 +326,19 @@
     "location": "USA",
     "display_name": "Whistling Straits, 2021",
     "course_type": "links",
-    "user_descriptors": ["Links Test", "Wind Is A Factor", "Power Course"],
+    "user_descriptors": [
+      "Links Test",
+      "Wind Is A Factor",
+      "Power Course"
+    ],
     "hidden_tags": {
       "power_weight": 80,
       "accuracy_weight": 72,
       "short_game_weight": 70,
       "wind_factor": 75,
-      "pressure_factor": 82
+      "pressure_factor": 82,
+      "putting_weight": 55,
+      "consistency_weight": 70
     },
     "flavor_text": "Lake Michigan winds, Pete Dye drama. USA steamrolled 19-9. DJ went 5-0."
   },
@@ -261,14 +349,89 @@
     "location": "EUR",
     "display_name": "Marco Simone, 2023",
     "course_type": "parkland",
-    "user_descriptors": ["Precision Required", "High Pressure Venue"],
+    "user_descriptors": [
+      "High Pressure Venue",
+      "Short Game Test",
+      "Power Course"
+    ],
     "hidden_tags": {
       "power_weight": 62,
       "accuracy_weight": 78,
       "short_game_weight": 74,
       "wind_factor": 30,
-      "pressure_factor": 85
+      "pressure_factor": 85,
+      "putting_weight": 55,
+      "consistency_weight": 55
     },
     "flavor_text": "Rome's first Ryder Cup. Tyrrell Hatton and Rory McIlroy led Europe to victory."
+  },
+  {
+    "id": "royal_birkdale_1969",
+    "name": "Royal Birkdale",
+    "year": 1969,
+    "location": "EUR",
+    "display_name": "Royal Birkdale, 1969",
+    "course_type": "links",
+    "user_descriptors": [
+      "Links Test",
+      "Wind Is A Factor",
+      "High Pressure Venue"
+    ],
+    "hidden_tags": {
+      "power_weight": 60,
+      "accuracy_weight": 82,
+      "short_game_weight": 70,
+      "wind_factor": 78,
+      "pressure_factor": 95,
+      "putting_weight": 75,
+      "consistency_weight": 78
+    },
+    "flavor_text": "Jack Nicklaus conceded Tony Jacklin's final putt to halve the match and the Cup. \"I don't think you would have missed, but I wasn't going to give you the chance.\""
+  },
+  {
+    "id": "muirfield_1973",
+    "name": "Muirfield",
+    "year": 1973,
+    "location": "EUR",
+    "display_name": "Muirfield, 1973",
+    "course_type": "links",
+    "user_descriptors": [
+      "Links Test",
+      "Wind Is A Factor",
+      "Putting Premium"
+    ],
+    "hidden_tags": {
+      "power_weight": 55,
+      "accuracy_weight": 88,
+      "short_game_weight": 65,
+      "wind_factor": 72,
+      "pressure_factor": 80,
+      "putting_weight": 85,
+      "consistency_weight": 85
+    },
+    "flavor_text": "East Lothian's fairest, toughest test. No bad luck, just bad golf gets punished here."
+  },
+  {
+    "id": "walton_heath_1981",
+    "name": "Walton Heath",
+    "year": 1981,
+    "location": "EUR",
+    "display_name": "Walton Heath, 1981",
+    "course_type": "heathland",
+    "user_descriptors": [
+      "Heathland Challenge",
+      "Putting Premium",
+      "Wind Is A Factor"
+    ],
+    "hidden_tags": {
+      "power_weight": 58,
+      "accuracy_weight": 75,
+      "short_game_weight": 68,
+      "wind_factor": 50,
+      "pressure_factor": 70,
+      "putting_weight": 70,
+      "consistency_weight": 72
+    },
+    "flavor_text": "USA's stacked 'Big Five' generation in full flight. Surrey heathland, ruthless execution."
   }
 ]

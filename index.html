@@ -91,6 +91,10 @@
     .card-name  { font-size: 14px; font-weight: 700; line-height: 1.15; padding-right: 18px; }
     .card-year  { font-size: 12px; color: var(--gold); font-weight: 600; margin-top: 3px; }
     .card-hero-bonus { margin-top: auto; font-size: 9px; font-weight: 700; color: var(--hero, #38bdf8); letter-spacing: .03em; text-transform: uppercase; }
+    .card-trophy { position: absolute; top: 7px; right: 19px; }
+    .card-trophy .trophy-icon-svg { width: 13px; height: 13px; display: block; }
+    .trophy-won  { color: #ffd24a; filter: drop-shadow(0 0 2px rgba(255,210,74,.6)); }
+    .trophy-lost { color: var(--text-dim); opacity: .55; }
     .card-tier-badge { position: absolute; top: 7px; right: 7px; width: 8px; height: 8px; border-radius: 50%; background: var(--tc, #888); }
 
     .tc-platinum { --tc: #c084fc; } .tc-gold { --tc: #c9a84c; } .tc-silver { --tc: #94a3b8; } .tc-bronze { --tc: #a0522d; } .tc-hero { --tc: #38bdf8; }
@@ -281,6 +285,8 @@
     .pp-chem-dot { position: absolute; top: 4px; right: 4px; width: 6px; height: 6px; border-radius: 50%; border: 1px solid rgba(0,0,0,0.25); }
     .pp-name { font-size: 10px; font-weight: 700; line-height: 1.2; }
     .pp-year { font-size: 8px; color: var(--gold); margin-top: 1px; }
+    .pp-trophy { display: inline-block; margin-left: 3px; vertical-align: -1px; }
+    .pp-trophy .trophy-icon-svg { width: 8px; height: 8px; display: block; }
     /* Empty slot placeholder */
     .pick-slot-empty { min-height: 44px; border: 1px dashed rgba(255,255,255,.1); border-radius: 5px; display: flex; align-items: center; justify-content: center; }
     .pse-num { font-size: 10px; color: var(--text-dim); font-weight: 600; }
@@ -396,6 +402,8 @@
   // DATA
   // ─────────────────────────────────────────────────────────────────────────────
   let VENUES = [], CAPTAINS = [], PLAYERS = [];
+  let CAPTAIN_IDS = new Set();
+  function isCaptainCard(obj) { return !!obj && CAPTAIN_IDS.has(obj.id); }
 
   // ─────────────────────────────────────────────────────────────────────────────
   // STATE
@@ -423,7 +431,8 @@
       currentCards: [],
       aiRoundCards: [],
       aiRoundPick:  null,
-      captainCards: [],
+      lastPick:           null,  // last item the human picked this round (player or captain)
+      lastPickIsCaptain:  false,
       results: null
     };
   }
@@ -457,9 +466,10 @@
     return 'bronze';
   }
 
-  // Draw one player for a given tier, falling back through tiers if pool is empty.
+  // Draw one player (and, while no captain is locked in yet, one captain) for a
+  // given tier, falling back through tiers if pool is empty.
   // Fallback order prefers the nearest tier to avoid jarring platinum cards in round 12.
-  function drawOneCard(nat, pickNum, usedNames, tierOverride, heroProb = 5) {
+  function drawOneCard(nat, pickNum, usedNames, tierOverride, heroProb = 5, includeCaptains = false) {
     const tier = tierOverride || rollTier(pickNum, heroProb);
     const nearestFirst = {
       platinum: ['gold','silver','bronze','hero'],
@@ -469,25 +479,36 @@
       hero:     ['silver','platinum','bronze'],   // gold tried below first
     };
 
-    let pool = PLAYERS.filter(p =>
-      p.nationality === nat &&
-      p.tier === tier &&
-      !usedNames.has(p.name)
-    );
+    // Combined player+captain pool at a given tier. Captains never get added to the
+    // permanent seenNames exclusion list (see generateAndTrackCards) since the captain
+    // pool is small (4-9 per tier per side) and would exhaust well before round 13's
+    // guaranteed-captain fallback if treated like the much larger player pool.
+    function poolForTier(t) {
+      let p = PLAYERS.filter(x => x.nationality === nat && x.tier === t && !usedNames.has(x.name));
+      if (includeCaptains) {
+        p = p.concat(CAPTAINS.filter(c => c.nationality === nat && c.tier === t && !usedNames.has(c.name)));
+      }
+      return p;
+    }
+
+    let pool = poolForTier(tier);
 
     if (!pool.length && tier === 'hero') {
-      pool = PLAYERS.filter(p => p.nationality === nat && p.tier === 'gold' && !usedNames.has(p.name));
+      pool = poolForTier('gold');
     }
     if (!pool.length) {
       const order = (nearestFirst[tier] || ['bronze','silver','gold','platinum'])
         .filter(t => heroProb > 0 || t !== 'hero');
       for (const fb of order) {
-        const fb2 = PLAYERS.filter(p => p.nationality === nat && p.tier === fb && !usedNames.has(p.name));
+        const fb2 = poolForTier(fb);
         if (fb2.length) { pool = fb2; break; }
       }
     }
     if (!pool.length) {
       pool = PLAYERS.filter(p => p.nationality === nat && !usedNames.has(p.name));
+      if (includeCaptains) {
+        pool = pool.concat(CAPTAINS.filter(c => c.nationality === nat && !usedNames.has(c.name)));
+      }
     }
     if (!pool.length) return null;
 
@@ -496,12 +517,14 @@
 
   // Each of the 3 cards rolls its own tier independently.
   // heroCount: heroes already picked by this side — 0→5%, 1→1%, ≥2→0%.
-  function getCardsAnyYear(nat, pickNum, seenNames, heroCount = 0) {
+  // includeCaptains: while true, each tier-roll draws from players+captains combined
+  // (see drawOneCard) — set to false once G.captain is locked in.
+  function getCardsAnyYear(nat, pickNum, seenNames, heroCount = 0, includeCaptains = false) {
     const heroProb = heroCount === 0 ? 5 : heroCount === 1 ? 1 : 0;
     const usedNames = new Set(seenNames);
     const cards = [];
     for (let i = 0; i < 3; i++) {
-      const card = drawOneCard(nat, pickNum, usedNames, null, heroProb);
+      const card = drawOneCard(nat, pickNum, usedNames, null, heroProb, includeCaptains);
       if (card) {
         cards.push(card);
         usedNames.add(card.name);
@@ -510,27 +533,88 @@
     return cards;
   }
 
-  function generateAndTrackCards(nat, pickNum, seenNames, heroCount = 0) {
-    const cards = getCardsAnyYear(nat, pickNum, seenNames, heroCount);
-    cards.forEach(c => { if (!seenNames.includes(c.name)) seenNames.push(c.name); });
+  function generateAndTrackCards(nat, pickNum, seenNames, heroCount = 0, includeCaptains = false) {
+    const cards = getCardsAnyYear(nat, pickNum, seenNames, heroCount, includeCaptains);
+    // Only players get permanently excluded from future rounds — see poolForTier note above.
+    cards.forEach(c => { if (!isCaptainCard(c) && !seenNames.includes(c.name)) seenNames.push(c.name); });
     return cards;
+  }
+
+  // Both the human AND the AI draft 13 slots: 12 players + 1 captain that never
+  // consumes a player slot. This one function generates a side-agnostic round of
+  // cards for whichever side's turn it is — used for the human (G.side/G.picks/
+  // G.captain/G.seenNames) and, identically, for the AI (opp(G.side)/G.aiPicks/
+  // G.aiCaptain/G.aiSeenNames). Tier odds are keyed off how many *players* have
+  // been picked so far, not the round number, so taking the captain early never
+  // skips or repeats a tier-odds row.
+  function generateRoundCardsFor(nat, picks, captain, seenNames) {
+    if (picks.length === 12 && captain === null) {
+      return drawLowTierCaptains(nat);
+    }
+    const pickNum   = Math.min(picks.length + 1, 12);
+    const heroCount = picks.filter(p => p.tier === 'hero').length;
+    return generateAndTrackCards(nat, pickNum, seenNames, heroCount, captain === null);
+  }
+
+  function nextRoundCards() {
+    return generateRoundCardsFor(G.side, G.picks, G.captain, G.seenNames);
+  }
+
+  // Forced fallback once all 12 player slots are full and no captain has been taken
+  // yet (round 13 for the human; the AI's equivalent last action if it never landed
+  // on a captain along the way): exactly 3 low-tier (silver/bronze) captain options
+  // only — guarantees a captain by draft's end, never costs a player slot, but
+  // waiting costs you a weaker captain.
+  function drawLowTierCaptains(nat) {
+    let pool = CAPTAINS.filter(c => c.nationality === nat && (c.tier === 'silver' || c.tier === 'bronze'));
+    if (pool.length < 3) pool = CAPTAINS.filter(c => c.nationality === nat); // safety net only
+    const picked = [], used = new Set();
+    while (picked.length < 3 && picked.length < pool.length) {
+      const c = pool[Math.floor(Math.random() * pool.length)];
+      if (!used.has(c.id)) { used.add(c.id); picked.push(c); }
+    }
+    return picked;
   }
 
   // ─────────────────────────────────────────────────────────────────────────────
   // AI LOGIC
   // ─────────────────────────────────────────────────────────────────────────────
+  // Internal-only ranking for comparing captain cards against each other — never
+  // shown to the user. Captains have no `stats`, so they can't go through
+  // compositeScore/applyHeroBoost like players do.
+  const CAPTAIN_TIER_RANK = { hero: 5, platinum: 4, gold: 3, silver: 2, bronze: 1 };
+  function captainValue(c) {
+    return (CAPTAIN_TIER_RANK[c.tier] || 0) * 100 + (c.chemistry_mult || 1) * 10 + (c.perks ? c.perks.length : 0);
+  }
+
   function aiBestFromCards(cards, existingPicks = []) {
     if (!cards.length) return null;
+    const players  = cards.filter(c => !isCaptainCard(c));
+    const captains = cards.filter(c => isCaptainCard(c));
 
-    // Rule 1: always draft a hero if one is available
-    const heroes = cards.filter(p => p.tier === 'hero');
+    // Forced captain-only round (mirrors the human's round-13 fallback) — just take
+    // the best one on offer, no player comparison possible.
+    if (!players.length) {
+      return captains.reduce((best, c) => captainValue(c) > captainValue(best) ? c : best);
+    }
+
+    // Rule 1: always draft a hero player if one is available.
+    const heroes = players.filter(p => p.tier === 'hero');
     if (heroes.length) {
       return heroes.reduce((best, p) =>
         compositeScore(applyHeroBoost(p)) > compositeScore(applyHeroBoost(best)) ? p : best
       );
     }
 
-    // Rule 2: optimize for chemistry with existing picks
+    // Rule 1.5: a hero/platinum-tier captain on offer is worth taking now rather than
+    // gambling on the forced low-tier-only fallback later.
+    if (captains.length) {
+      const bestCaptain = captains.reduce((best, c) => captainValue(c) > captainValue(best) ? c : best);
+      if (bestCaptain.tier === 'hero' || bestCaptain.tier === 'platinum') return bestCaptain;
+    }
+
+    // Rule 2: optimize for chemistry with existing picks (players only — captains
+    // don't have player stats to run through calculatePairingChemistry).
     if (existingPicks.length > 0) {
       function chemPotential(candidate) {
         return existingPicks.reduce((sum, ep) => {
@@ -539,13 +623,13 @@
           return sum + (fs + fb) / 2;
         }, 0) / existingPicks.length;
       }
-      return cards.reduce((best, p) =>
+      return players.reduce((best, p) =>
         chemPotential(p) > chemPotential(best) ? p : best
       );
     }
 
     // Fallback (round 1): highest composite
-    return cards.reduce((best, p) =>
+    return players.reduce((best, p) =>
       compositeScore(applyHeroBoost(p)) > compositeScore(applyHeroBoost(best)) ? p : best
     );
   }
@@ -755,48 +839,27 @@
     return parts.length ? parts.join(' · ') : '';
   }
 
-  function randomCaptains(nat, n) {
-    const pool = CAPTAINS.filter(c => c.nationality === nat);
-    const byTier = {
-      legendary: pool.filter(c => c.tier === 'legendary'),
-      hero:      pool.filter(c => c.tier === 'hero'),
-      standard:  pool.filter(c => c.tier === 'standard')
-    };
-    const results = [];
-    const used = new Set();
-    let legendaryUsed = false;
+  // Which nationality won the Ryder Cup that year — drives the made_team trophy
+  // color (gold if their side won, muted silhouette if their side lost). Years not
+  // listed here (no edition that year, or result not yet known) render as silhouette.
+  const RYDER_CUP_WINNER = {
+    1999: 'USA', 2002: 'EUR', 2004: 'EUR', 2006: 'EUR', 2008: 'USA', 2010: 'EUR',
+    2012: 'EUR', 2014: 'EUR', 2016: 'USA', 2018: 'EUR', 2021: 'USA', 2023: 'EUR',
+    2025: 'EUR',
+  };
 
-    for (let i = 0; i < n; i++) {
-      const r = Math.random() * 100;
-      let candidates = null;
+  const TROPHY_SVG = `<svg class="trophy-icon-svg" viewBox="0 0 16 16" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+    <path d="M5 1h6v1.5h1.75A.75.75 0 0 1 13.5 3.25v1A2.75 2.75 0 0 1 11 7h-.1A4 4 0 0 1 8.75 9.4v1.1h1.75v1.5h-5V10.5h1.75V9.4A4 4 0 0 1 5.1 7H5a2.75 2.75 0 0 1-2.75-2.75v-1A.75.75 0 0 1 3 2.5h1.75V1H5zm0 3H3.5v.25c0 .69.56 1.25 1.25 1.25H5V4zm6 0v1.5h.25A1.25 1.25 0 0 0 12.5 4.25V4H11z"/>
+  </svg>`;
 
-      if (!legendaryUsed && r < 5) {
-        candidates = byTier.legendary.filter(c => !used.has(c.id));
-        if (candidates.length) legendaryUsed = true;
-        else candidates = null;
-      }
-      if (!candidates) {
-        candidates = (r < 25) ? byTier.hero.filter(c => !used.has(c.id)) : null;
-        if (!candidates || !candidates.length) candidates = byTier.standard.filter(c => !used.has(c.id));
-        if (!candidates.length) candidates = pool.filter(c => !used.has(c.id));
-      }
-
-      if (!candidates.length) break;
-      const pick = candidates[Math.floor(Math.random() * candidates.length)];
-      results.push(pick);
-      used.add(pick.id);
-    }
-    return results;
-  }
-
-  function drawAICaptain(nat) {
-    const pool = CAPTAINS.filter(c => c.nationality === nat);
-    const r = Math.random() * 100;
-    let candidates = r < 5   ? pool.filter(c => c.tier === 'legendary') :
-                     r < 25  ? pool.filter(c => c.tier === 'hero')      :
-                               pool.filter(c => c.tier === 'standard');
-    if (!candidates.length) candidates = pool;
-    return candidates[Math.floor(Math.random() * candidates.length)];
+  // Returns '' if the player didn't make their real Ryder Cup team that year
+  // (made_team false/null), otherwise a small trophy icon — gold if their
+  // nationality won that year, a muted silhouette if they lost.
+  function trophyHTML(p) {
+    if (!p.made_team) return '';
+    const won = RYDER_CUP_WINNER[p.year] === p.nationality;
+    const label = won ? 'Won the Ryder Cup this year' : 'Made the team — Ryder Cup runner-up this year';
+    return `<span class="${won ? 'trophy-won' : 'trophy-lost'}" title="${label}">${TROPHY_SVG}</span>`;
   }
 
   // Returns up to 2 style tags for a player, mapped to the same labels as course demands
@@ -883,10 +946,12 @@
   }
 
   function playerPickedHTML(p, chemDotHTML = '') {
+    const icon   = trophyHTML(p);
+    const trophy = icon ? `<span class="pp-trophy">${icon}</span>` : '';
     return `<div class="player-picked ${tcClass(p.tier)}" ${tcStyle(p.tier)}>
       ${chemDotHTML}
       <div class="pp-name">${p.name}</div>
-      <div class="pp-year">${p.year}</div>
+      <div class="pp-year">${p.year}${trophy}</div>
     </div>`;
   }
 
@@ -914,12 +979,15 @@
       const label   = attr ? attr.label : d.label;
       return `<span class="cpb-icon-chip" style="color:${d.color}">${svg}${label}</span>`;
     }).join('');
-    const capColor = captain ? ({ legendary:'#c9a84c', hero:'#c084fc', standard:'#22c55e' }[captain.tier] || '#22c55e') : null;
+    const capColor = captain ? ({ legendary:'#c9a84c', hero:'#c084fc', standard:'#22c55e' }[captain.prestige] || '#22c55e') : null;
     const capHTML  = captain ? `
       <div class="cpb-cap-mini" style="border-color:${capColor}">
-        <span class="cpb-cap-tier" style="color:${capColor}">${captain.tier[0].toUpperCase()}</span>
+        <span class="cpb-cap-tier" style="color:${capColor}">${captain.prestige[0].toUpperCase()}</span>
         <span class="cpb-cap-name">${captain.name}</span>
-      </div>` : '';
+      </div>` : `
+      <div class="cpb-cap-mini" style="border-color:var(--text-dim);opacity:.7">
+        <span class="cpb-cap-name">No Captain Selected</span>
+      </div>`;
     return `<div class="course-profile-bar">
       <span class="cpb-venue">${venue.display_name || venue.name}</span>
       <span class="cpb-sep">·</span>
@@ -935,9 +1003,11 @@
     const hero  = isHero(p) ? 'hero-card' : '';
     const da    = clickable ? `data-pid="${p.id}"` : '';
     const bonus = heroBonusLabel(p);
+    const icon  = trophyHTML(p);
     return `<div class="player-card ${tcClass(p.tier)} ${hero} ${extraClass}" ${tcStyle(p.tier)} ${da}>
       <div class="card-tier-badge"></div>
       ${chemDotHTML}
+      ${icon ? `<div class="card-trophy">${icon}</div>` : ''}
       <div class="card-name">${p.name}</div>
       <div class="card-year">${p.year}</div>
       ${bonus ? `<div class="card-hero-bonus">${bonus}</div>` : ''}
@@ -955,7 +1025,6 @@
     else if (p === 'nationality')  renderNationality();
     else if (p === 'venue_spinner')renderVenueSpinner();
     else if (p === 'venue')        renderVenueReveal();
-    else if (p === 'captain')      renderCaptain();
     else if (p === 'draft')        renderDraft();
     else if (p === 'ai_reveal')    renderAIReveal();
     else if (p === 'review')       renderReview();
@@ -1097,12 +1166,25 @@
         <div class="venue-badge">${v.course_type}</div>
         <div class="venue-pills">${(v.user_descriptors || []).map(d => `<span class="pill">${d}</span>`).join('')}</div>
         <div class="venue-flavor">"${v.flavor_text}"</div>
-        <button class="btn btn-gold" id="choose-captain-btn">Choose Your Captain →</button>
+        <button class="btn btn-gold" id="start-draft-btn">Start Your Draft →</button>
       </div>`;
 
-    document.getElementById('choose-captain-btn').addEventListener('click', () => {
-      G.phase = 'captain';
-      G.captainCards = randomCaptains(G.side, 3);
+    document.getElementById('start-draft-btn').addEventListener('click', () => {
+      // Captain selection now happens inside the 13-round draft itself for BOTH sides
+      // (see generateRoundCardsFor / nextRoundCards / handlePick) — there's no standalone
+      // captain screen, and no separate one-shot AI captain draw either.
+      G.aiCaptain   = null;
+      G.captain     = null;
+      G.phase       = 'draft';
+      G.currentRound = 1;
+      G.seenNames   = [];
+      G.aiSeenNames = [];
+      G.picks       = [];
+      G.aiPicks     = [];
+      G.pairings       = { fridayAM: [], fridayPM: [], saturdayAM: [], saturdayPM: [] };
+      G.pairingOptions = [];
+      G.pairingIndex   = 0;
+      G.currentCards = nextRoundCards();
       save();
       render();
     });
@@ -1116,7 +1198,7 @@
       legendary: { bg: 'rgba(201,168,76,.1)',   border: 'rgba(201,168,76,.45)', badge: '#c9a84c' },
       hero:      { bg: 'rgba(192,132,252,.07)', border: 'rgba(192,132,252,.35)', badge: '#c084fc' },
       standard:  { bg: 'rgba(34,197,94,.05)',   border: 'rgba(34,197,94,.2)',   badge: '#22c55e' }
-    }[c.tier] || { bg: 'var(--surface2)', border: 'var(--border)', badge: 'var(--gold)' };
+    }[c.prestige] || { bg: 'var(--surface2)', border: 'var(--border)', badge: 'var(--gold)' };
 
     const yearsStr = (c.years || []).join(', ');
     const perksHTML = (c.perks || []).map(p => `
@@ -1133,7 +1215,7 @@
     return `
       <div class="captain-card" data-cid="${c.id}" style="background:${TC.bg};border-color:${TC.border}">
         <div class="cap-header">
-          <span class="cap-tier-badge" style="color:${TC.badge};border-color:${TC.badge}">${c.tier}</span>
+          <span class="cap-tier-badge" style="color:${TC.badge};border-color:${TC.badge}">${c.prestige}</span>
           <span class="cap-years">${yearsStr}</span>
         </div>
         <div class="cap-name">${c.name}</div>
@@ -1141,38 +1223,6 @@
         <div class="cap-perks">${perksHTML}</div>
         ${specialHTML}
       </div>`;
-  }
-
-  function renderCaptain() {
-    const caps = G.captainCards;
-    document.getElementById('app').innerHTML = `
-      <div class="captain-screen fade-in">
-        <div style="font-size:11px;color:var(--text-muted);text-transform:uppercase;letter-spacing:.1em;margin-bottom:8px;">Step 1 — Captain</div>
-        <div class="captain-title">Choose Your Captain</div>
-        <div style="font-size:13px;color:var(--text-muted);margin-bottom:4px;">Select the captain who will lead your ${G.side} team at ${G.venue.name}</div>
-        <div class="captain-cards">
-          ${caps.map(captainCardHTML).join('')}
-        </div>
-      </div>`;
-
-    document.querySelectorAll('[data-cid]').forEach(el => {
-      el.addEventListener('click', () => {
-        G.captain = CAPTAINS.find(c => c.id === el.dataset.cid);
-        G.aiCaptain = drawAICaptain(opp(G.side));
-        G.phase = 'draft';
-        G.currentRound = 1;
-        G.seenNames   = [];
-        G.aiSeenNames = [];
-        G.picks       = [];
-        G.aiPicks     = [];
-        G.pairings       = { fridayAM: [], fridayPM: [], saturdayAM: [], saturdayPM: [] };
-        G.pairingOptions = [];
-        G.pairingIndex   = 0;
-        G.currentCards = generateAndTrackCards(G.side, 1, G.seenNames, 0);
-        save();
-        render();
-      });
-    });
   }
 
   // ─────────────────────────────────────────────────────────────────────────────
@@ -1201,11 +1251,18 @@
       return `<div class="pick-slot-empty"><span class="pse-num">${i + 1}</span></div>`;
     }).join('');
 
+    const captainStatusHTML = G.captain
+      ? `Captain: <strong>${G.captain.name}</strong>`
+      : `Captain: <span style="color:var(--text-dim)">Not yet selected</span>`;
+    const roundLabel = (G.picks.length === 12 && G.captain === null)
+      ? 'Round 13 — Choose Your Captain'
+      : `Round ${round} of 13 — Choose`;
+
     document.getElementById('app').innerHTML = `
       <div class="draft-full">
         <div class="page-header">
           <span class="page-title">Fourballs</span>
-          <span class="ticker-score">Pick ${round} of 12</span>
+          <span class="ticker-score">Round ${round} of 13</span>
           <span style="flex:1"></span>
           <span style="font-size:11px;color:var(--text-dim)">${G.side}</span>
         </div>
@@ -1213,14 +1270,14 @@
         ${courseProfileHTML(G.venue, G.captain)}
 
         <div class="draft-team-area">
-          <div style="padding:4px 12px 2px;font-size:9px;text-transform:uppercase;letter-spacing:.07em;color:var(--text-dim);">Your Squad — ${G.picks.length}/12</div>
+          <div style="padding:4px 12px 2px;font-size:9px;text-transform:uppercase;letter-spacing:.07em;color:var(--text-dim);">Your Squad — ${G.picks.length}/12 · ${captainStatusHTML}</div>
           <div class="picks-grid">${slotsHTML}</div>
         </div>
 
         <div class="pick-area">
-          <div class="pick-round-label">Round ${round} of 12 — Choose</div>
+          <div class="pick-round-label">${roundLabel}</div>
           <div class="pick-cards-row">
-            ${cards.map(p => playerCardHTML(p, true)).join('')}
+            ${cards.map(c => isCaptainCard(c) ? captainCardHTML(c) : playerCardHTML(c, true)).join('')}
           </div>
         </div>
       </div>`;
@@ -1228,20 +1285,41 @@
     document.querySelectorAll('[data-pid]').forEach(el => {
       el.addEventListener('click', () => {
         const p = PLAYERS.find(x => x.id === el.dataset.pid);
-        if (p) handlePickCard(p);
+        if (p) handlePick(p);
+      });
+    });
+    document.querySelectorAll('[data-cid]').forEach(el => {
+      el.addEventListener('click', () => {
+        const c = CAPTAINS.find(x => x.id === el.dataset.cid);
+        if (c) handlePick(c);
       });
     });
   }
 
-  function handlePickCard(p) {
-    G.picks.push(p);
+  // Handles either a player pick (fills one of the 12 player slots) or a captain
+  // pick (fills the separate captain slot — never consumes a player slot).
+  // The AI drafts the same 13-slot structure in parallel, one action per human
+  // round, via the same generateRoundCardsFor/aiBestFromCards path — it stops
+  // acting once it too has 12 players + a captain (aiIsDone below).
+  function handlePick(item) {
+    const captainPicked = isCaptainCard(item);
+    if (captainPicked) { G.captain = item; } else { G.picks.push(item); }
+    G.lastPick          = item;
+    G.lastPickIsCaptain = captainPicked;
 
-    const aiHeroCount = G.aiPicks.filter(p => p.tier === 'hero').length;
-    const aiCards = generateAndTrackCards(opp(G.side), G.currentRound, G.aiSeenNames, aiHeroCount);
-    G.aiRoundCards = aiCards;
-    const aiPick = aiBestFromCards(aiCards, G.aiPicks);
-    G.aiRoundPick = aiPick;
-    if (aiPick) G.aiPicks.push(aiPick);
+    const aiIsDone = (G.aiPicks.length === 12 && G.aiCaptain !== null);
+    if (!aiIsDone) {
+      const aiCards = generateRoundCardsFor(opp(G.side), G.aiPicks, G.aiCaptain, G.aiSeenNames);
+      G.aiRoundCards = aiCards;
+      const aiPick = aiBestFromCards(aiCards, G.aiPicks);
+      G.aiRoundPick = aiPick;
+      if (aiPick) {
+        if (isCaptainCard(aiPick)) { G.aiCaptain = aiPick; } else { G.aiPicks.push(aiPick); }
+      }
+    } else {
+      G.aiRoundCards = [];
+      G.aiRoundPick  = null;
+    }
 
     G.phase = 'ai_reveal';
     save();
@@ -1255,38 +1333,42 @@
     const round   = G.currentRound;
     const aiCards = G.aiRoundCards || [];
     const aiPick  = G.aiRoundPick;
-    const myPick  = G.picks[G.picks.length - 1];
-    const isLast  = round >= 12;
+    const myPick  = G.lastPick;
+    const myPickIsCaptain = G.lastPickIsCaptain;
+    const isLast  = (G.picks.length === 12 && G.captain !== null);
+    const aiDone  = (G.aiPicks.length === 12 && G.aiCaptain !== null);
 
     const cardsHTML = aiCards.map(p => {
       const picked   = aiPick && p.id === aiPick.id;
       const wrapCls  = picked ? 'ai-picked' : 'ai-not-picked';
       const badge    = picked ? '<div class="ai-picked-badge">Opponent picked</div>' : '';
+      const cardHTML = isCaptainCard(p) ? captainCardHTML(p) : playerCardHTML(p, false);
       return `<div class="ai-card-wrap ${wrapCls}">
         ${badge}
-        ${playerCardHTML(p, false)}
+        ${cardHTML}
       </div>`;
     }).join('');
 
     document.getElementById('app').innerHTML = `
       <div class="ai-reveal-screen fade-in">
-        <div class="ai-reveal-eyebrow">Round ${round} of 12</div>
+        <div class="ai-reveal-eyebrow">Round ${round} of 13</div>
         <div class="ai-reveal-title">Opponent's Pick — ${opp(G.side)}</div>
-        <div class="ai-reveal-sub">Here's what they had to choose from</div>
-        ${myPick ? `<div class="ai-your-pick">Your pick: <strong>${myPick.name}</strong> (${myPick.year})</div>` : ''}
+        <div class="ai-reveal-sub">${aiDone ? "Opponent's squad is complete" : "Here's what they had to choose from"}</div>
+        ${myPick ? `<div class="ai-your-pick">${myPickIsCaptain ? 'Your captain' : 'Your pick'}: <strong>${myPick.name}</strong>${myPickIsCaptain ? '' : ` (${myPick.year})`}</div>` : ''}
         <button class="btn btn-gold" id="ai-continue-btn" style="margin:8px 0 4px;">
           ${isLast ? 'See Your Pairings →' : `Continue to Round ${round + 1} →`}
         </button>
         ${courseProfileHTML(G.venue, G.captain)}
-        <div class="ai-reveal-cards">${cardsHTML || '<p style="color:var(--text-muted)">No options available</p>'}</div>
+        <div class="ai-reveal-cards">${cardsHTML || (aiDone ? '' : '<p style="color:var(--text-muted)">No options available</p>')}</div>
       </div>`;
 
     document.getElementById('ai-continue-btn').addEventListener('click', advanceFromAIReveal);
   }
 
   function advanceFromAIReveal() {
-    const round = G.currentRound;
-    if (round >= 12) {
+    // Draft ends once all 12 player slots AND the captain slot are filled —
+    // always 13 rounds total, regardless of which round the captain was taken in.
+    if (G.picks.length === 12 && G.captain !== null) {
       // Pre-compute 4 pairing options (best chemistry first); reshuffle cycles through them
       G.pairingOptions = computePairingOptions(G.picks, 4);
       G.pairingIndex   = 0;
@@ -1298,9 +1380,8 @@
       save();
       if (G.mode === 'advanced') { renderAdvancedPairing(); } else { render(); }
     } else {
-      G.currentRound = round + 1;
-      const userHeroCount = G.picks.filter(p => p.tier === 'hero').length;
-      G.currentCards = generateAndTrackCards(G.side, G.currentRound, G.seenNames, userHeroCount);
+      G.currentRound = G.currentRound + 1;
+      G.currentCards = nextRoundCards();
       G.phase = 'draft';
       save();
       render();
@@ -1903,16 +1984,16 @@
       body: 'Your venue is drawn randomly before the draft. The course profile bar shows what it demands — build your team to match it.'
     },
     {
-      title: 'Captain First',
-      body: 'Pick your captain before you know who you\'ll draft. Their bonus applies all week, and some captains have special affinity with certain players — choose wisely.'
+      title: 'Draft Cards',
+      body: '3 options appear each round — usually players, but a captain card can show up too. Earlier picks lean elite, later picks are more of a gamble, and a Hero card can land any round.'
     },
     {
-      title: 'Draft Cards',
-      body: '3 players from across all Ryder Cup years appear each round. Earlier picks lean elite, later picks are more of a gamble — but a Hero card can land any round.'
+      title: 'Captain Slot',
+      body: 'One of your 13 rounds fills a separate captain slot — taking a captain never costs you a player pick. Their bonus applies all week. Wait too long and round 13 forces a choice from the weaker captains left.'
     },
     {
       title: 'Pairings',
-      body: 'After round 12, pairings are auto-assigned by chemistry and strength. Hit Re-randomize on the review screen to explore different matchups until you find a lineup you trust.'
+      body: 'Once all 12 player slots and your captain slot are filled, pairings are auto-assigned by chemistry and strength. Hit Re-randomize on the review screen to explore different matchups until you find a lineup you trust.'
     },
     {
       title: 'Simulate',
@@ -2061,6 +2142,7 @@
       VENUES   = venues;
       CAPTAINS = captains;
       PLAYERS  = players;
+      CAPTAIN_IDS = new Set(CAPTAINS.map(c => c.id));
     } catch(err) {
       document.getElementById('app').innerHTML = `
         <div class="center-screen">

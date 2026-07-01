@@ -83,7 +83,7 @@
     .venue-flavor { font-style: italic; color: var(--text-muted); max-width: 460px; margin-bottom: 30px; font-size: 14px; }
 
     /* ── PLAYER CARDS ── */
-    .player-card { background: color-mix(in srgb, var(--tc, #444) 10%, var(--surface2)); border-radius: var(--radius); border: 1px solid color-mix(in srgb, var(--tc, #444) 30%, var(--border)); border-left: 4px solid var(--tc, #444); padding: 8px; cursor: pointer; transition: transform .15s, box-shadow .15s; position: relative; aspect-ratio: 10 / 16; display: flex; flex-direction: column; overflow: hidden; }
+    .player-card { background: color-mix(in srgb, var(--tc, #444) 10%, var(--surface2)); border-radius: var(--radius); border: 1px solid color-mix(in srgb, var(--tc, #444) 30%, var(--border)); border-left: 4px solid var(--tc, #444); padding: 8px; cursor: pointer; transition: transform .15s, box-shadow .15s; position: relative; aspect-ratio: 10 / 16; max-height: 240px; display: flex; flex-direction: column; overflow: hidden; }
     .player-card:hover { transform: translateY(-2px); box-shadow: 0 4px 18px rgba(0,0,0,.45); }
     .player-card.selected { border-color: var(--green-bright) !important; box-shadow: 0 0 12px rgba(76,175,80,.35); }
     .player-card.hero-card { animation: hero-glow 2s ease-in-out infinite; }
@@ -293,6 +293,9 @@
     .attr-icon-item { display: flex; flex-direction: column; align-items: center; gap: 2px; }
     .attr-icon-svg { width: 13px; height: 13px; display: block; }
     .attr-icon-label { font-size: 7px; font-weight: 700; text-transform: uppercase; letter-spacing: .02em; line-height: 1; }
+    /* Cap card size in pick row and AI reveal — prevents huge cards on wide desktop */
+    .pick-cards-row .player-card,
+    .ai-reveal-cards .player-card { max-width: 160px; margin: 0 auto; }
     /* Slightly larger icons on full selection cards */
     .pick-cards-row .attr-icon-svg { width: 15px; height: 15px; }
     .pick-cards-row .attr-icon-label { font-size: 8px; }

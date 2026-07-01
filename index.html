@@ -87,17 +87,18 @@
     .player-card:hover { transform: translateY(-2px); box-shadow: 0 4px 18px rgba(0,0,0,.45); }
     .player-card.selected { border-color: var(--green-bright) !important; box-shadow: 0 0 12px rgba(76,175,80,.35); }
     .player-card.hero-card { animation: hero-glow 2s ease-in-out infinite; }
-    @keyframes hero-glow { 0%,100% { box-shadow: 0 0 8px rgba(56,189,248,.35); } 50% { box-shadow: 0 0 22px rgba(56,189,248,.7); } }
+    @keyframes hero-glow { 0%,100% { box-shadow: 0 0 8px rgba(94,200,232,.35); } 50% { box-shadow: 0 0 22px rgba(94,200,232,.7); } }
     .card-name  { font-size: 14px; font-weight: 700; line-height: 1.15; padding-right: 18px; }
-    .card-year  { font-size: 13px; color: var(--gold); font-weight: 600; margin-top: 3px; }
-    .card-trophy { position: absolute; top: 7px; right: 19px; }
-    .card-trophy .trophy-icon-svg { width: 13px; height: 13px; display: block; }
-    .trophy-won  { color: #ffd24a; filter: drop-shadow(0 0 2px rgba(255,210,74,.6)); }
-    .trophy-lost { color: var(--text-dim); opacity: .55; }
-    /* Jersey silhouette background art */
-    .jersey-svg { position: absolute; bottom: 2px; right: -2px; width: 58%; pointer-events: none; opacity: 0.2; }
+    .card-year  { font-size: 13px; color: var(--gold); font-weight: 600; }
+    /* Card art & per-card-year indicators */
+    .card-icon-art { display: flex; justify-content: center; align-items: flex-end; flex: 1; padding: 4px 0 6px; pointer-events: none; }
+    .card-indicators { display: flex; align-items: center; gap: 5px; margin-top: 2px; }
+    .ci-icon { width: 13px; height: 13px; flex-shrink: 0; }
+    .ci-flag       { color: #7dd3fc; }
+    .ci-trophy-won { color: #c9a84c; }
+    .ci-trophy-lost{ color: #3a4a3a; }
 
-    .tc-platinum { --tc: #c084fc; } .tc-gold { --tc: #c9a84c; } .tc-silver { --tc: #94a3b8; } .tc-bronze { --tc: #a0522d; } .tc-hero { --tc: #38bdf8; }
+    .tc-platinum { --tc: #c084fc; } .tc-gold { --tc: #c9a84c; } .tc-silver { --tc: #94a3b8; } .tc-bronze { --tc: #a0522d; } .tc-hero { --tc: #5ec8e8; }
     .card-tier-badge { position: absolute; top: 8px; right: 8px; font-size: 9px; font-weight: 800; text-transform: uppercase; letter-spacing: .04em; padding: 2px 6px; border-radius: 3px; background: rgba(0,0,0,.45); color: var(--tc, #888); border: 1px solid var(--tc, #888); }
     /* Silver highlight ring on hero badge to distinguish from platinum at small sizes */
     .tier-hero .card-tier-badge { box-shadow: 0 0 0 1.5px rgba(255,255,255,.5); }
@@ -151,11 +152,13 @@
     .captain-title { font-size: 26px; font-weight: 800; color: var(--gold); text-align: center; margin-bottom: 6px; }
     /* 3 columns always — matches the player selection card layout */
     .captain-cards { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-top: 20px; width: 100%; }
-    .captain-card  { border: 1px solid; border-radius: var(--radius); padding: 12px 10px; cursor: pointer; transition: transform .15s, box-shadow .15s; }
+    .captain-card  { border: 1px dashed; border-radius: var(--radius); padding: 12px 10px; cursor: pointer; transition: transform .15s, box-shadow .15s; }
     .captain-card:hover { transform: translateY(-3px); box-shadow: 0 6px 22px rgba(0,0,0,.5); }
     .cap-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 7px; }
     .cap-tier-badge { font-size: 8px; font-weight: 800; text-transform: uppercase; letter-spacing: .08em; border: 1px solid; border-radius: 3px; padding: 2px 5px; }
     .cap-years { font-size: 9px; color: var(--text-muted); }
+    .cap-captain-pill { font-size: 9px; font-weight: 800; text-transform: uppercase; letter-spacing: .06em; color: #c9a84c; border: 1px solid rgba(201,168,76,.5); border-radius: 3px; padding: 1px 5px; background: rgba(201,168,76,.08); }
+    .cap-icon-art { display: flex; justify-content: center; margin: 4px 0 6px; pointer-events: none; }
     .cap-name { font-size: 14px; font-weight: 800; line-height: 1.2; margin-bottom: 4px; }
     .cap-tagline { font-size: 9px; color: var(--text-muted); font-style: italic; line-height: 1.35; margin-bottom: 8px; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
     .cap-perks { display: flex; flex-direction: column; gap: 4px; margin-bottom: 6px; }
@@ -305,8 +308,6 @@
     .pp-chem-chip.chem-weak    { background: #ef4444; }
     .pp-name { font-size: 13px; font-weight: 700; line-height: 1.2; }
     .pp-year { font-size: 10px; color: var(--gold); margin-top: 1px; }
-    .pp-trophy { display: inline-block; margin-left: 3px; vertical-align: -1px; }
-    .pp-trophy .trophy-icon-svg { width: 8px; height: 8px; display: block; }
     /* Empty slot placeholder */
     .pick-slot-empty { min-height: 44px; border: 1px dashed rgba(255,255,255,.1); border-radius: 5px; display: flex; align-items: center; justify-content: center; }
     .pse-num { font-size: 10px; color: var(--text-dim); font-weight: 600; }
@@ -393,7 +394,7 @@
 
   const TIER_COLORS = {
     platinum: '#c084fc', gold: '#c9a84c', silver: '#94a3b8',
-    bronze: '#a0522d',   hero: '#38bdf8'
+    bronze: '#a0522d',   hero: '#5ec8e8'
   };
 
   // Index 1–12; hero always 5%, rest distributed
@@ -840,25 +841,55 @@
   function rLabel(r)     { return r === 'win' ? 'W' : r === 'loss' ? 'L' : 'H'; }
 
 
-  const TROPHY_SVG = `<svg class="trophy-icon-svg" viewBox="0 0 16 16" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
-    <path d="M5 1h6v1.5h1.75A.75.75 0 0 1 13.5 3.25v1A2.75 2.75 0 0 1 11 7h-.1A4 4 0 0 1 8.75 9.4v1.1h1.75v1.5h-5V10.5h1.75V9.4A4 4 0 0 1 5.1 7H5a2.75 2.75 0 0 1-2.75-2.75v-1A.75.75 0 0 1 3 2.5h1.75V1H5zm0 3H3.5v.25c0 .69.56 1.25 1.25 1.25H5V4zm6 0v1.5h.25A1.25 1.25 0 0 0 12.5 4.25V4H11z"/>
-  </svg>`;
-
-  function trophyHTML(p) {
-    if (!p.made_team) return '';
-    const won = CUP_RESULTS[String(p.year)] === p.nationality;
-    const label = won ? 'Won the Ryder Cup this year' : 'Made the team — Ryder Cup runner-up this year';
-    return `<span class="${won ? 'trophy-won' : 'trophy-lost'}" title="${label}">${TROPHY_SVG}</span>`;
+  function eraSat(year) {
+    return Math.min(1, Math.max(0.45, 0.45 + (year - 1999) / 19 * 0.55)).toFixed(2);
   }
 
-  function jerseyHTML(p) {
-    const fill   = '#1e3a5f';
-    const stroke = p.nationality === 'USA' ? '#c0312b' : '#c9a84c';
-    // Linear saturation ramp: 1999 = 0.45, 2018+ = 1.0
-    const sat = Math.min(1, Math.max(0.45, 0.45 + (p.year - 1999) / 19 * 0.55)).toFixed(2);
-    return `<svg viewBox="0 0 60 70" class="jersey-svg" style="filter:saturate(${sat})" aria-hidden="true">
-      <path d="M0,22 L14,8 L30,19 L46,8 L60,22 L60,37 L48,31 L48,70 L12,70 L12,31 L0,37 Z"
-            fill="${fill}" stroke="${stroke}" stroke-width="2.5" stroke-linejoin="round"/>
+  function shirtIconHTML(p) {
+    const stroke = TIER_COLORS[p.tier] || '#888';
+    const sat    = eraSat(p.year);
+    return `<svg width="80" height="80" viewBox="0 0 24 24" fill="none" stroke="${stroke}"
+      stroke-width="1.1" stroke-linecap="round" stroke-linejoin="round"
+      style="filter:saturate(${sat})" aria-hidden="true">
+      <path d="M15 4l6 2v5h-3v8a1 1 0 0 1 -1 1h-10a1 1 0 0 1 -1 -1v-8h-3v-5l6 -2a3 3 0 0 0 6 0"/>
+    </svg>`;
+  }
+
+  function jacketIconHTML(c) {
+    const stroke = TIER_COLORS[c.tier] || '#888';
+    return `<svg width="80" height="80" viewBox="0 0 24 24" fill="none" stroke="${stroke}"
+      stroke-width="0.85" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+      <path d="M16 3l-4 5l-4 -5"/>
+      <path d="M12 19a2 2 0 0 1 -2 2h-4a2 2 0 0 1 -2 -2v-8.172a2 2 0 0 1 .586 -1.414l.828 -.828a2 2 0 0 0 .586 -1.414v-2.172a2 2 0 0 1 2 -2h8a2 2 0 0 1 2 2v2.172a2 2 0 0 0 .586 1.414l.828 .828a2 2 0 0 1 .586 1.414v8.172a2 2 0 0 1 -2 2h-4a2 2 0 0 1 -2 -2"/>
+      <path d="M20 13h-3a1 1 0 0 0 -1 1v2a1 1 0 0 0 1 1h3"/>
+      <path d="M4 17h3a1 1 0 0 0 1 -1v-2a1 1 0 0 0 -1 -1h-3"/>
+      <circle cx="12" cy="12" r="0.5" fill="#c9a84c" stroke="none"/>
+      <circle cx="12" cy="16" r="0.5" fill="#c9a84c" stroke="none"/>
+      <circle cx="15.3" cy="8.6" r="1.6" fill="none" stroke="#c9a84c" stroke-width="0.55"/>
+      <path d="M14.6 8.1h1.4v0.4c0 0.6 -0.5 0.7 -0.7 0.7c-0.2 0 -0.7 -0.1 -0.7 -0.7z" fill="#c9a84c" stroke="none"/>
+    </svg>`;
+  }
+
+  function flagHTML(p) {
+    if (p.made_team !== true) return '';
+    return `<svg class="ci-icon ci-flag" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+      <path stroke="none" d="M0 0h24v24H0z" fill="none"/>
+      <path d="M5 14h14l-4.5 -4.5l4.5 -4.5h-14v16"/>
+    </svg>`;
+  }
+
+  function trophyIconHTML(p) {
+    if (p.made_team !== true) return '';
+    const won = CUP_RESULTS[String(p.year)] === p.nationality;
+    const cls = won ? 'ci-trophy-won' : 'ci-trophy-lost';
+    return `<svg class="ci-icon ${cls}" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+      <path stroke="none" d="M0 0h24v24H0z" fill="none"/>
+      <path d="M8 21l8 0"/><path d="M12 17l0 4"/><path d="M7 4l10 0"/>
+      <path d="M17 4v8a5 5 0 0 1 -10 0v-8"/>
+      <path d="M5 9m-2 0a2 2 0 1 0 4 0a2 2 0 1 0 -4 0"/>
+      <path d="M19 9m-2 0a2 2 0 1 0 4 0a2 2 0 1 0 -4 0"/>
     </svg>`;
   }
 
@@ -919,12 +950,10 @@
   }
 
   function playerPickedHTML(p, chemDotHTML = '') {
-    const icon   = trophyHTML(p);
-    const trophy = icon ? `<span class="pp-trophy">${icon}</span>` : '';
     return `<div class="player-picked ${tcClass(p.tier)}" ${tcStyle(p.tier)}>
       ${chemDotHTML}
       <div class="pp-name">${p.name}</div>
-      <div class="pp-year">${p.year}${trophy}</div>
+      <div class="pp-year">${p.year}</div>
     </div>`;
   }
 
@@ -975,15 +1004,16 @@
   function playerCardHTML(p, clickable = true, extraClass = '', chemDotHTML = '') {
     const hero = isHero(p) ? 'hero-card' : '';
     const da   = clickable ? `data-pid="${p.id}"` : '';
-    const icon = trophyHTML(p);
     return `<div class="player-card ${tcClass(p.tier)} ${hero} ${extraClass}" ${tcStyle(p.tier)} ${da}>
       <div class="card-tier-badge"></div>
       ${chemDotHTML}
-      ${icon ? `<div class="card-trophy">${icon}</div>` : ''}
+      <div class="card-icon-art">${shirtIconHTML(p)}</div>
       <div class="card-name">${p.name}</div>
-      <div class="card-year">${p.year}</div>
+      <div class="card-indicators">
+        <span class="card-year">${p.year}</span>
+        ${flagHTML(p)}${trophyIconHTML(p)}
+      </div>
       ${playerAttrIconsHTML(p)}
-      ${jerseyHTML(p)}
     </div>`;
   }
 
@@ -1172,7 +1202,7 @@
       standard:  { bg: 'rgba(34,197,94,.05)',   border: 'rgba(34,197,94,.2)',   badge: '#22c55e' }
     }[c.prestige] || { bg: 'var(--surface2)', border: 'var(--border)', badge: 'var(--gold)' };
 
-    const yearsStr = (c.years || []).join(', ');
+    const yearsStr  = (c.years || []).join(', ');
     const perksHTML = (c.perks || []).map(p => `
       <div class="cap-perk-pill">
         <span class="cap-perk-label">${p.label}</span>
@@ -1188,8 +1218,10 @@
       <div class="captain-card" data-cid="${c.id}" style="background:${TC.bg};border-color:${TC.border}">
         <div class="cap-header">
           <span class="cap-tier-badge" style="color:${TC.badge};border-color:${TC.badge}">${c.prestige}</span>
-          <span class="cap-years">${yearsStr}</span>
+          <span class="cap-captain-pill">★ CAPTAIN</span>
+          <span class="cap-years">Captained ${yearsStr}</span>
         </div>
+        <div class="cap-icon-art">${jacketIconHTML(c)}</div>
         <div class="cap-name">${c.name}</div>
         <div class="cap-tagline">${c.tagline}</div>
         <div class="cap-perks">${perksHTML}</div>

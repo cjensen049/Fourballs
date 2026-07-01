@@ -91,7 +91,7 @@
     .card-name  { font-size: 14px; font-weight: 700; line-height: 1.15; padding-right: 18px; }
     .card-year  { font-size: 13px; color: var(--gold); font-weight: 600; }
     /* Card art & per-card-year indicators */
-    .card-icon-art { display: flex; justify-content: center; align-items: flex-end; flex: 1; padding: 4px 0 6px; pointer-events: none; }
+    .card-icon-art { display: flex; justify-content: center; align-items: center; padding: 6px 0 4px; pointer-events: none; }
     .card-indicators { display: flex; align-items: center; gap: 5px; margin-top: 2px; }
     .ci-icon { width: 13px; height: 13px; flex-shrink: 0; }
     .ci-flag       { color: #7dd3fc; }
@@ -124,7 +124,7 @@
     .pick-area { padding: 8px 10px 10px; background: var(--surface); border-top: 1px solid var(--border); }
     .pick-round-label { font-size: 11px; color: var(--text-muted); margin-bottom: 6px; text-transform: uppercase; letter-spacing: .05em; }
     /* Always 3 columns — no mobile collapse */
-    .pick-cards-row { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; }
+    .pick-cards-row { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; max-width: 480px; margin: 0 auto; }
 
     /* ── PLAYER MINI (reused in pairing seats) ── */
     .player-mini { width: 100%; padding: 5px 8px; border-radius: 4px; border-left: 3px solid var(--tc, #444); background: var(--surface3); }
@@ -151,7 +151,7 @@
     .captain-screen { display: flex; flex-direction: column; align-items: center; padding: 20px 14px 40px; background: radial-gradient(ellipse at 50% 0%, #1a0a2a 0%, var(--bg) 70%); min-height: 100vh; }
     .captain-title { font-size: 26px; font-weight: 800; color: var(--gold); text-align: center; margin-bottom: 6px; }
     /* 3 columns always — matches the player selection card layout */
-    .captain-cards { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-top: 20px; width: 100%; }
+    .captain-cards { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-top: 20px; width: 100%; max-width: 480px; margin-left: auto; margin-right: auto; }
     .captain-card  { border: 1px dashed; border-radius: var(--radius); padding: 12px 10px; cursor: pointer; transition: transform .15s, box-shadow .15s; }
     .captain-card:hover { transform: translateY(-3px); box-shadow: 0 6px 22px rgba(0,0,0,.5); }
     .cap-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 7px; }

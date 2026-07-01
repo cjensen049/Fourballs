@@ -1,100 +1,76 @@
 // scoring-engine.js — pure JS module, no UI dependencies
 
+// ─── Talent score (tier → baseline match advantage) ──────────────────────────
+const _TALENT = { hero: 20, platinum: 15, gold: 10, silver: 7, bronze: 3 };
+function getTalentScore(tier) { return _TALENT[tier] || 7; }
+
 // ─── Composite score ──────────────────────────────────────────────────────────
 function compositeScore(player) {
-  const s = player.stats;
-  return (s.driving_distance + s.driving_accuracy + s.greens_in_regulation +
-          s.scrambling + s.birdie_rate + s.pressure_index) / 6;
-}
-
-// ─── Hero boost ───────────────────────────────────────────────────────────────
-// Returns a deep copy with stats multiplied. Never mutates source.
-function applyHeroBoost(player) {
-  if (!player.hero_boost) return player;
-  const p = JSON.parse(JSON.stringify(player));
-  const m = player.hero_boost;
-  const s = p.stats;
-  s.driving_distance     = Math.min(99, Math.round(s.driving_distance     * m));
-  s.driving_accuracy     = Math.min(99, Math.round(s.driving_accuracy     * m));
-  s.greens_in_regulation = Math.min(99, Math.round(s.greens_in_regulation * m));
-  s.scrambling           = Math.min(99, Math.round(s.scrambling           * m));
-  s.birdie_rate          = Math.min(99, Math.round(s.birdie_rate          * m));
-  s.pressure_index       = Math.min(99, Math.round(s.pressure_index       * m));
-  return p;
+  return (player.stat_driving_distance + player.stat_driving_accuracy +
+          player.stat_greens_in_regulation + player.stat_scrambling +
+          player.stat_birdie_rate + player.stat_pressure_index) / 6;
 }
 
 // ─── Venue fit ────────────────────────────────────────────────────────────────
-// Returns 0–100. Weighted average of how well player attributes match venue demands.
 function calculateVenueFit(player, venue) {
-  const ht = venue.hidden_tags;
-  const st = player.style_tags;
-  const s  = player.stats;
+  const ht  = venue.hidden_tags;
   const num =
-    ht.power_weight      * st.power       +
-    ht.accuracy_weight   * st.accuracy    +
-    ht.short_game_weight * s.scrambling   +
-    ht.wind_factor       * st.consistency +
-    ht.pressure_factor   * s.pressure_index;
-  const den =
-    ht.power_weight + ht.accuracy_weight + ht.short_game_weight +
-    ht.wind_factor  + ht.pressure_factor;
+    ht.power_weight      * player.style_power       +
+    ht.accuracy_weight   * player.style_accuracy    +
+    ht.short_game_weight * player.stat_scrambling   +
+    ht.wind_factor       * player.style_consistency +
+    ht.pressure_factor   * player.stat_pressure_index;
+  const den = ht.power_weight + ht.accuracy_weight + ht.short_game_weight +
+              ht.wind_factor  + ht.pressure_factor;
   return Math.min(100, Math.max(0, Math.round(num / den)));
 }
 
-// ─── Chemistry helpers ────────────────────────────────────────────────────────
-function hasBond(p1, p2) {
-  if (!p1 || !p2) return false;
-  const b1 = p1.bonds || [];
-  const b2 = p2.bonds || [];
-  return b1.includes(p2.name) || b2.includes(p1.name);
-}
+// ─── Chemistry ────────────────────────────────────────────────────────────────
+// Returns 0–20. Two pillars:
+//   Pillar 1 — Stat Complementarity (0–10): bigger spread across style dimensions
+//              = more complementary skill sets.
+//   Pillar 2 — Shared History (0–10): teammates on real Ryder Cup rosters
+//              (via made_team==true rows), with bonuses for winning together and
+//              repeated partnerships.
+// allPlayers: full multi-year player list (needed for shared history lookup).
+// cupResults: { "year": "NAT" } map.
+// NOTE: in-match effect is not yet wired into calculateMatchProbability —
+//   this score is used for pairing decisions and display only.
+function computeChemistry(p1, p2, allPlayers, cupResults) {
+  if (!p1 || !p2 || p1.name === p2.name) return 0;
 
-function hasSharedVenueConnection(p1, p2, venue) {
-  if (!venue || !p1 || !p2) return false;
-  const v1 = p1.venue_connections || [];
-  const v2 = p2.venue_connections || [];
-  return v1.some(id => id === venue.id && v2.includes(id));
-}
+  // Pillar 1 — Stat Complementarity
+  const diffs = [
+    Math.abs(p1.style_power               - p2.style_power),
+    Math.abs(p1.style_accuracy            - p2.style_accuracy),
+    Math.abs(p1.style_aggression          - p2.style_aggression),
+    Math.abs(p1.style_consistency         - p2.style_consistency),
+    Math.abs(p1.style_match_play_affinity - p2.style_match_play_affinity),
+  ];
+  const avgDiff        = diffs.reduce((a, b) => a + b, 0) / diffs.length;
+  const complementarity = Math.min(10, avgDiff / 4);
 
-// ─── Pairing chemistry ────────────────────────────────────────────────────────
-// Returns 0–100. Designed to spread ~40–90 so pairing decisions actually matter.
-// Foursomes: weakest-link accuracy floor, consistency mismatch penalty, power bonus.
-// Fourball:  avg aggression (not max) so a defensive player genuinely hurts the pair.
-// Both: +5 bonus when both players have 3+ Ryder Cup appearances (year-filtered).
-function calculatePairingChemistry(p1, p2, format, venue = null) {
-  const st1 = p1.style_tags, st2 = p2.style_tags;
-  const s1  = p1.stats,      s2  = p2.stats;
+  // Pillar 2 — Shared History
+  const aYears = new Set(
+    (allPlayers || []).filter(p => p.name === p1.name && p.made_team === true).map(p => p.year)
+  );
+  const bYears = new Set(
+    (allPlayers || []).filter(p => p.name === p2.name && p.made_team === true).map(p => p.year)
+  );
+  const sharedYears = [...aYears].filter(y => bYears.has(y));
 
-  let base;
-  if (format === 'foursomes') {
-    // Weakest-link accuracy: alternating shots punish the inaccurate player hard
-    const accuracyFloor = Math.min(st1.accuracy, st2.accuracy);
-    // Consistency gap > 5 is a liability — styles must mesh
-    const conPenalty    = Math.max(0, Math.abs(st1.consistency - st2.consistency) - 5) * 2;
-    // Power bonus: beneficial but not defining
-    const powerBonus    = Math.max(0, ((st1.power + st2.power) / 2 - 65) * 0.3);
-    const pressure      = (s1.pressure_index + s2.pressure_index) / 2;
-    base = accuracyFloor * 0.40 + pressure * 0.25 + powerBonus - conPenalty * 0.30 + 15;
-  } else if (format === 'fourball') {
-    // Both players hunt independently — avg aggression matters, not just the peak.
-    // Normalize effective range 60-95 → 0-1 so elite stats compress at top-end.
-    const avgAgg  = (st1.aggression + st2.aggression) / 2;
-    const avgBird = (s1.birdie_rate + s2.birdie_rate) / 2;
-    const pressure = (s1.pressure_index + s2.pressure_index) / 2;
-    const normAgg  = Math.min(1, Math.max(0, (avgAgg  - 60) / 35));
-    const normBird = Math.min(1, Math.max(0, (avgBird - 60) / 35));
-    const normPres = Math.min(1, Math.max(0, (pressure - 60) / 35));
-    base = 40 + normAgg * 22 + normBird * 18 + normPres * 10;
-  } else {
-    base = (s1.pressure_index + s2.pressure_index) / 2;
+  let history = 0;
+  if (sharedYears.length > 0) {
+    history = 4;
+    const sharedNat  = p1.nationality;
+    const cupRef     = cupResults || {};
+    const wonTogether = sharedYears.some(y => cupRef[String(y)] === sharedNat);
+    if (wonTogether) history += 3;
+    history += Math.min(3, sharedYears.length - 1);
+    history  = Math.min(10, history);
   }
 
-  // Ryder Cup experience: count only years up to the player's card year (data stores full career)
-  const rc1 = p1.ryder_cup_years ? p1.ryder_cup_years.filter(y => y <= (p1.year || 9999)).length : 0;
-  const rc2 = p2.ryder_cup_years ? p2.ryder_cup_years.filter(y => y <= (p2.year || 9999)).length : 0;
-  const rcBonus = (rc1 >= 3 && rc2 >= 3) ? 5 : 0;
-
-  return Math.min(100, Math.max(0, Math.round(base + rcBonus)));
+  return Math.min(20, Math.round(complementarity + history));
 }
 
 // ─── Captain perk boost ───────────────────────────────────────────────────────
@@ -107,14 +83,14 @@ function captainPerkBoost(captain, format, ctx) {
   let boost = 0;
   for (const perk of captain.perks) {
     switch (perk.type) {
-      case 'tactician':        if (format === 'foursomes')                                   boost += 4; break;
-      case 'flamboyant':       if (format === 'fourball')                                    boost += 4; break;
-      case 'pressure_player':  if (format === 'singles')                                     boost += 4; break;
-      case 'rallying_cry':     if (format === 'singles' && c.trailing)                       boost += 7; break;
-      case 'home_fortress':    if (c.homeMatch)                                              boost += 5; break;
-      case 'veteran_anchor':   if ((c.rcYears || 0) >= 3)                                    boost += 3; break;
-      case 'rookie_whisperer': if (c.tier === 'bronze' || c.tier === 'silver')               boost += 3; break;
-      case 'momentum':         if ((c.sessionsWon || 0) >= 2)                                boost += 3; break;
+      case 'tactician':        if (format === 'foursomes')                             boost += 4; break;
+      case 'flamboyant':       if (format === 'fourball')                              boost += 4; break;
+      case 'pressure_player':  if (format === 'singles')                               boost += 4; break;
+      case 'rallying_cry':     if (format === 'singles' && c.trailing)                 boost += 7; break;
+      case 'home_fortress':    if (c.homeMatch)                                        boost += 5; break;
+      case 'veteran_anchor':   if ((c.rcYears || 0) >= 3)                              boost += 3; break;
+      case 'rookie_whisperer': if (c.tier === 'bronze' || c.tier === 'silver')         boost += 3; break;
+      case 'momentum':         if ((c.sessionsWon || 0) >= 2)                          boost += 3; break;
     }
   }
   return boost;
@@ -126,52 +102,34 @@ function captainPerkBoost(captain, format, ctx) {
 // Positive totalSwing favors user. Cap ±30 → delta ±15 → userWin range 30–60%.
 //
 // matchCtx (optional): { userTrailing, aiTrailing, userSessionsWon, aiSessionsWon }
-//   userTrailing/aiTrailing: boolean — whether that team is trailing entering this session
-//   sessionsWon: how many sessions won so far (used for momentum perk)
 function calculateMatchProbability(myPlayer, oppPlayer, venue, format, captain, myPartner = null, aiCaptain = null, oppPartner = null, matchCtx = {}) {
-  const myP  = applyHeroBoost(myPlayer);
-  const oppP = applyHeroBoost(oppPlayer);
-
   let totalSwing = 0;
 
-  // 1. Talent delta — per 10-point composite gap, max ±9 full swing
-  const talentGap = compositeScore(myP) - compositeScore(oppP);
-  totalSwing += Math.min(9, Math.max(-9, talentGap / 10 * 3));
+  // 1. Talent delta — composite stats + tier talent score, max ±9 full swing
+  const myTalent  = compositeScore(myPlayer)  + getTalentScore(myPlayer.tier);
+  const oppTalent = compositeScore(oppPlayer) + getTalentScore(oppPlayer.tier);
+  totalSwing += Math.min(9, Math.max(-9, (myTalent - oppTalent) / 10 * 3));
 
   // 2. Venue fit delta — max ±6 full swing
   const fitDiff = calculateVenueFit(myPlayer, venue) - calculateVenueFit(oppPlayer, venue);
   totalSwing += Math.min(6, Math.max(-6, fitDiff / 100 * 6));
 
   // 3. Format fit delta — max ±4 full swing
-  const myFF  = (myPlayer.format_fit && myPlayer.format_fit[format])  || 75;
-  const oppFF = (oppPlayer.format_fit && oppPlayer.format_fit[format]) || 75;
+  const FIT = { foursomes: 'fit_foursomes', fourball: 'fit_fourball', singles: 'fit_singles' };
+  const myFF  = myPlayer[FIT[format]]  || 75;
+  const oppFF = oppPlayer[FIT[format]] || 75;
   totalSwing += Math.min(4, Math.max(-4, (myFF - oppFF) / 100 * 4));
 
-  // 4. Pairing chemistry delta — team matches only, max ±6 full swing from style tags
-  //    Named bond: +5% win swing (+10 before /2), shared venue connection: +3% (+6), stacked cap +7% (+14)
-  if (format === 'foursomes' || format === 'fourball') {
-    // Support both new chemistry_mult and old bonus.chemistry_multiplier
-    const myCaptainMult  = (captain   && captain.chemistry_mult)   || (captain   && captain.bonus && captain.bonus.chemistry_multiplier)   || 1;
-    const aiCaptainMult  = (aiCaptain && aiCaptain.chemistry_mult) || (aiCaptain && aiCaptain.bonus && aiCaptain.bonus.chemistry_multiplier) || 1;
-    const myChem  = myPartner  ? Math.min(100, calculatePairingChemistry(myPlayer, myPartner, format, venue)  * myCaptainMult)  : 50;
-    const oppChem = oppPartner ? Math.min(100, calculatePairingChemistry(oppPlayer, oppPartner, format, venue) * aiCaptainMult)  : 50;
-    totalSwing += Math.min(10, Math.max(-10, (myChem - oppChem) / 100 * 10));
-
-    // Bond/venue bonuses applied directly — bypasses chemistry scale cap but flows through ±30 total cap
-    const myBondSwing  = Math.min(14,
-      (myPartner  && hasBond(myPlayer,  myPartner)                            ? 10 : 0) +
-      (myPartner  && hasSharedVenueConnection(myPlayer,  myPartner,  venue)  ?  6 : 0));
-    const oppBondSwing = Math.min(14,
-      (oppPartner && hasBond(oppPlayer, oppPartner)                           ? 10 : 0) +
-      (oppPartner && hasSharedVenueConnection(oppPlayer, oppPartner, venue)  ?  6 : 0));
-    totalSwing += (myBondSwing - oppBondSwing);
-  }
+  // 4. Chemistry — in-match effect not yet defined; wired into pairing/display only.
+  //    Placeholder zero; revisit after balance design.
 
   // 5. Captain perk delta — zero-sum, max ±16 full swing (±8% after halving)
   const homeMatch   = !!(venue && venue.location && myPlayer.nationality  && venue.location === myPlayer.nationality);
   const aiHomeMatch = !!(venue && venue.location && oppPlayer.nationality && venue.location === oppPlayer.nationality);
-  const myRCYears   = myPlayer.ryder_cup_years  ? myPlayer.ryder_cup_years.filter(y  => y <= (myPlayer.year  || 9999)).length : 0;
-  const aiRCYears   = oppPlayer.ryder_cup_years ? oppPlayer.ryder_cup_years.filter(y => y <= (oppPlayer.year || 9999)).length : 0;
+  const myRCYears   = myPlayer.ryder_cup_years
+    ? myPlayer.ryder_cup_years.filter(y => parseInt(y) <= (myPlayer.year  || 9999)).length : 0;
+  const aiRCYears   = oppPlayer.ryder_cup_years
+    ? oppPlayer.ryder_cup_years.filter(y => parseInt(y) <= (oppPlayer.year || 9999)).length : 0;
 
   const myCtx = {
     trailing:    !!matchCtx.userTrailing,
@@ -194,10 +152,9 @@ function calculateMatchProbability(myPlayer, oppPlayer, venue, format, captain, 
 
   // 6. Ryder Cup history delta — max ±3 full swing
   function rcRate(p) {
-    const rc = p.ryder_cup_record;
-    if (!rc || !rc.played) return 0.5;
-    const tot = rc.won + rc.lost + rc.halved;
-    return tot ? (rc.won + rc.halved * 0.5) / tot : 0.5;
+    if (!p.rc_played) return 0.5;
+    const tot = (p.rc_won || 0) + (p.rc_lost || 0) + (p.rc_halved || 0);
+    return tot ? ((p.rc_won || 0) + (p.rc_halved || 0) * 0.5) / tot : 0.5;
   }
   totalSwing += Math.min(3, Math.max(-3, (rcRate(myPlayer) - rcRate(oppPlayer)) * 3));
 
@@ -215,22 +172,6 @@ function calculateMatchProbability(myPlayer, oppPlayer, venue, format, captain, 
     }
   }
 
-  // 8. Hero bonus special abilities — one-sided; doubled so halving preserves the stated %
-  const hb = myPlayer.hero_bonus;
-  if (hb) {
-    if (hb.all_formats_boost)                                              totalSwing += hb.all_formats_boost * 2;
-    if (hb.foursomes_boost && format === 'foursomes')                      totalSwing += hb.foursomes_boost   * 2;
-    if (hb.fourball_boost  && format === 'fourball')                       totalSwing += hb.fourball_boost    * 2;
-    if (hb.singles_boost   && format === 'singles')                        totalSwing += hb.singles_boost     * 2;
-    if (hb.chemistry_boost && myPartner && format !== 'singles')           totalSwing += hb.chemistry_boost   * 2;
-    if (venue && venue.location && myPlayer.nationality) {
-      if (hb.home_boost && venue.location === myPlayer.nationality)        totalSwing += hb.home_boost * 2;
-      if (hb.away_boost && venue.location !== myPlayer.nationality)        totalSwing += hb.away_boost * 2;
-    }
-  }
-  const phb = myPartner && myPartner.hero_bonus;
-  if (phb && phb.chemistry_boost && format !== 'singles') totalSwing += phb.chemistry_boost * 2;
-
   // Cap total swing — delta = swing/2
   totalSwing = Math.min(30, Math.max(-30, totalSwing));
   const delta = totalSwing / 2;
@@ -244,17 +185,14 @@ function calculateMatchProbability(myPlayer, oppPlayer, venue, format, captain, 
   let loss  = Math.round((100 - win - halve) * 10) / 10;
 
   // Aggression/consistency spread modifier
-  // Aggressive match → halve drops, freed points redistributed based on MY pair's consistency.
-  // High consistency → freed points lean toward win. Low consistency → blow-up risk (lean toward loss).
-  const _agg = p => (p && p.style_tags && p.style_tags.aggression) || 65;
-  const _con = p => (p && p.style_tags && p.style_tags.consistency) || 65;
+  const _agg = p => (p && p.style_aggression)   || 65;
+  const _con = p => (p && p.style_consistency)  || 65;
 
-  const pairAgg    = myPartner  ? (_agg(myPlayer) + _agg(myPartner))  / 2 : _agg(myPlayer);
+  const pairAgg    = myPartner  ? (_agg(myPlayer) + _agg(myPartner))   / 2 : _agg(myPlayer);
   const oppPairAgg = oppPartner ? (_agg(oppPlayer) + _agg(oppPartner)) / 2 : _agg(oppPlayer);
   const pairCon    = myPartner  ? (_con(myPlayer) + _con(myPartner))   / 2 : _con(myPlayer);
   const matchAgg   = (pairAgg + oppPairAgg) / 2;
 
-  // halveShift > 0 = fewer halves (aggressive); < 0 = more halves (defensive)
   const halveShift = Math.min(4, Math.max(-3, Math.round((matchAgg - 65) / 7)));
   const newHalve   = Math.max(2, Math.min(halve + 3, halve - halveShift));
   const freed      = halve - newHalve;
@@ -278,14 +216,6 @@ function calculateMatchProbability(myPlayer, oppPlayer, venue, format, captain, 
   loss = Math.round((100 - win - halve) * 10) / 10;
   if (loss < 5) { loss = 5; win = Math.round((100 - loss - halve) * 10) / 10; }
 
-  // Hero singles_loss_ceiling — applied after all modifiers
-  if (format === 'singles' && hb && hb.singles_loss_ceiling != null && loss > hb.singles_loss_ceiling) {
-    const excess = loss - hb.singles_loss_ceiling;
-    loss = hb.singles_loss_ceiling;
-    win  = Math.round((win + excess) * 10) / 10;
-    loss = Math.round((100 - win - halve) * 10) / 10;
-  }
-
   return { win, halve, loss };
 }
 
@@ -297,23 +227,7 @@ function simulateMatch(probability) {
   return 'loss';
 }
 
-// ─── Pairings (utility — kept for external use / tests) ──────────────────────
-function _makePairings(players) {
-  const [F1, F2, F3, F4] = players;
-  return [
-    { p1: F1, p2: F2 },
-    { p1: F1, p2: F3 },
-    { p1: F3, p2: F4 },
-    { p1: F2, p2: F3 }
-  ];
-}
-
-function generateFoursomePairings(players) { return _makePairings(players); }
-function generateFourballPairings(players)  { return _makePairings(players); }
-
 // ─── Singles order ────────────────────────────────────────────────────────────
-// Captain perk determines singles deployment strategy.
-// slots[i] = 0-indexed position assigned to the i-th ranked player.
 function _hasPerk(captain, type) {
   return !!(captain && captain.perks && captain.perks.some(p => p.type === type));
 }
@@ -324,19 +238,14 @@ function singlesOrder(players, captain = null) {
 
   let slots;
   if (_hasPerk(captain, 'rallying_cry')) {
-    // Back-load: best 4 close it out — pairs with rallying_cry +7% when trailing
     slots = [11, 10, 9, 8, 0, 1, 2, 3, 4, 5, 6, 7];
   } else if (_hasPerk(captain, 'home_fortress')) {
-    // Top-load: front the best players and build early momentum
     slots = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11];
   } else if (_hasPerk(captain, 'pressure_player')) {
-    // Anchor: best player closes at 12, next two provide bookends at 2 and 7
     slots = [11, 1, 6, 0, 2, 3, 4, 5, 7, 8, 9, 10];
   } else if (_hasPerk(captain, 'flamboyant')) {
-    // Mid-heavy: best 3 cluster in positions 4, 6, 8 — dominate the critical middle
     slots = [5, 3, 7, 0, 1, 2, 4, 6, 8, 9, 10, 11];
   } else {
-    // Default stagger: best→2nd, 2nd best→6th, 3rd→11th, fill the rest
     slots = [1, 5, 10, 0, 2, 3, 4, 6, 7, 8, 9, 11];
   }
 
@@ -349,26 +258,10 @@ function singlesOrder(players, captain = null) {
 //   { fridayAMPairs, saturdayAMPairs: foursomes [[p1,p2]×4]
 //     fridayPMPairs, saturdayPMPairs: fourball  [[p1,p2]×4]
 //     allPlayers: [×12] }
-// Players with 4 team match appearances (all sessions) are fatigued in singles (−2%/+2%).
+// Players with 4+ team match appearances are fatigued in singles (−2%/+2%).
 // Concession special: if user captain has it, user was leading entering singles,
 // but lost overall — result is clamped to 14-14 tie.
 function simulateFullEvent(myTeam, opponentTeam, venue, myCaptain, aiCaptain) {
-  function boostPair([p1, p2]) {
-    return { p1: p1 ? applyHeroBoost(p1) : null, p2: p2 ? applyHeroBoost(p2) : null };
-  }
-
-  const myFriAM  = myTeam.fridayAMPairs.map(boostPair);
-  const myFriPM  = myTeam.fridayPMPairs.map(boostPair);
-  const mySatAM  = myTeam.saturdayAMPairs.map(boostPair);
-  const mySatPM  = myTeam.saturdayPMPairs.map(boostPair);
-  const myAll    = myTeam.allPlayers.map(applyHeroBoost);
-
-  const oppFriAM  = opponentTeam.fridayAMPairs.map(boostPair);
-  const oppFriPM  = opponentTeam.fridayPMPairs.map(boostPair);
-  const oppSatAM  = opponentTeam.saturdayAMPairs.map(boostPair);
-  const oppSatPM  = opponentTeam.saturdayPMPairs.map(boostPair);
-  const oppAll    = opponentTeam.allPlayers.map(applyHeroBoost);
-
   function countAppearances(team) {
     const counts = {};
     const allPairs = [
@@ -387,8 +280,8 @@ function simulateFullEvent(myTeam, opponentTeam, venue, myCaptain, aiCaptain) {
   const myFatiguedIds  = new Set(Object.entries(myAppearances).filter(([, c]) => c >= 4).map(([id]) => id));
   const oppFatiguedIds = new Set(Object.entries(oppAppearances).filter(([, c]) => c >= 4).map(([id]) => id));
 
-  const mySingles  = singlesOrder(myAll,  myCaptain);
-  const oppSingles = singlesOrder(oppAll, aiCaptain);
+  const mySingles  = singlesOrder(myTeam.allPlayers,         myCaptain);
+  const oppSingles = singlesOrder(opponentTeam.allPlayers,   aiCaptain);
 
   const scores = { user: 0, ai: 0 };
   let userSessionsWon = 0, aiSessionsWon = 0;
@@ -403,18 +296,18 @@ function simulateFullEvent(myTeam, opponentTeam, venue, myCaptain, aiCaptain) {
     const results = [];
     let sUser = 0, sAI = 0;
     for (let i = 0; i < myPairs.length; i++) {
-      const myPair  = myPairs[i];
-      const oppPair = oppPairs[i];
-      if (!myPair.p1 || !oppPair || !oppPair.p1) continue;
-      const myProb = calculateMatchProbability(myPair.p1, oppPair.p1, venue, format, myCaptain, myPair.p2, aiCaptain, oppPair.p2, sessionCtx);
+      const [myP1, myP2]   = myPairs[i];
+      const [oppP1, oppP2] = oppPairs[i];
+      if (!myP1 || !oppP1) continue;
+      const myProb = calculateMatchProbability(myP1, oppP1, venue, format, myCaptain, myP2, aiCaptain, oppP2, sessionCtx);
       const result = simulateMatch(myProb);
       addPoints(result);
       if      (result === 'win')   sUser++;
       else if (result === 'halve') { sUser += 0.5; sAI += 0.5; }
       else                          sAI++;
       results.push({
-        myPlayers:  [myPair.p1.name,  myPair.p2 ? myPair.p2.name : null],
-        oppPlayers: [oppPair.p1.name, oppPair.p2 ? oppPair.p2.name : null],
+        myPlayers:  [myP1.name,  myP2  ? myP2.name  : null],
+        oppPlayers: [oppP1.name, oppP2 ? oppP2.name : null],
         format, result,
         points: result === 'win' ? 1 : result === 'halve' ? 0.5 : 0
       });
@@ -424,20 +317,19 @@ function simulateFullEvent(myTeam, opponentTeam, venue, myCaptain, aiCaptain) {
     return results;
   }
 
-  // Sessions run in order — context reflects live score/sessions at each point
-  const fridayAM = playTeamSession(myFriAM, oppFriAM, 'foursomes', {
+  const fridayAM = playTeamSession(myTeam.fridayAMPairs, opponentTeam.fridayAMPairs, 'foursomes', {
     userSessionsWon: 0, aiSessionsWon: 0,
     userTrailing: false, aiTrailing: false
   });
-  const fridayPM = playTeamSession(myFriPM, oppFriPM, 'fourball', {
+  const fridayPM = playTeamSession(myTeam.fridayPMPairs, opponentTeam.fridayPMPairs, 'fourball', {
     userSessionsWon, aiSessionsWon,
     userTrailing: scores.user < scores.ai, aiTrailing: scores.ai < scores.user
   });
-  const saturdayAM = playTeamSession(mySatAM, oppSatAM, 'foursomes', {
+  const saturdayAM = playTeamSession(myTeam.saturdayAMPairs, opponentTeam.saturdayAMPairs, 'foursomes', {
     userSessionsWon, aiSessionsWon,
     userTrailing: scores.user < scores.ai, aiTrailing: scores.ai < scores.user
   });
-  const saturdayPM = playTeamSession(mySatPM, oppSatPM, 'fourball', {
+  const saturdayPM = playTeamSession(myTeam.saturdayPMPairs, opponentTeam.saturdayPMPairs, 'fourball', {
     userSessionsWon, aiSessionsWon,
     userTrailing: scores.user < scores.ai, aiTrailing: scores.ai < scores.user
   });
@@ -456,8 +348,7 @@ function simulateFullEvent(myTeam, opponentTeam, venue, myCaptain, aiCaptain) {
     let prob = calculateMatchProbability(myP, oppP, venue, 'singles', myCaptain, null, aiCaptain, null, singlesCtx);
 
     const isFatigued = myFatiguedIds.has(myP.id);
-    const isImmune   = myP.hero_bonus && myP.hero_bonus.fatigue_immune;
-    if (isFatigued && !isImmune) {
+    if (isFatigued) {
       prob = {
         win:   Math.max(0,   Math.round((prob.win   - 2) * 10) / 10),
         halve: prob.halve,
@@ -466,8 +357,7 @@ function simulateFullEvent(myTeam, opponentTeam, venue, myCaptain, aiCaptain) {
     }
 
     const isOppFatigued = oppFatiguedIds.has(oppP.id);
-    const isOppImmune   = oppP.hero_bonus && oppP.hero_bonus.fatigue_immune;
-    if (isOppFatigued && !isOppImmune) {
+    if (isOppFatigued) {
       prob = {
         win:   Math.min(100, Math.round((prob.win   + 2) * 10) / 10),
         halve: prob.halve,
@@ -484,8 +374,8 @@ function simulateFullEvent(myTeam, opponentTeam, venue, myCaptain, aiCaptain) {
       result,
       points:      result === 'win' ? 1 : result === 'halve' ? 0.5 : 0,
       matchNumber: i + 1,
-      fatigued:    isFatigued && !isImmune,
-      oppFatigued: isOppFatigued && !isOppImmune
+      fatigued:    isFatigued,
+      oppFatigued: isOppFatigued
     };
   });
 
@@ -510,18 +400,14 @@ function simulateFullEvent(myTeam, opponentTeam, venue, myCaptain, aiCaptain) {
 
 if (typeof module !== 'undefined' && module.exports) {
   module.exports = {
+    getTalentScore,
     compositeScore,
-    applyHeroBoost,
     calculateVenueFit,
-    hasBond,
-    hasSharedVenueConnection,
-    calculatePairingChemistry,
+    computeChemistry,
     captainPerkBoost,
     calculateMatchProbability,
     simulateMatch,
     singlesOrder,
-    generateFoursomePairings,
-    generateFourballPairings,
     simulateFullEvent
   };
 }

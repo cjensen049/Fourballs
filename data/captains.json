@@ -3,14 +3,14 @@
     "id": "jack_nicklaus",
     "name": "Jack Nicklaus",
     "years": [
-      1983,
-      1987
+      "1983",
+      "1987"
     ],
     "nationality": "USA",
     "prestige": "legendary",
-    "tier": "hero",
+    "tier": "legendary",
     "tagline": "The Golden Bear won back-to-back as captain. His sportsmanship defined what the Cup stands for.",
-    "chemistry_mult": 1,
+    "chemistry_mult": 1.0,
     "perks": [
       {
         "type": "tactician",
@@ -26,7 +26,7 @@
     "special": {
       "type": "concession",
       "label": "The Concession",
-      "desc": "If leading entering singles, cannot lose — the worst result is a tie"
+      "desc": "If leading entering singles, cannot lose \u2014 the worst result is a tie"
     },
     "affinities": [
       "Tiger Woods",
@@ -38,14 +38,14 @@
     "id": "tony_jacklin",
     "name": "Tony Jacklin",
     "years": [
-      1983,
-      1985,
-      1987,
-      1989
+      "1983",
+      "1985",
+      "1987",
+      "1989"
     ],
     "nationality": "EUR",
     "prestige": "legendary",
-    "tier": "hero",
+    "tier": "legendary",
     "tagline": "The Transformer. Jacklin turned a disorganised side into Ryder Cup winners. Europe never looked back.",
     "chemistry_mult": 1.15,
     "perks": [
@@ -63,7 +63,7 @@
     "special": {
       "type": "concession",
       "label": "The Concession",
-      "desc": "If leading entering singles, cannot lose — the worst result is a tie"
+      "desc": "If leading entering singles, cannot lose \u2014 the worst result is a tie"
     },
     "affinities": [
       "Ian Poulter",
@@ -75,15 +75,15 @@
     "id": "bernard_gallacher",
     "name": "Bernard Gallacher",
     "years": [
-      1991,
-      1993,
-      1995
+      "1991",
+      "1993",
+      "1995"
     ],
     "nationality": "EUR",
     "prestige": "legendary",
-    "tier": "platinum",
+    "tier": "hero",
     "tagline": "Three times captain, twice on American soil. Gallacher's teams never conceded an inch away from home.",
-    "chemistry_mult": 1,
+    "chemistry_mult": 1.0,
     "perks": [
       {
         "type": "veteran_anchor",
@@ -111,11 +111,11 @@
     "id": "paul_azinger",
     "name": "Paul Azinger",
     "years": [
-      2008
+      "2008"
     ],
     "nationality": "USA",
     "prestige": "hero",
-    "tier": "platinum",
+    "tier": "hero",
     "tagline": "Pod system pioneer. Built USA's most dominant single-cup performance in a generation.",
     "chemistry_mult": 1.12,
     "perks": [
@@ -141,13 +141,13 @@
     "id": "ben_crenshaw",
     "name": "Ben Crenshaw",
     "years": [
-      1999
+      "1999"
     ],
     "nationality": "USA",
     "prestige": "hero",
-    "tier": "gold",
+    "tier": "platinum",
     "tagline": "I have a feeling about this week. The greatest Sunday comeback in Ryder Cup history.",
-    "chemistry_mult": 1,
+    "chemistry_mult": 1.0,
     "perks": [
       {
         "type": "rallying_cry",
@@ -171,11 +171,11 @@
     "id": "steve_stricker",
     "name": "Steve Stricker",
     "years": [
-      2021
+      "2021"
     ],
     "nationality": "USA",
     "prestige": "hero",
-    "tier": "gold",
+    "tier": "platinum",
     "tagline": "Calm authority. His 2021 team won 19-9 at Whistling Straits in historic fashion.",
     "chemistry_mult": 1.12,
     "perks": [
@@ -201,13 +201,13 @@
     "id": "seve_ballesteros",
     "name": "Seve Ballesteros",
     "years": [
-      1997
+      "1997"
     ],
     "nationality": "EUR",
     "prestige": "hero",
-    "tier": "platinum",
+    "tier": "hero",
     "tagline": "La Pasion. Seve was the soul of European golf. Valderrama was his cathedral.",
-    "chemistry_mult": 1,
+    "chemistry_mult": 1.0,
     "perks": [
       {
         "type": "flamboyant",
@@ -231,13 +231,13 @@
     "id": "paul_mcginley",
     "name": "Paul McGinley",
     "years": [
-      2014
+      "2014"
     ],
     "nationality": "EUR",
     "prestige": "hero",
-    "tier": "gold",
+    "tier": "platinum",
     "tagline": "Gleneagles was a masterclass. McGinley's preparation was unmatched in modern captaincy.",
-    "chemistry_mult": 1,
+    "chemistry_mult": 1.0,
     "perks": [
       {
         "type": "rookie_whisperer",
@@ -261,12 +261,12 @@
     "id": "luke_donald",
     "name": "Luke Donald",
     "years": [
-      2023,
-      2025
+      "2023",
+      "2025"
     ],
     "nationality": "EUR",
     "prestige": "hero",
-    "tier": "gold",
+    "tier": "platinum",
     "tagline": "Rome 2023. His investment in team cohesion and the next generation delivered a famous victory.",
     "chemistry_mult": 1.12,
     "perks": [
@@ -293,13 +293,13 @@
     "id": "billy_casper",
     "name": "Billy Casper",
     "years": [
-      1979
+      "1979"
     ],
     "nationality": "USA",
     "prestige": "standard",
     "tier": "bronze",
     "tagline": "Two-time major champion, composed under fire. Casper brought quiet authority to the Greenbrier.",
-    "chemistry_mult": 1,
+    "chemistry_mult": 1.0,
     "perks": [
       {
         "type": "home_fortress",
@@ -314,7 +314,7 @@
     "id": "dave_marr",
     "name": "Dave Marr",
     "years": [
-      1981
+      "1981"
     ],
     "nationality": "USA",
     "prestige": "standard",
@@ -335,13 +335,13 @@
     "id": "lee_trevino",
     "name": "Lee Trevino",
     "years": [
-      1985
+      "1985"
     ],
     "nationality": "USA",
     "prestige": "standard",
-    "tier": "silver",
+    "tier": "gold",
     "tagline": "Merry Mex. Never flustered, never beaten in spirit. His teams play Sunday to win.",
-    "chemistry_mult": 1,
+    "chemistry_mult": 1.0,
     "perks": [
       {
         "type": "pressure_player",
@@ -356,13 +356,13 @@
     "id": "raymond_floyd",
     "name": "Raymond Floyd",
     "years": [
-      1989
+      "1989"
     ],
     "nationality": "USA",
     "prestige": "standard",
-    "tier": "silver",
+    "tier": "gold",
     "tagline": "The Belfry 1989. Floyd's tactical setup pushed USA to a dramatic draw on European soil.",
-    "chemistry_mult": 1,
+    "chemistry_mult": 1.0,
     "perks": [
       {
         "type": "tactician",
@@ -377,13 +377,13 @@
     "id": "dave_stockton",
     "name": "Dave Stockton",
     "years": [
-      1991
+      "1991"
     ],
     "nationality": "USA",
     "prestige": "standard",
-    "tier": "silver",
+    "tier": "gold",
     "tagline": "War by the Shore. Stockton's tactical edge at Kiawah Island gave USA the Cup back.",
-    "chemistry_mult": 1,
+    "chemistry_mult": 1.0,
     "perks": [
       {
         "type": "tactician",
@@ -398,14 +398,14 @@
     "id": "tom_watson",
     "name": "Tom Watson",
     "years": [
-      1993,
-      2014
+      "1993",
+      "2014"
     ],
     "nationality": "USA",
     "prestige": "standard",
-    "tier": "gold",
+    "tier": "platinum",
     "tagline": "Five Open Championships, two Ryder Cup captaincies. A winner's mindset above all.",
-    "chemistry_mult": 1,
+    "chemistry_mult": 1.0,
     "perks": [
       {
         "type": "pressure_player",
@@ -429,13 +429,13 @@
     "id": "lanny_wadkins",
     "name": "Lanny Wadkins",
     "years": [
-      1995
+      "1995"
     ],
     "nationality": "USA",
     "prestige": "standard",
-    "tier": "silver",
+    "tier": "gold",
     "tagline": "All-out attack all the time. Wadkins never asked his teams to be careful.",
-    "chemistry_mult": 1,
+    "chemistry_mult": 1.0,
     "perks": [
       {
         "type": "rallying_cry",
@@ -450,13 +450,13 @@
     "id": "tom_kite",
     "name": "Tom Kite",
     "years": [
-      1997
+      "1997"
     ],
     "nationality": "USA",
     "prestige": "standard",
-    "tier": "silver",
+    "tier": "gold",
     "tagline": "Precision above all. Kite's meticulous preparation kept USA competitive at Valderrama.",
-    "chemistry_mult": 1,
+    "chemistry_mult": 1.0,
     "perks": [
       {
         "type": "tactician",
@@ -471,13 +471,13 @@
     "id": "curtis_strange",
     "name": "Curtis Strange",
     "years": [
-      2002
+      "2002"
     ],
     "nationality": "USA",
     "prestige": "standard",
-    "tier": "bronze",
+    "tier": "silver",
     "tagline": "Two-time US Open champion, one tough captain. His teams fight hardest on Sunday.",
-    "chemistry_mult": 1,
+    "chemistry_mult": 1.0,
     "perks": [
       {
         "type": "pressure_player",
@@ -492,13 +492,13 @@
     "id": "hal_sutton",
     "name": "Hal Sutton",
     "years": [
-      2004
+      "2004"
     ],
     "nationality": "USA",
     "prestige": "standard",
-    "tier": "bronze",
-    "tagline": "High-risk pairings, veteran trust. Sutton's boldness defined Oakland Hills — for better and worse.",
-    "chemistry_mult": 1,
+    "tier": "silver",
+    "tagline": "High-risk pairings, veteran trust. Sutton's boldness defined Oakland Hills \u2014 for better and worse.",
+    "chemistry_mult": 1.0,
     "perks": [
       {
         "type": "veteran_anchor",
@@ -513,13 +513,13 @@
     "id": "tom_lehman",
     "name": "Tom Lehman",
     "years": [
-      2006
+      "2006"
     ],
     "nationality": "USA",
     "prestige": "standard",
-    "tier": "bronze",
+    "tier": "silver",
     "tagline": "Faith and fight. Lehman's teams play fearless fourball.",
-    "chemistry_mult": 1,
+    "chemistry_mult": 1.0,
     "perks": [
       {
         "type": "flamboyant",
@@ -534,13 +534,13 @@
     "id": "corey_pavin",
     "name": "Corey Pavin",
     "years": [
-      2010
+      "2010"
     ],
     "nationality": "USA",
     "prestige": "standard",
-    "tier": "silver",
+    "tier": "gold",
     "tagline": "Celtic Manor 2010. Pavin's rookie-heavy USA team fought to the very last match in the rain.",
-    "chemistry_mult": 1,
+    "chemistry_mult": 1.0,
     "perks": [
       {
         "type": "rookie_whisperer",
@@ -559,14 +559,14 @@
     "id": "davis_love_iii",
     "name": "Davis Love III",
     "years": [
-      2012,
-      2016
+      "2012",
+      "2016"
     ],
     "nationality": "USA",
     "prestige": "standard",
-    "tier": "gold",
+    "tier": "platinum",
     "tagline": "Two-time captain who built his teams around emerging talent and veteran belief.",
-    "chemistry_mult": 1,
+    "chemistry_mult": 1.0,
     "perks": [
       {
         "type": "rookie_whisperer",
@@ -590,13 +590,13 @@
     "id": "jim_furyk",
     "name": "Jim Furyk",
     "years": [
-      2018
+      "2018"
     ],
     "nationality": "USA",
     "prestige": "standard",
-    "tier": "silver",
+    "tier": "gold",
     "tagline": "Steady, process-driven, composed. Furyk's teams never panic and always compete.",
-    "chemistry_mult": 1,
+    "chemistry_mult": 1.0,
     "perks": [
       {
         "type": "pressure_player",
@@ -611,13 +611,13 @@
     "id": "zach_johnson",
     "name": "Zach Johnson",
     "years": [
-      2023
+      "2023"
     ],
     "nationality": "USA",
     "prestige": "standard",
-    "tier": "silver",
+    "tier": "gold",
     "tagline": "Faith in experience. Zach leaned on his veterans to lead a tough week in Rome.",
-    "chemistry_mult": 1,
+    "chemistry_mult": 1.0,
     "perks": [
       {
         "type": "veteran_anchor",
@@ -636,13 +636,13 @@
     "id": "keegan_bradley",
     "name": "Keegan Bradley",
     "years": [
-      2025
+      "2025"
     ],
     "nationality": "USA",
     "prestige": "standard",
-    "tier": "silver",
+    "tier": "gold",
     "tagline": "Fiercely patriotic. The most passionate USA player in decades brings that fire to captaincy.",
-    "chemistry_mult": 1,
+    "chemistry_mult": 1.0,
     "perks": [
       {
         "type": "momentum",
@@ -661,8 +661,8 @@
     "id": "john_jacobs",
     "name": "John Jacobs",
     "years": [
-      1979,
-      1981
+      "1979",
+      "1981"
     ],
     "nationality": "EUR",
     "prestige": "standard",
@@ -683,13 +683,13 @@
     "id": "mark_james",
     "name": "Mark James",
     "years": [
-      1999
+      "1999"
     ],
     "nationality": "EUR",
     "prestige": "standard",
-    "tier": "bronze",
+    "tier": "silver",
     "tagline": "Calculated and methodical. James understood matchups better than most.",
-    "chemistry_mult": 1,
+    "chemistry_mult": 1.0,
     "perks": [
       {
         "type": "tactician",
@@ -704,13 +704,13 @@
     "id": "sam_torrance",
     "name": "Sam Torrance",
     "years": [
-      2002
+      "2002"
     ],
     "nationality": "EUR",
     "prestige": "standard",
-    "tier": "bronze",
+    "tier": "silver",
     "tagline": "The hole-winning hero of 1985. Torrance at The Belfry was like coming home.",
-    "chemistry_mult": 1,
+    "chemistry_mult": 1.0,
     "perks": [
       {
         "type": "home_fortress",
@@ -725,13 +725,13 @@
     "id": "bernhard_langer",
     "name": "Bernhard Langer",
     "years": [
-      2004
+      "2004"
     ],
     "nationality": "EUR",
     "prestige": "standard",
-    "tier": "silver",
+    "tier": "gold",
     "tagline": "18.5-9.5 at Oakland Hills. Langer's disciplined preparation was relentless.",
-    "chemistry_mult": 1,
+    "chemistry_mult": 1.0,
     "perks": [
       {
         "type": "veteran_anchor",
@@ -746,13 +746,13 @@
     "id": "ian_woosnam",
     "name": "Ian Woosnam",
     "years": [
-      2006
+      "2006"
     ],
     "nationality": "EUR",
     "prestige": "standard",
-    "tier": "silver",
+    "tier": "gold",
     "tagline": "Woosie loved birdie golf. The K Club 2006 was a fourball feast from start to finish.",
-    "chemistry_mult": 1,
+    "chemistry_mult": 1.0,
     "perks": [
       {
         "type": "flamboyant",
@@ -767,13 +767,13 @@
     "id": "nick_faldo",
     "name": "Nick Faldo",
     "years": [
-      2008
+      "2008"
     ],
     "nationality": "EUR",
     "prestige": "standard",
-    "tier": "silver",
+    "tier": "gold",
     "tagline": "Six majors. Analytical and precise. Faldo's foursomes pairings were built like equations.",
-    "chemistry_mult": 1,
+    "chemistry_mult": 1.0,
     "perks": [
       {
         "type": "tactician",
@@ -788,13 +788,13 @@
     "id": "colin_montgomerie",
     "name": "Colin Montgomerie",
     "years": [
-      2010
+      "2010"
     ],
     "nationality": "EUR",
     "prestige": "standard",
-    "tier": "silver",
+    "tier": "gold",
     "tagline": "Celtic Manor in the rain. Monty's home captaincy was the Ryder Cup at its most dramatic.",
-    "chemistry_mult": 1,
+    "chemistry_mult": 1.0,
     "perks": [
       {
         "type": "home_fortress",
@@ -813,13 +813,13 @@
     "id": "jose_maria_olazabal",
     "name": "Jose Maria Olazabal",
     "years": [
-      2012
+      "2012"
     ],
     "nationality": "EUR",
     "prestige": "standard",
-    "tier": "silver",
+    "tier": "gold",
     "tagline": "For Seve. The most emotional captaincy in history produced the Miracle at Medinah.",
-    "chemistry_mult": 1,
+    "chemistry_mult": 1.0,
     "perks": [
       {
         "type": "rallying_cry",
@@ -839,13 +839,13 @@
     "id": "darren_clarke",
     "name": "Darren Clarke",
     "years": [
-      2016
+      "2016"
     ],
     "nationality": "EUR",
     "prestige": "standard",
-    "tier": "bronze",
-    "tagline": "Hazeltine 2016. Clarke trusted his rookies — Pieters, Willett, Wood, Sullivan — and they delivered.",
-    "chemistry_mult": 1,
+    "tier": "silver",
+    "tagline": "Hazeltine 2016. Clarke trusted his rookies \u2014 Pieters, Willett, Wood, Sullivan \u2014 and they delivered.",
+    "chemistry_mult": 1.0,
     "perks": [
       {
         "type": "rookie_whisperer",
@@ -860,11 +860,11 @@
     "id": "thomas_bjorn",
     "name": "Thomas Bjorn",
     "years": [
-      2018
+      "2018"
     ],
     "nationality": "EUR",
     "prestige": "standard",
-    "tier": "gold",
+    "tier": "platinum",
     "tagline": "Le Golf National 2018. Moliwood. 17.5-10.5. A tactical and emotional triumph.",
     "chemistry_mult": 1.08,
     "perks": [
@@ -885,13 +885,13 @@
     "id": "padraig_harrington",
     "name": "Padraig Harrington",
     "years": [
-      2021
+      "2021"
     ],
     "nationality": "EUR",
     "prestige": "standard",
-    "tier": "silver",
+    "tier": "gold",
     "tagline": "Three major champion mentality. Harrington demands experience from his veterans.",
-    "chemistry_mult": 1,
+    "chemistry_mult": 1.0,
     "perks": [
       {
         "type": "veteran_anchor",

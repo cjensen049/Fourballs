@@ -1,0 +1,8 @@
+{
+  "_comment": "Talent score is a fixed baseline advantage by tier, used as the starting gap before modifiers (stats, fit_*, captain perks, home/away, course fit) are applied in a match. Locked in for now per design discussion; revisit for balance after playtesting.",
+  "hero": 20,
+  "platinum": 15,
+  "gold": 10,
+  "silver": 7,
+  "bronze": 3
+}

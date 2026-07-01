@@ -368,17 +368,12 @@
   // ─────────────────────────────────────────────────────────────────────────────
   // CONSTANTS
   // ─────────────────────────────────────────────────────────────────────────────
-  const STORAGE_KEY     = 'fourballs_state_v7';
-  const STORAGE_VERSION = 7;
+  const STORAGE_KEY     = 'fourballs_state_v8';
+  const STORAGE_VERSION = 8;
 
   const TIER_COLORS = {
     platinum: '#c084fc', gold: '#c9a84c', silver: '#94a3b8',
     bronze: '#a0522d',   hero: '#38bdf8'
-  };
-
-  const TIER_LABELS = {
-    platinum: 'Platinum', gold: 'Gold', silver: 'Silver',
-    bronze: 'Bronze',     hero: 'Hero'
   };
 
   // Index 1–12; hero always 5%, rest distributed
@@ -402,6 +397,7 @@
   // DATA
   // ─────────────────────────────────────────────────────────────────────────────
   let VENUES = [], CAPTAINS = [], PLAYERS = [];
+  let CUP_RESULTS = {}, TALENT_SCORES = {};
   let CAPTAIN_IDS = new Set();
   function isCaptainCard(obj) { return !!obj && CAPTAIN_IDS.has(obj.id); }
 
@@ -486,7 +482,9 @@
     function poolForTier(t) {
       let p = PLAYERS.filter(x => x.nationality === nat && x.tier === t && !usedNames.has(x.name));
       if (includeCaptains) {
-        p = p.concat(CAPTAINS.filter(c => c.nationality === nat && c.tier === t && !usedNames.has(c.name)));
+        // Legendary-tier captains (Nicklaus, Jacklin) slot into the hero tier draw
+        const capTiers = t === 'hero' ? ['hero', 'legendary'] : [t];
+        p = p.concat(CAPTAINS.filter(c => c.nationality === nat && capTiers.includes(c.tier) && !usedNames.has(c.name)));
       }
       return p;
     }
@@ -580,9 +578,9 @@
   // AI LOGIC
   // ─────────────────────────────────────────────────────────────────────────────
   // Internal-only ranking for comparing captain cards against each other — never
-  // shown to the user. Captains have no `stats`, so they can't go through
-  // compositeScore/applyHeroBoost like players do.
-  const CAPTAIN_TIER_RANK = { hero: 5, platinum: 4, gold: 3, silver: 2, bronze: 1 };
+  // shown to the user. Captains have no stat fields, so they can't go through
+  // compositeScore like players do.
+  const CAPTAIN_TIER_RANK = { legendary: 6, hero: 5, platinum: 4, gold: 3, silver: 2, bronze: 1 };
   function captainValue(c) {
     return (CAPTAIN_TIER_RANK[c.tier] || 0) * 100 + (c.chemistry_mult || 1) * 10 + (c.perks ? c.perks.length : 0);
   }
@@ -602,7 +600,7 @@
     const heroes = players.filter(p => p.tier === 'hero');
     if (heroes.length) {
       return heroes.reduce((best, p) =>
-        compositeScore(applyHeroBoost(p)) > compositeScore(applyHeroBoost(best)) ? p : best
+        compositeScore(p) > compositeScore(best) ? p : best
       );
     }
 
@@ -614,13 +612,11 @@
     }
 
     // Rule 2: optimize for chemistry with existing picks (players only — captains
-    // don't have player stats to run through calculatePairingChemistry).
+    // don't have player stats to run through computeChemistry).
     if (existingPicks.length > 0) {
       function chemPotential(candidate) {
         return existingPicks.reduce((sum, ep) => {
-          const fs = calculatePairingChemistry(candidate, ep, 'foursomes');
-          const fb = calculatePairingChemistry(candidate, ep, 'fourball');
-          return sum + (fs + fb) / 2;
+          return sum + computeChemistry(candidate, ep, PLAYERS, CUP_RESULTS);
         }, 0) / existingPicks.length;
       }
       return players.reduce((best, p) =>
@@ -630,7 +626,7 @@
 
     // Fallback (round 1): highest composite
     return players.reduce((best, p) =>
-      compositeScore(applyHeroBoost(p)) > compositeScore(applyHeroBoost(best)) ? p : best
+      compositeScore(p) > compositeScore(best) ? p : best
     );
   }
 
@@ -720,7 +716,7 @@
 
   function _scoreMatching(matching, format) {
     return matching.reduce((s, [a, b]) => {
-      return s + (a && b ? calculatePairingChemistry(a, b, format) : 0);
+      return s + (a && b ? computeChemistry(a, b, PLAYERS, CUP_RESULTS) : 0);
     }, 0);
   }
 
@@ -819,79 +815,26 @@
   function tcClass(tier) { return `tc-${tier || 'bronze'}`; }
   function isHero(p)     { return p.tier === 'hero'; }
   function delay(ms)     { return new Promise(r => setTimeout(r, ms)); }
-  function chemClass(s)  { return s >= 72 ? 'chem-strong' : s >= 55 ? 'chem-neutral' : 'chem-weak'; }
+  function chemClass(s)  { return s >= 14 ? 'chem-strong' : s >= 8 ? 'chem-neutral' : 'chem-weak'; }
   function rClass(r)     { return r === 'win' ? 'r-win' : r === 'loss' ? 'r-loss' : 'r-half'; }
   function rLabel(r)     { return r === 'win' ? 'W' : r === 'loss' ? 'L' : 'H'; }
 
-  function heroBonusLabel(p) {
-    const hb = p.hero_bonus;
-    if (!hb) return '';
-    const parts = [];
-    if (hb.all_formats_boost)      parts.push(`+${hb.all_formats_boost}% all formats`);
-    if (hb.singles_boost)          parts.push(`+${hb.singles_boost}% singles`);
-    if (hb.foursomes_boost)        parts.push(`+${hb.foursomes_boost}% foursomes`);
-    if (hb.fourball_boost)         parts.push(`+${hb.fourball_boost}% fourball`);
-    if (hb.chemistry_boost)        parts.push(`+${hb.chemistry_boost}% pair chem`);
-    if (hb.home_boost)             parts.push(`+${hb.home_boost}% home`);
-    if (hb.away_boost)             parts.push(`+${hb.away_boost}% away`);
-    if (hb.singles_loss_ceiling)   parts.push(`loss floor ≤${hb.singles_loss_ceiling}% singles`);
-    if (hb.fatigue_immune)         parts.push('fatigue immune');
-    return parts.length ? parts.join(' · ') : '';
-  }
-
-  // Which nationality won the Ryder Cup that year — drives the made_team trophy
-  // color (gold if their side won, muted silhouette if their side lost). Years not
-  // listed here (no edition that year, or result not yet known) render as silhouette.
-  const RYDER_CUP_WINNER = {
-    1999: 'USA', 2002: 'EUR', 2004: 'EUR', 2006: 'EUR', 2008: 'USA', 2010: 'EUR',
-    2012: 'EUR', 2014: 'EUR', 2016: 'USA', 2018: 'EUR', 2021: 'USA', 2023: 'EUR',
-    2025: 'EUR',
-  };
 
   const TROPHY_SVG = `<svg class="trophy-icon-svg" viewBox="0 0 16 16" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
     <path d="M5 1h6v1.5h1.75A.75.75 0 0 1 13.5 3.25v1A2.75 2.75 0 0 1 11 7h-.1A4 4 0 0 1 8.75 9.4v1.1h1.75v1.5h-5V10.5h1.75V9.4A4 4 0 0 1 5.1 7H5a2.75 2.75 0 0 1-2.75-2.75v-1A.75.75 0 0 1 3 2.5h1.75V1H5zm0 3H3.5v.25c0 .69.56 1.25 1.25 1.25H5V4zm6 0v1.5h.25A1.25 1.25 0 0 0 12.5 4.25V4H11z"/>
   </svg>`;
 
-  // Returns '' if the player didn't make their real Ryder Cup team that year
-  // (made_team false/null), otherwise a small trophy icon — gold if their
-  // nationality won that year, a muted silhouette if they lost.
   function trophyHTML(p) {
     if (!p.made_team) return '';
-    const won = RYDER_CUP_WINNER[p.year] === p.nationality;
+    const won = CUP_RESULTS[String(p.year)] === p.nationality;
     const label = won ? 'Won the Ryder Cup this year' : 'Made the team — Ryder Cup runner-up this year';
     return `<span class="${won ? 'trophy-won' : 'trophy-lost'}" title="${label}">${TROPHY_SVG}</span>`;
-  }
-
-  // Returns up to 2 style tags for a player, mapped to the same labels as course demands
-  // 5 categories map 1-to-1 with course demands shown in the course profile bar.
-  // Scored purely from stats (not style_tags) which actually differentiate by tier.
-  function playerStyleTags(p) {
-    const s = p.stats;
-    const scores = [
-      { tag:'power',      val: s.driving_distance },
-      { tag:'accurate',   val: (s.driving_accuracy * 0.55 + s.greens_in_regulation * 0.45) },
-      { tag:'shortgame',  val: s.scrambling },
-      { tag:'consistent', val: Math.min(s.driving_accuracy, s.scrambling) }, // both must be solid
-      { tag:'clutch',     val: s.pressure_index },
-    ];
-    scores.sort((a, b) => b.val - a.val);
-    // Always show top 1; add 2nd only if it's within 5 points of the leader
-    const tags = [scores[0].tag];
-    if (scores[1].val >= scores[0].val - 5) tags.push(scores[1].tag);
-    return tags;
-  }
-
-  const STYLE_TAG_LABELS = { power:'Power', accurate:'Accurate', shortgame:'Short Game', clutch:'Clutch', consistent:'Consistent' };
-
-  function styleTagsHTML(p) {
-    const tags = playerStyleTags(p);
-    return tags.map(t => `<span class="card-style-tag cst-${t}">${STYLE_TAG_LABELS[t]}</span>`).join('');
   }
 
   const ATTR_META = [
     {
       key: 'power', label: 'Power', color: '#f97316',
-      fn: s => s.driving_distance,
+      fn: p => p.stat_driving_distance,
       svg: `<svg class="attr-icon-svg" viewBox="0 0 16 16" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
         <rect x="0.5" y="6.5" width="2" height="3" rx="0.5"/>
         <rect x="2.5" y="5.5" width="1.5" height="5" rx="0.5"/>
@@ -902,7 +845,7 @@
     },
     {
       key: 'accurate', label: 'Accurate', color: '#38bdf8',
-      fn: s => Math.round(s.driving_accuracy * 0.55 + s.greens_in_regulation * 0.45),
+      fn: p => Math.round(p.stat_driving_accuracy * 0.55 + p.stat_greens_in_regulation * 0.45),
       svg: `<svg class="attr-icon-svg" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.4" xmlns="http://www.w3.org/2000/svg">
         <circle cx="8" cy="8" r="6.5"/>
         <circle cx="8" cy="8" r="3.5"/>
@@ -911,7 +854,7 @@
     },
     {
       key: 'shortgame', label: 'Short', color: '#4ade80',
-      fn: s => s.scrambling,
+      fn: p => p.stat_scrambling,
       svg: `<svg class="attr-icon-svg" viewBox="0 0 16 16" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
         <line x1="5" y1="2" x2="5" y2="14" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/>
         <polygon points="5,2 12,4.5 5,7"/>
@@ -920,14 +863,14 @@
     },
     {
       key: 'clutch', label: 'Clutch', color: '#f59e0b',
-      fn: s => s.pressure_index,
+      fn: p => p.stat_pressure_index,
       svg: `<svg class="attr-icon-svg" viewBox="0 0 16 16" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
         <path d="M9.5 1.5 L6 8 H8.5 L6.5 14.5 L13 6.5 H10 Z"/>
       </svg>`
     },
     {
       key: 'consistent', label: 'Steady', color: '#a78bfa',
-      fn: s => Math.min(s.driving_accuracy, s.scrambling),
+      fn: p => Math.min(p.stat_driving_accuracy, p.stat_scrambling),
       svg: `<svg class="attr-icon-svg" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linejoin="round" xmlns="http://www.w3.org/2000/svg">
         <path d="M8 1.5 L13.5 3.5 L13.5 8.5 Q13.5 13 8 14.5 Q2.5 13 2.5 8.5 L2.5 3.5 Z"/>
       </svg>`
@@ -935,8 +878,7 @@
   ];
 
   function playerAttrIconsHTML(p) {
-    const s = p.stats;
-    const scored = ATTR_META.map(a => ({ ...a, val: a.fn(s) })).sort((a, b) => b.val - a.val);
+    const scored = ATTR_META.map(a => ({ ...a, val: a.fn(p) })).sort((a, b) => b.val - a.val);
     return `<div class="attr-icons">${scored.slice(0, 3).map(a =>
       `<div class="attr-icon-item" style="color:${a.color}">
         ${a.svg}
@@ -1000,17 +942,15 @@
   // HTML BUILDERS
   // ─────────────────────────────────────────────────────────────────────────────
   function playerCardHTML(p, clickable = true, extraClass = '', chemDotHTML = '') {
-    const hero  = isHero(p) ? 'hero-card' : '';
-    const da    = clickable ? `data-pid="${p.id}"` : '';
-    const bonus = heroBonusLabel(p);
-    const icon  = trophyHTML(p);
+    const hero = isHero(p) ? 'hero-card' : '';
+    const da   = clickable ? `data-pid="${p.id}"` : '';
+    const icon = trophyHTML(p);
     return `<div class="player-card ${tcClass(p.tier)} ${hero} ${extraClass}" ${tcStyle(p.tier)} ${da}>
       <div class="card-tier-badge"></div>
       ${chemDotHTML}
       ${icon ? `<div class="card-trophy">${icon}</div>` : ''}
       <div class="card-name">${p.name}</div>
       <div class="card-year">${p.year}</div>
-      ${bonus ? `<div class="card-hero-bonus">${bonus}</div>` : ''}
       ${playerAttrIconsHTML(p)}
     </div>`;
   }
@@ -1239,10 +1179,7 @@
         let chemDotHTML = '';
         if (G.picks.length >= 2) {
           const others = G.picks.filter((_, j) => j !== i);
-          const scores = others.flatMap(ep => [
-            calculatePairingChemistry(p, ep, 'foursomes'),
-            calculatePairingChemistry(p, ep, 'fourball')
-          ]);
+          const scores = others.map(ep => computeChemistry(p, ep, PLAYERS, CUP_RESULTS));
           const avg = Math.round(scores.reduce((a, b) => a + b, 0) / scores.length);
           chemDotHTML = `<div class="pp-chem-dot ${chemClass(avg)}" title="Avg team chemistry: ${avg}"></div>`;
         }
@@ -1428,15 +1365,11 @@
       return SESS_ORDER.every(s => slots[s].every(([a,b]) => a && b));
     }
 
-    function chemDisplay(p1, p2, fmt) {
+    function chemDisplay(p1, p2) {
       if (!p1 || !p2) return '<span style="font-size:11px;color:var(--text-dim);">—</span>';
-      const score  = calculatePairingChemistry(p1, p2, fmt);
-      const bond   = hasBond(p1, p2);
-      const vc     = hasSharedVenueConnection(p1, p2, G.venue);
-      const badges = [bond&&'<span class="adv-badge">Bond</span>', vc&&'<span class="adv-badge">Venue</span>'].filter(Boolean).join('');
+      const score = computeChemistry(p1, p2, PLAYERS, CUP_RESULTS);
       return `<span class="chem-dot ${chemClass(score)}" style="flex-shrink:0;"></span>
-              <span style="font-size:11px;color:var(--text-muted);margin-left:4px;">${score}%</span>
-              ${badges}`;
+              <span style="font-size:11px;color:var(--text-muted);margin-left:4px;">${score}</span>`;
     }
 
     function slotHTML(sess, pi, si) {
@@ -1462,7 +1395,7 @@
         ${slotHTML(sess,pi,0)}
         <span class="adv-plus">+</span>
         ${slotHTML(sess,pi,1)}
-        <div class="adv-chem">${chemDisplay(p1,p2,fmt)}</div>
+        <div class="adv-chem">${chemDisplay(p1,p2)}</div>
       </div>`;
     }
 
@@ -1492,7 +1425,7 @@
               ${picks.map(p => {
                 const isPartner   = partner && partner.id === p.id;
                 const isCurrent   = current && current.id === p.id;
-                const chem        = partner ? calculatePairingChemistry(partner, p, fmt) : null;
+                const chem        = partner ? computeChemistry(partner, p, PLAYERS, CUP_RESULTS) : null;
                 const chemCls     = chem !== null ? chemClass(chem) : '';
                 const sessCount   = playerSessions(p);
                 const alreadySess = slots[sess].some(([a,b]) => (a&&a.id===p.id)||(b&&b.id===p.id));
@@ -1503,7 +1436,7 @@
                   <div style="font-size:10px;color:var(--text-muted);margin-bottom:4px;">${p.year}</div>
                   ${chem!==null ? `<div style="display:flex;align-items:center;justify-content:center;gap:4px;">
                     <span class="chem-dot ${chemCls}" style="width:7px;height:7px;flex-shrink:0;"></span>
-                    <span style="font-size:10px;color:var(--text-muted);">${chem}%</span>
+                    <span style="font-size:10px;color:var(--text-muted);">${chem}</span>
                   </div>` : ''}
                   ${wouldTire ? '<div style="font-size:9px;color:var(--gold);margin-top:3px;">⚡ Tired</div>' : ''}
                 </div>`;
@@ -1611,17 +1544,17 @@
   function renderReview() {
     const app = document.getElementById('app');
 
-    function pairListHTML(pairs, format) {
+    function pairListHTML(pairs) {
       if (!pairs || !pairs.length) return `<div style="font-size:11px;color:var(--text-dim);padding:4px 0;">No pairs assigned</div>`;
       return pairs.map((pair, i) => {
         const [p1, p2] = pair;
         if (!p1 && !p2) return `<div class="chem-pair" style="opacity:.4"><span class="cp-names">Pair ${i+1} — empty</span></div>`;
         if (p1 && p2) {
-          const score = calculatePairingChemistry(p1, p2, format);
+          const score = computeChemistry(p1, p2, PLAYERS, CUP_RESULTS);
           return `<div class="chem-pair">
             <span class="chem-dot ${chemClass(score)}"></span>
             <span class="cp-names">${p1.name} + ${p2.name}</span>
-            <span style="font-size:10px;color:var(--text-muted)">${score}%</span>
+            <span style="font-size:10px;color:var(--text-muted)">${score}</span>
           </div>`;
         }
         const only = p1 || p2;
@@ -1638,19 +1571,19 @@
         </div>` : ''}
         <div class="review-slot-group">
           <div class="review-slot-label">Friday AM — Foursomes</div>
-          ${pairListHTML(pairings.fridayAM, 'foursomes')}
+          ${pairListHTML(pairings.fridayAM)}
         </div>
         <div class="review-slot-group">
           <div class="review-slot-label">Friday PM — Fourball</div>
-          ${pairListHTML(pairings.fridayPM, 'fourball')}
+          ${pairListHTML(pairings.fridayPM)}
         </div>
         <div class="review-slot-group">
           <div class="review-slot-label">Saturday AM — Foursomes</div>
-          ${pairListHTML(pairings.saturdayAM, 'foursomes')}
+          ${pairListHTML(pairings.saturdayAM)}
         </div>
         <div class="review-slot-group">
           <div class="review-slot-label">Saturday PM — Fourball</div>
-          ${pairListHTML(pairings.saturdayPM, 'fourball')}
+          ${pairListHTML(pairings.saturdayPM)}
         </div>`;
     }
 
@@ -2134,15 +2067,19 @@
   // ─────────────────────────────────────────────────────────────────────────────
   async function init() {
     try {
-      const [venues, captains, players] = await Promise.all([
+      const [venues, captains, players, cupResults, talentScores] = await Promise.all([
         fetch('data/venues.json').then(r => r.json()),
         fetch('data/captains.json').then(r => r.json()),
         fetch('data/players.json').then(r => r.json()),
+        fetch('data/cup_results.json').then(r => r.json()),
+        fetch('data/talent_scores.json').then(r => r.json()),
       ]);
-      VENUES   = venues;
-      CAPTAINS = captains;
-      PLAYERS  = players;
-      CAPTAIN_IDS = new Set(CAPTAINS.map(c => c.id));
+      VENUES        = venues;
+      CAPTAINS      = captains;
+      PLAYERS       = players;
+      CUP_RESULTS   = cupResults;
+      TALENT_SCORES = talentScores;
+      CAPTAIN_IDS   = new Set(CAPTAINS.map(c => c.id));
     } catch(err) {
       document.getElementById('app').innerHTML = `
         <div class="center-screen">
@@ -2165,13 +2102,8 @@
     document.body.appendChild(helpBtn);
 
     try {
-      const saved = loadSaved();
-      if (saved && saved.phase !== 'landing') {
-        G = saved;
-      } else {
-        G = initState();
-        save();
-      }
+      G = initState();
+      // Don't save here — preserve any existing save so the Continue button can restore it.
 
       render();
 

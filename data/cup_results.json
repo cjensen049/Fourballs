@@ -1,0 +1,16 @@
+{
+  "_comment": "Ryder Cup year -> winning nationality. Used by the chemistry system to compute the 'won together' bonus. Covers every year present in players.csv.",
+  "1999": "USA",
+  "2002": "EUR",
+  "2004": "EUR",
+  "2006": "EUR",
+  "2008": "USA",
+  "2010": "EUR",
+  "2012": "EUR",
+  "2014": "EUR",
+  "2016": "USA",
+  "2018": "EUR",
+  "2021": "USA",
+  "2023": "EUR",
+  "2025": "EUR"
+}

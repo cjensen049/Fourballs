@@ -30,15 +30,13 @@ and a dramatic session-by-session results reveal.
                          # team vs. was in contention/strong tour year but didn't);
                          # null on entries where this hasn't been researched. Shown in
                          # UI as a small "✓ Made the Team" badge (playerCardHTML /
-                         # playerPickedHTML) — feeds Pillar 2 of the chemistry system,
-                         # see /data/talent\_scores.json and /data/cup\_results.json below.
-  talent\_scores.json    # NEW — tier -> flat baseline talent score (hero:20, platinum:15,
+                         # playerPickedHTML) — used by the chemistry system's teammate
+                         # and champion connection categories (see Chemistry System below).
+  talent\_scores.json    # tier -> flat baseline talent score (hero:20, platinum:15,
                          # gold:10, silver:7, bronze:3). Looked up at calculation time
                          # from a card's tier, not stored on the player record.
-                         # See chemistry\_system\_spec.md Section 1.
-  cup\_results.json      # NEW — Ryder Cup year -> winning nationality. Used by Pillar 2
-                         # (shared history) of the chemistry calculation.
-                         # See chemistry\_system\_spec.md Section 2.
+  cup\_results.json      # Ryder Cup year -> winning nationality. Used by the chemistry
+                         # system's champion connection category.
   venues.json           # 19 Ryder Cup venues (real history, pre-2000 included for
                          # flavor) with hidden course tags — 7 hidden\_tags dimensions:
                          # power/accuracy/short\_game/wind/pressure/putting/consistency
@@ -65,15 +63,22 @@ chemistry\_system\_spec.md # ACTIVE implementation spec for the talent/chemistry
 ## Chemistry System
 
 * Talent score: flat per-tier value from `talent\_scores.json`, looked up at calc time.
-* Chemistry score: computed on demand for a specific pair of cards, NOT stored on either
-card. Two pillars, 0–10 each, summed to a 0–20 total:
-
-  * **Stat complementarity** — average spread across the five `style\_\*` fields.
-  * **Shared history** — did both players make the same real Ryder Cup roster in any
-year(s), and did they win together (per `cup\_results.json`)?
-* The 0–20 chemistry score's exact in-match effect (win-probability nudge, etc.) is
-**not yet defined** — do not invent a conversion formula without further design input.
-* Full detail: `chemistry\_system\_spec.md`.
+* Pairwise chemistry: `computeChemistry(p1, p2, _, cupResults)` → 0–3 points per pair.
+  Four additive connection categories (each worth 1 pt):
+  * **Teammates** — both cards share the same `year` and `nationality`, both `made\_team: true`
+  * **Champion** — only with teammates; that shared year was a win (`cup\_results.json[year] === nationality`)
+  * **Same season, not teammates** — same year + nationality, but at least one has `made\_team: false`
+  * **Complementary styles** — dominant style tags form one of: Power+ShortGame, Power+Accurate,
+    Power+Clutch, Accurate+Clutch, ShortGame+Clutch. Dominant tag derived from `stat\_*` fields
+    (same logic as ATTR\_META chips), not `style\_*` fields.
+* **Player pod score**: `computePlayerChemScore(player, podmates, _, cupResults)` sums pairwise
+  pts across up to 3 podmates. Tier: green ≥4 (+11 reward), yellow 2–3 (+6), red 0–1 (+0).
+* **Captain score**: `computeCaptainChemScore(captain, drafted, _, venue, cupResults)` — venue
+  match +1, +1 per drafted player on a real roster the captain led, +1 per cup win by that captain.
+  Tier: green ≥8 (+15), yellow 5–7 (+10), red 0–4 (+0).
+* In-match effect of rewards not yet wired — do not invent a conversion formula without design input.
+* In-draft chip UI not redesigned for pods yet — `chemClass` thresholds are on the 0–3 pairwise scale.
+* `chemistry\_system\_v2.md` is the authoritative spec; `chemistry\_system\_spec.md` is archived.
 
 ## Game Flow (in order)
 
@@ -269,9 +274,9 @@ Adjustment factors (applied in order, total cap ±25%):
 1. Talent delta: per 10-point composite gap → ±3–5%
 2. Venue fit: player style vs course hidden tags → ±5%
 3. Format fit: player's `fit_*` score for assigned format → ±3%
-4. *(intentionally absent)* — reserved for pairing chemistry. `computeChemistry()` (0–20)
-   exists and drives pairing ranking / display, but its conversion into a win-probability
-   delta is not yet designed. Do not invent a formula here without explicit design input.
+4. *(intentionally absent)* — reserved for pairing chemistry. `computeChemistry()` (0–3
+   pairwise) and pod reward scores exist and drive pairing ranking / display, but their
+   conversion into a win-probability delta is not yet designed. Do not invent a formula.
 5. Captain modifier: flat format-specific bonus from captain.json
 6. Ryder Cup history: prior match play record → ±2–4%
 7. Home advantage: +5% foursomes / +1% fourball / +1% singles when venue.location

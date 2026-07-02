@@ -123,8 +123,8 @@
     /* ── DRAFT PICK AREA ── */
     .pick-area { padding: 8px 10px 10px; background: var(--surface); border-top: 1px solid var(--border); }
     .pick-round-label { font-size: 11px; color: var(--text-muted); margin-bottom: 6px; text-transform: uppercase; letter-spacing: .05em; }
-    /* Always 3 columns — no mobile collapse */
-    .pick-cards-row { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; max-width: 480px; margin: 0 auto; }
+    /* 3 fixed-width shield columns, centred */
+    .pick-cards-row { display: grid; grid-template-columns: repeat(3, 56px); gap: 8px; justify-content: center; }
 
     /* ── PLAYER MINI (reused in pairing seats) ── */
     .player-mini { width: 100%; padding: 5px 8px; border-radius: 4px; border-left: 3px solid var(--tc, #444); background: var(--surface3); }
@@ -267,25 +267,21 @@
 
     /* ── RESPONSIVE ── */
     @media (max-width: 480px) {
-      /* Draft pick row stays 3-col on mobile — needed for drag target visibility */
-      .pick-cards-row { grid-template-columns: repeat(3, 1fr); gap: 6px; }
+      /* Draft tray: 3-col fixed-width shields, centred */
+      .pick-cards-row { grid-template-columns: repeat(3, 56px); gap: 8px; justify-content: center; }
       .pick-area { overflow-y: visible; }
       .ai-reveal-cards { grid-template-columns: 1fr; max-width: 300px; }
-      /* Captain cards (also 3-up) */
       .captain-cards { grid-template-columns: 1fr; }
-      /* Compact pod slots: 44px slots → each pod 92px, B+C row = 92+8+92 = 192px, well under 375px */
+      /* Pod slots scale down via CSS (viewBox stays 56×72, CSS scales the SVG) */
       .pod-slots { grid-template-columns: 44px 44px; }
-      .pod-slot { width: 44px; min-height: 48px; border-radius: 5px; }
-      .pod-slot-inner { padding: 3px 2px 2px; gap: 1px; }
-      .pod-slot-name { font-size: 8px; }
-      .pod-slot-year { font-size: 7px; }
-      .pod-slot-dot { width: 7px; height: 7px; top: 3px; right: 3px; }
-      .captain-hub-node { width: 58px; min-height: 58px; border-radius: 10px; }
+      .pod-slot { width: 44px; height: 57px; }
+      .pod-slot > svg { width: 44px !important; height: 57px !important; }
+      .captain-hub-node { width: 44px; height: 44px; font-size: 0.85em; }
+      .captain-hub-name { font-size: 8px; }
       .squad-hub-wrap { gap: 5px; padding: 2px 4px 4px; }
       .pod-row-top, .pod-row-bot { gap: 8px; }
       .pod-label { font-size: 7px; }
-      /* Constrain tall trading-card to a readable height in single-column contexts */
-      .pick-cards-row .player-card,
+      /* Constrain full player-cards (AI reveal) on mobile */
       .ai-reveal-cards .player-card { aspect-ratio: unset; min-height: 130px; max-height: 180px; }
     }
 
@@ -304,12 +300,8 @@
     .attr-icon-item { display: flex; flex-direction: column; align-items: center; gap: 2px; }
     .attr-icon-svg { width: 13px; height: 13px; display: block; }
     .attr-icon-label { font-size: 7px; font-weight: 700; text-transform: uppercase; letter-spacing: .02em; line-height: 1; }
-    /* Cap card size in pick row and AI reveal — prevents huge cards on wide desktop */
-    .pick-cards-row .player-card,
+    /* Cap card size in AI reveal */
     .ai-reveal-cards .player-card { max-width: 160px; margin: 0 auto; }
-    /* Slightly larger icons on full selection cards */
-    .pick-cards-row .attr-icon-svg { width: 15px; height: 15px; }
-    .pick-cards-row .attr-icon-label { font-size: 8px; }
 
     /* ── TEAM BOARD (top of draft screen) ── */
     .picks-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 5px; padding: 5px 10px 6px; }
@@ -333,24 +325,22 @@
     .pod-row-mid { display: flex; justify-content: center; }
     .pod-group { display: flex; flex-direction: column; align-items: center; gap: 3px; }
     .pod-label { font-size: 8px; font-weight: 800; text-transform: uppercase; letter-spacing: .1em; color: var(--text-dim); }
-    .pod-slots { display: grid; grid-template-columns: 64px 64px; gap: 4px; }
+    .pod-slots { display: grid; grid-template-columns: 56px 56px; gap: 4px; }
     .tray-card { cursor: grab; touch-action: none; user-select: none; -webkit-user-select: none; }
-    .pod-slot { width: 64px; min-height: 68px; border: 1px dashed rgba(255,255,255,.13); border-radius: 7px; display: flex; flex-direction: column; align-items: center; justify-content: center; position: relative; transition: border-color .12s, background .12s; box-sizing: border-box; touch-action: none; }
-    .pod-slot.filled { cursor: grab; border-style: solid; border-width: 1.5px; }
+    /* Pod slot: transparent container, SVG handles all visuals */
+    .pod-slot { width: 56px; height: 72px; position: relative; display: flex; align-items: center; justify-content: center; touch-action: none; flex-shrink: 0; }
+    .pod-slot > svg { pointer-events: none; display: block; }
+    .pod-slot.filled { cursor: grab; }
     .pod-slot.filled:active { cursor: grabbing; }
-    .pod-slot.drop-ok { border-color: var(--green) !important; border-style: solid !important; background: rgba(34,197,94,.06); }
-    .pod-slot-inner { display: flex; flex-direction: column; align-items: center; gap: 1px; padding: 4px 3px 3px; width: 100%; }
-    .pod-slot-name { font-size: 9px; font-weight: 700; line-height: 1.2; text-align: center; width: 100%; padding: 0 2px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-    .pod-slot-year { font-size: 8px; color: var(--gold); }
-    .pod-slot-dot { position: absolute; top: 3px; right: 3px; width: 8px; height: 8px; border-radius: 50%; }
-    /* Captain hub node */
-    .captain-hub-node { width: 82px; min-height: 82px; border: 1.5px dashed rgba(201,168,76,.35); border-radius: 10px; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 5px 4px; gap: 2px; background: rgba(201,168,76,.03); transition: border-color .12s, background .12s; position: relative; box-sizing: border-box; }
-    .captain-hub-node.filled { border-style: solid; cursor: default; }
-    .captain-hub-node.drop-ok { border-color: var(--gold) !important; border-style: solid !important; background: rgba(201,168,76,.1); }
-    .captain-hub-badge { font-size: 7px; font-weight: 800; text-transform: uppercase; letter-spacing: .1em; color: rgba(201,168,76,.5); }
-    .captain-hub-name { font-size: 10px; font-weight: 700; text-align: center; color: var(--gold); line-height: 1.2; }
-    .captain-hub-years { font-size: 8px; color: var(--text-muted); }
-    .captain-hub-dot { position: absolute; top: 3px; right: 3px; width: 8px; height: 8px; border-radius: 50%; }
+    .pod-slot.drop-ok { filter: drop-shadow(0 0 5px #22c55e); }
+    /* Captain hub: circle */
+    .captain-hub-node { width: 52px; height: 52px; border-radius: 50%; border: 2px dashed rgba(201,168,76,.45); display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 1px; background: rgba(201,168,76,.04); transition: border-color .12s, background .12s; position: relative; flex-shrink: 0; touch-action: none; }
+    .captain-hub-node.filled { border-style: solid; border-color: var(--gold); }
+    .captain-hub-node.drop-ok { box-shadow: 0 0 10px rgba(201,168,76,.55); border-color: var(--gold) !important; }
+    .captain-hub-badge { font-size: 6px; font-weight: 800; text-transform: uppercase; letter-spacing: .08em; color: rgba(201,168,76,.55); }
+    .captain-hub-name { font-size: 9px; font-weight: 700; text-align: center; color: var(--gold); line-height: 1.1; max-width: 46px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .captain-hub-years { font-size: 7px; color: var(--text-muted); }
+    .captain-hub-dot { position: absolute; top: 3px; right: 3px; width: 7px; height: 7px; border-radius: 50%; }
     /* SVG connection lines overlay */
     .conn-svg { position: absolute; inset: 0; pointer-events: none; overflow: visible; width: 100%; height: 100%; }
     /* Drag ghost */
@@ -1306,47 +1296,84 @@
     return [-1, -1];
   }
 
-  // Small polo icon SVG for a pod slot (32px, tier-colored, era-saturated).
-  function podShirtSVG(p) {
-    const tc  = TIER_COLORS[p.tier] || '#888';
-    const sat = Math.min(1, Math.max(0.45, 0.45 + (p.year - 1999) / 19 * 0.55));
-    return `<svg viewBox="0 0 24 24" width="30" height="30" fill="none" stroke="${tc}" stroke-width="1.15" stroke-linecap="round" stroke-linejoin="round" style="filter:saturate(${sat.toFixed(2)})"><path d="M9 3L4 6v4l3.5-1V20h9V9l3.5 1V6L21 3l-6 0"/><path d="M9 3c0 2 1.5 3 3 3s3-1 3-3"/></svg>`;
+  // Style icon inner paths (16×16 viewBox) per dominant tag.
+  const _STYLE_PATHS = {
+    power:      `<rect x="0.5" y="6.5" width="2" height="3" rx="0.5"/><rect x="2.5" y="5.5" width="1.5" height="5" rx="0.5"/><rect x="4" y="7.25" width="8" height="1.5" rx="0.75"/><rect x="12" y="5.5" width="1.5" height="5" rx="0.5"/><rect x="13.5" y="6.5" width="2" height="3" rx="0.5"/>`,
+    accurate:   `<circle cx="8" cy="8" r="6.5" fill="none"/><circle cx="8" cy="8" r="3.5" fill="none"/><circle cx="8" cy="8" r="1.2"/>`,
+    shortgame:  `<line x1="5" y1="2" x2="5" y2="14" stroke-linecap="round"/><polygon points="5,2 12,4.5 5,7"/><line x1="3" y1="14" x2="11" y2="14" stroke-linecap="round"/>`,
+    clutch:     `<path d="M9.5 1.5 L6 8 H8.5 L6.5 14.5 L13 6.5 H10 Z"/>`,
+    consistent: `<path d="M8 1.5 L13.5 3.5 L13.5 8.5 Q13.5 13 8 14.5 Q2.5 13 2.5 8.5 L2.5 3.5 Z" fill="none"/>`,
+  };
+  const _STYLE_COLOR = { power:'#f97316', accurate:'#38bdf8', shortgame:'#4ade80', clutch:'#f59e0b', consistent:'#a78bfa' };
+
+  // Render a style icon centred at (cx,cy) at given pixel size inside a parent SVG.
+  function _styleIconEl(style, cx, cy, size=12) {
+    const paths = _STYLE_PATHS[style] || '';
+    const color = _STYLE_COLOR[style] || '#888';
+    const sc = size / 16;
+    return `<g transform="translate(${(cx - size/2).toFixed(1)},${(cy - size/2).toFixed(1)}) scale(${sc.toFixed(3)})" fill="${color}" stroke="${color}" stroke-width="${(1.4/sc).toFixed(2)}" stroke-linecap="round" stroke-linejoin="round">${paths}</g>`;
   }
 
-  // Small blazer icon SVG for the captain hub.
-  function podJacketSVG(c) {
-    const tc = TIER_COLORS[c.tier] || TIER_COLORS.gold;
-    return `<svg viewBox="0 0 24 24" width="38" height="38" fill="none" stroke="${tc}" stroke-width="0.9" stroke-linecap="round" stroke-linejoin="round"><path d="M9 3L4 6v4l3.5-1V20h9V9l3.5 1V6L21 3"/><path d="M9 3c0 1.5 1.5 2.5 3 2.5S15 4.5 15 3"/><circle cx="12" cy="12" r="0.65" fill="${tc}"/><circle cx="12" cy="16" r="0.65" fill="${tc}"/><circle cx="15.3" cy="8.6" r="0.9" fill="#c9a84c"/></svg>`;
+  // Shield path string for a w×h card with taper starting at 65% height.
+  function _shieldPath(w, h) {
+    const py = Math.round(h * 0.65);
+    return `M1,1 L${w-1},1 L${w-1},${py} L${w/2},${h-1} L1,${py} Z`;
+  }
+
+  // Shield SVG for a filled pod slot (56×72 viewport).
+  function _filledShieldSVG(player, dotColor) {
+    const W=56, H=72, cx=28;
+    const tc = TIER_COLORS[player.tier] || '#888';
+    const parts = player.name.split(' ');
+    const label = parts.length > 1
+      ? `${parts[0][0]}. ${parts.slice(1).join(' ').toUpperCase()}`
+      : player.name.toUpperCase();
+    const shortLabel = label.length > 12 ? label.slice(0,11) + '…' : label;
+    const dom = dominantStyleTag(player);
+    const yr  = String(player.year);
+    const won = CUP_RESULTS[yr] === player.nationality && player.made_team === true;
+    const badgeParts = [];
+    if (player.made_team === true) badgeParts.push(`<tspan fill="#22c55e">✓</tspan>`);
+    if (won)                        badgeParts.push(`<tspan fill="#c9a84c"> ★</tspan>`);
+    const badges = badgeParts.length
+      ? `<text x="${cx}" y="44" text-anchor="middle" font-size="9" font-family="system-ui,sans-serif">${badgeParts.join('')}</text>`
+      : '';
+    return `<svg viewBox="0 0 ${W} ${H}" width="${W}" height="${H}">
+      <path d="${_shieldPath(W,H)}" fill="${tc}22" stroke="${tc}" stroke-width="1.5"/>
+      ${_styleIconEl(dom, cx, 13, 12)}
+      <text x="${cx}" y="27" text-anchor="middle" font-size="7" fill="white" font-family="system-ui,sans-serif" font-weight="700">${shortLabel}</text>
+      <text x="${cx}" y="37" text-anchor="middle" font-size="7" fill="${tc}" font-family="system-ui,sans-serif">${player.year}</text>
+      ${badges}
+      <circle cx="${W-5}" cy="5" r="3.5" fill="${dotColor}"/>
+    </svg>`;
+  }
+
+  // Shield SVG for an empty pod slot placeholder.
+  function _emptyShieldSVG() {
+    return `<svg viewBox="0 0 56 72" width="56" height="72">
+      <path d="${_shieldPath(56,72)}" fill="rgba(255,255,255,0.03)" stroke="rgba(255,255,255,0.12)" stroke-width="1.5" stroke-dasharray="4 3"/>
+    </svg>`;
   }
 
   // HTML for one pod slot (filled or empty).
   function podSlotHTML(pi, si) {
     const p = G.pods[pi][si];
     if (!p) {
-      return `<div class="pod-slot empty" data-pod="${pi}" data-slot="${si}"></div>`;
+      return `<div class="pod-slot empty" data-pod="${pi}" data-slot="${si}">${_emptyShieldSVG()}</div>`;
     }
-    const tc = TIER_COLORS[p.tier] || '#888';
     const podmates = G.pods[pi].filter((x, i) => x && i !== si);
     const { tier: chemTier } = computePlayerChemScore(p, podmates, [], CUP_RESULTS, G.captain);
     const dotColor = chemTier === 'green' ? '#22c55e' : chemTier === 'yellow' ? '#eab308' : '#ef4444';
-    const lastName = p.name.split(' ').pop();
-    return `<div class="pod-slot filled" data-pod="${pi}" data-slot="${si}" style="border-color:${tc}44">
-      <div class="pod-slot-dot" style="background:${dotColor}"></div>
-      <div class="pod-slot-inner">
-        ${podShirtSVG(p)}
-        <div class="pod-slot-name" style="color:${tc}">${lastName}</div>
-        <div class="pod-slot-year">${p.year}</div>
-      </div>
-    </div>`;
+    return `<div class="pod-slot filled" data-pod="${pi}" data-slot="${si}">${_filledShieldSVG(p, dotColor)}</div>`;
   }
 
-  // HTML for the captain hub node.
+  // HTML for the captain hub node (circle).
   function captainHubHTML() {
     const c = G.captain;
     if (!c) {
       return `<div class="captain-hub-node empty" id="captain-hub-node">
-        <div class="captain-hub-badge">Captain</div>
-        <div style="font-size:8px;color:var(--text-dim);text-align:center;line-height:1.4;margin-top:4px">Drop<br>here</div>
+        <div class="captain-hub-badge">CAPT</div>
+        <div style="font-size:7px;color:var(--text-dim);text-align:center;line-height:1.4">Drop<br>here</div>
       </div>`;
     }
     const tc = TIER_COLORS[c.tier] || TIER_COLORS.gold;
@@ -1354,11 +1381,10 @@
     const { tier: capTier } = computeCaptainChemScore(c, allPlayers, [], G.venue, CUP_RESULTS);
     const dotColor = capTier === 'green' ? '#22c55e' : capTier === 'yellow' ? '#eab308' : '#ef4444';
     const lastName = c.name.split(' ').pop();
-    const yearStr  = (c.years || []).join(', ');
+    const yearStr  = (c.years || []).slice(0,2).join('/');
     return `<div class="captain-hub-node filled" id="captain-hub-node" style="border-color:${tc}">
       <div class="captain-hub-dot" style="background:${dotColor}"></div>
-      <div class="captain-hub-badge" style="color:${tc}">CAPTAIN</div>
-      ${podJacketSVG(c)}
+      <div class="captain-hub-badge" style="color:${tc}">CAPT</div>
       <div class="captain-hub-name">${lastName}</div>
       <div class="captain-hub-years">${yearStr}</div>
     </div>`;
@@ -1397,19 +1423,34 @@
       const r = el.getBoundingClientRect();
       return { x: r.left + r.width / 2 - aRect.left, y: r.top + r.height / 2 - aRect.top };
     }
-    function drawLine(c1, c2, stroke, dashed) {
+    function drawLine(c1, c2, stroke, dashed, width, opacity) {
       const el = document.createElementNS('http://www.w3.org/2000/svg', 'line');
       el.setAttribute('x1', c1.x); el.setAttribute('y1', c1.y);
       el.setAttribute('x2', c2.x); el.setAttribute('y2', c2.y);
       el.setAttribute('stroke', stroke);
-      el.setAttribute('stroke-width', '1.5');
+      el.setAttribute('stroke-width', width || '1.5');
       el.setAttribute('stroke-linecap', 'round');
-      el.setAttribute('opacity', '0.55');
+      el.setAttribute('opacity', opacity || '0.55');
       if (dashed) el.setAttribute('stroke-dasharray', '4 3');
       svg.appendChild(el);
     }
 
-    // Pod-to-pod chemistry lines
+    // Structural divider lines — always visible, radiate from captain hub centre.
+    // Upper-left separates Pod A / Pod B; upper-right A / C; straight down B / C.
+    const capHub = document.getElementById('captain-hub-node');
+    if (capHub) {
+      const cc  = ctr(capHub);
+      const len = Math.max(aRect.width, aRect.height) * 0.7;
+      [
+        { dx: -0.5, dy: -0.866 },
+        { dx:  0.5, dy: -0.866 },
+        { dx:  0,   dy:  1     },
+      ].forEach(({ dx, dy }) => {
+        drawLine(cc, { x: cc.x + dx * len, y: cc.y + dy * len }, '#7a6520', false, '2.5', '0.75');
+      });
+    }
+
+    // Chemistry lines within each pod (thin, coloured)
     G.pods.forEach((pod, pi) => {
       for (let i = 0; i < 4; i++) {
         for (let j = i + 1; j < 4; j++) {
@@ -1419,22 +1460,19 @@
           if (!el1 || !el2) continue;
           const chem = computeChemistry(pod[i], pod[j], [], CUP_RESULTS);
           const stroke = chem >= 2 ? '#22c55e' : chem >= 1 ? '#eab308' : '#ef4444';
-          drawLine(ctr(el1), ctr(el2), stroke, false);
+          drawLine(ctr(el1), ctr(el2), stroke, false, '1.5', '0.6');
         }
       }
     });
 
-    // Captain-to-pod lines (gold dashed)
-    if (G.captain) {
-      const capNode = document.getElementById('captain-hub-node');
-      if (capNode) {
-        const capCtr = ctr(capNode);
-        [0, 1, 2].forEach(pi => {
-          const podEl = document.querySelector(`[data-pod-group="${pi}"]`);
-          if (!podEl) return;
-          drawLine(capCtr, ctr(podEl), '#c9a84c', true);
-        });
-      }
+    // Captain-to-pod group lines (gold dashed) — only once captain selected
+    if (G.captain && capHub) {
+      const cc = ctr(capHub);
+      [0, 1, 2].forEach(pi => {
+        const podEl = document.querySelector(`[data-pod-group="${pi}"]`);
+        if (!podEl) return;
+        drawLine(cc, ctr(podEl), '#c9a84c', true, '1.5', '0.5');
+      });
     }
   }
 
@@ -1572,6 +1610,51 @@
     });
   })();
 
+  // Shield SVG for a player card in the draft tray (no chem dot — not yet placed).
+  function _trayShieldHTML(player) {
+    const W=56, H=72, cx=28;
+    const tc = TIER_COLORS[player.tier] || '#888';
+    const parts = player.name.split(' ');
+    const label = parts.length > 1
+      ? `${parts[0][0]}. ${parts.slice(1).join(' ').toUpperCase()}`
+      : player.name.toUpperCase();
+    const shortLabel = label.length > 12 ? label.slice(0,11) + '…' : label;
+    const dom = dominantStyleTag(player);
+    const yr  = String(player.year);
+    const won = CUP_RESULTS[yr] === player.nationality && player.made_team === true;
+    const badgeParts = [];
+    if (player.made_team === true) badgeParts.push(`<tspan fill="#22c55e">✓</tspan>`);
+    if (won)                        badgeParts.push(`<tspan fill="#c9a84c"> ★</tspan>`);
+    const badges = badgeParts.length
+      ? `<text x="${cx}" y="44" text-anchor="middle" font-size="9" font-family="system-ui,sans-serif">${badgeParts.join('')}</text>`
+      : '';
+    return `<svg viewBox="0 0 ${W} ${H}" width="${W}" height="${H}">
+      <path d="${_shieldPath(W,H)}" fill="${tc}22" stroke="${tc}" stroke-width="1.5"/>
+      ${_styleIconEl(dom, cx, 13, 12)}
+      <text x="${cx}" y="27" text-anchor="middle" font-size="7" fill="white" font-family="system-ui,sans-serif" font-weight="700">${shortLabel}</text>
+      <text x="${cx}" y="37" text-anchor="middle" font-size="7" fill="${tc}" font-family="system-ui,sans-serif">${player.year}</text>
+      ${badges}
+    </svg>`;
+  }
+
+  // Shield SVG for a captain card in the draft tray.
+  function _trayCaptainShieldHTML(captain) {
+    const W=56, H=72, cx=28;
+    const tc = TIER_COLORS[captain.tier] || '#c9a84c';
+    const parts = captain.name.split(' ');
+    const label = parts.length > 1
+      ? `${parts[0][0]}. ${parts.slice(1).join(' ').toUpperCase()}`
+      : captain.name.toUpperCase();
+    const shortLabel = label.length > 12 ? label.slice(0,11) + '…' : label;
+    const yearStr = (captain.years || []).slice(0,2).join('/');
+    return `<svg viewBox="0 0 ${W} ${H}" width="${W}" height="${H}">
+      <path d="${_shieldPath(W,H)}" fill="${tc}22" stroke="${tc}" stroke-width="1.5" stroke-dasharray="3 2"/>
+      <text x="${cx}" y="14" text-anchor="middle" font-size="6" fill="${tc}" font-family="system-ui,sans-serif" font-weight="800" letter-spacing="0.08em">CAPTAIN</text>
+      <text x="${cx}" y="27" text-anchor="middle" font-size="7" fill="white" font-family="system-ui,sans-serif" font-weight="700">${shortLabel}</text>
+      <text x="${cx}" y="37" text-anchor="middle" font-size="7" fill="${tc}" font-family="system-ui,sans-serif">${yearStr}</text>
+    </svg>`;
+  }
+
   // ─────────────────────────────────────────────────────────────────────────────
   // SCREEN: DRAFT
   // ─────────────────────────────────────────────────────────────────────────────
@@ -1600,7 +1683,7 @@
         : `Round ${round} of 13 — Drag a card to a pod slot`;
       const trayHTML = cards.map(c => {
         const isCapt = isCaptainCard(c);
-        const html   = isCapt ? captainCardHTML(c) : playerCardHTML(c, true);
+        const html   = isCapt ? _trayCaptainShieldHTML(c) : _trayShieldHTML(c);
         const attr   = isCapt ? `data-cid="${c.id}"` : `data-pid="${c.id}"`;
         return `<div class="tray-card" ${attr}>${html}</div>`;
       }).join('');

@@ -273,13 +273,17 @@
       .ai-reveal-cards { grid-template-columns: 1fr; max-width: 300px; }
       /* Captain cards (also 3-up) */
       .captain-cards { grid-template-columns: 1fr; }
-      /* Compact pod slots on small screens */
-      .pod-slot { width: 54px; min-height: 58px; }
+      /* Compact pod slots: 44px slots → each pod 92px, B+C row = 92+8+92 = 192px, well under 375px */
+      .pod-slots { grid-template-columns: 44px 44px; }
+      .pod-slot { width: 44px; min-height: 48px; border-radius: 5px; }
       .pod-slot-inner { padding: 3px 2px 2px; gap: 1px; }
       .pod-slot-name { font-size: 8px; }
       .pod-slot-year { font-size: 7px; }
-      .captain-hub-node { width: 70px; min-height: 70px; }
-      .squad-hub-wrap { gap: 6px; padding: 3px 6px 4px; }
+      .pod-slot-dot { width: 7px; height: 7px; top: 3px; right: 3px; }
+      .captain-hub-node { width: 58px; min-height: 58px; border-radius: 10px; }
+      .squad-hub-wrap { gap: 5px; padding: 2px 4px 4px; }
+      .pod-row-top, .pod-row-bot { gap: 8px; }
+      .pod-label { font-size: 7px; }
       /* Constrain tall trading-card to a readable height in single-column contexts */
       .pick-cards-row .player-card,
       .ai-reveal-cards .player-card { aspect-ratio: unset; min-height: 130px; max-height: 180px; }
@@ -329,8 +333,9 @@
     .pod-row-mid { display: flex; justify-content: center; }
     .pod-group { display: flex; flex-direction: column; align-items: center; gap: 3px; }
     .pod-label { font-size: 8px; font-weight: 800; text-transform: uppercase; letter-spacing: .1em; color: var(--text-dim); }
-    .pod-slots { display: grid; grid-template-columns: 1fr 1fr; gap: 4px; }
-    .pod-slot { width: 64px; min-height: 68px; border: 1px dashed rgba(255,255,255,.13); border-radius: 7px; display: flex; flex-direction: column; align-items: center; justify-content: center; position: relative; transition: border-color .12s, background .12s; box-sizing: border-box; }
+    .pod-slots { display: grid; grid-template-columns: 64px 64px; gap: 4px; }
+    .tray-card { cursor: grab; touch-action: none; user-select: none; -webkit-user-select: none; }
+    .pod-slot { width: 64px; min-height: 68px; border: 1px dashed rgba(255,255,255,.13); border-radius: 7px; display: flex; flex-direction: column; align-items: center; justify-content: center; position: relative; transition: border-color .12s, background .12s; box-sizing: border-box; touch-action: none; }
     .pod-slot.filled { cursor: grab; border-style: solid; border-width: 1.5px; }
     .pod-slot.filled:active { cursor: grabbing; }
     .pod-slot.drop-ok { border-color: var(--green) !important; border-style: solid !important; background: rgba(34,197,94,.06); }
@@ -1451,7 +1456,7 @@
     document.body.appendChild(ghost);
     sourceEl.style.opacity = '0.3';
     _drag = { card, isCapt: isCaptainCard(card), source, ghost, sourceEl };
-    try { e.target.setPointerCapture(e.pointerId); } catch(_) {}
+    try { sourceEl.setPointerCapture(e.pointerId); } catch(_) {}
   }
 
   function _moveGhost(e) {
@@ -1549,6 +1554,8 @@
     document.addEventListener('pointercancel', () => {
       if (_drag) { _drag.ghost?.remove(); if (_drag.sourceEl) _drag.sourceEl.style.opacity = ''; _drag = null; }
     });
+    // Suppress context-menu on long-press (mobile Safari/Chrome) so drag starts immediately.
+    document.addEventListener('contextmenu', e => { if (_drag) e.preventDefault(); });
     // Delegate pointerdown from body so re-renders don't break listeners.
     document.body.addEventListener('pointerdown', e => {
       const trayCard = e.target.closest('.tray-card');
@@ -1595,7 +1602,7 @@
         const isCapt = isCaptainCard(c);
         const html   = isCapt ? captainCardHTML(c) : playerCardHTML(c, true);
         const attr   = isCapt ? `data-cid="${c.id}"` : `data-pid="${c.id}"`;
-        return `<div class="tray-card" ${attr} style="cursor:grab">${html}</div>`;
+        return `<div class="tray-card" ${attr}>${html}</div>`;
       }).join('');
       bottomHTML = `<div class="pick-area">
         <div class="pick-round-label">${roundLabel}</div>

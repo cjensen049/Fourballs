@@ -131,7 +131,7 @@ function computeCaptainChemScore(captain, draftedPlayers, _allPlayers, venue, cu
 }
 
 // computeTeamChemScore — total chemistry contribution for the team.
-// Sums (connection_points + tier_reward) for all 12 players across pods + captain.
+// Sums tier_reward only (not raw points) for all 12 players across pods + captain.
 // pods: [[p,p,p,p],[p,p,p,p],[p,p,p,p]] (null slots skipped)
 function computeTeamChemScore(pods, captain, venue, cupResults) {
   if (!pods) return 0;
@@ -141,13 +141,13 @@ function computeTeamChemScore(pods, captain, venue, cupResults) {
     const filled = pod.filter(Boolean);
     for (const player of filled) {
       const podmates = filled.filter(p => p.name !== player.name);
-      const { points, reward } = computePlayerChemScore(player, podmates, [], cr, captain);
-      total += points + reward;
+      const { reward } = computePlayerChemScore(player, podmates, [], cr, captain);
+      total += reward;
     }
   }
   const allDrafted = pods.flat().filter(Boolean);
-  const { points: capPts, reward: capReward } = computeCaptainChemScore(captain, allDrafted, [], venue, cr);
-  total += capPts + capReward;
+  const { reward: capReward } = computeCaptainChemScore(captain, allDrafted, [], venue, cr);
+  total += capReward;
   return total;
 }
 

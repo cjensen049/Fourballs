@@ -25,52 +25,91 @@ function calculateVenueFit(player, venue) {
   return Math.min(100, Math.max(0, Math.round(num / den)));
 }
 
-// ─── Chemistry ────────────────────────────────────────────────────────────────
-// Returns 0–20. Two pillars:
-//   Pillar 1 — Stat Complementarity (0–10): bigger spread across style dimensions
-//              = more complementary skill sets.
-//   Pillar 2 — Shared History (0–10): teammates on real Ryder Cup rosters
-//              (via made_team==true rows), with bonuses for winning together and
-//              repeated partnerships.
-// allPlayers: full multi-year player list (needed for shared history lookup).
-// cupResults: { "year": "NAT" } map.
-// NOTE: in-match effect is not yet wired into calculateMatchProbability —
-//   this score is used for pairing decisions and display only.
-function computeChemistry(p1, p2, allPlayers, cupResults) {
+// ─── Chemistry v2 (Pods and Connections) ─────────────────────────────────────
+// See chemistry-system-v2.md for full spec.
+//
+// dominantStyleTag: mirrors ATTR_META derivation from index.html (stat-based, not style_* fields).
+function dominantStyleTag(p) {
+  const scores = {
+    power:      p.stat_driving_distance,
+    accurate:   Math.round(p.stat_driving_accuracy * 0.55 + p.stat_greens_in_regulation * 0.45),
+    shortgame:  p.stat_scrambling,
+    consistent: Math.min(p.stat_driving_accuracy, p.stat_scrambling),
+    clutch:     p.stat_pressure_index,
+  };
+  return Object.entries(scores).sort((a, b) => b[1] - a[1])[0][0];
+}
+
+// Sorted-join key for complement lookup (order-independent).
+const _COMP_PAIRS = new Set([
+  'accurate|clutch', 'accurate|power', 'clutch|power',
+  'clutch|shortgame', 'power|shortgame',
+]);
+
+// computeChemistry — pairwise connection points (0–3).
+// Categories per pair:
+//   +1 teammates:      same year, same nat, both made_team===true
+//   +1 champion:       alongside teammates AND cup won that year
+//   +1 same season:    same year, same nat, ≥1 has made_team===false (mutually exclusive with teammates)
+//   +1 complementary:  dominant style tags form a recognised pairing
+// allPlayers retained in signature for compatibility; no longer used.
+function computeChemistry(p1, p2, _allPlayers, cupResults) {
   if (!p1 || !p2 || p1.name === p2.name) return 0;
+  let pts = 0;
+  const sameYear = parseInt(p1.year) === parseInt(p2.year);
+  const sameNat  = p1.nationality === p2.nationality;
+  if (sameYear && sameNat) {
+    if (p1.made_team === true && p2.made_team === true) {
+      pts += 1; // teammates
+      if ((cupResults || {})[String(p1.year)] === p1.nationality) pts += 1; // champions
+    } else if (p1.made_team === false || p2.made_team === false) {
+      pts += 1; // same season, not teammates
+    }
+  }
+  const tags = [dominantStyleTag(p1), dominantStyleTag(p2)].sort().join('|');
+  if (_COMP_PAIRS.has(tags)) pts += 1;
+  return pts; // 0–3
+}
 
-  // Pillar 1 — Stat Complementarity
-  const diffs = [
-    Math.abs(p1.style_power               - p2.style_power),
-    Math.abs(p1.style_accuracy            - p2.style_accuracy),
-    Math.abs(p1.style_aggression          - p2.style_aggression),
-    Math.abs(p1.style_consistency         - p2.style_consistency),
-    Math.abs(p1.style_match_play_affinity - p2.style_match_play_affinity),
-  ];
-  const avgDiff        = diffs.reduce((a, b) => a + b, 0) / diffs.length;
-  const complementarity = Math.min(10, avgDiff / 4);
+// computePlayerChemScore — sum pairwise points across a player's pod (up to 3 podmates).
+// Returns { points, tier: 'green'|'yellow'|'red', reward }.
+function computePlayerChemScore(player, podmates, allPlayers, cupResults) {
+  let total = 0;
+  for (const mate of (podmates || [])) {
+    total += computeChemistry(player, mate, allPlayers, cupResults);
+  }
+  if (total >= 4) return { points: total, tier: 'green',  reward: 11 };
+  if (total >= 2) return { points: total, tier: 'yellow', reward:  6 };
+  return               { points: total, tier: 'red',    reward:  0 };
+}
 
-  // Pillar 2 — Shared History
-  const aYears = new Set(
-    (allPlayers || []).filter(p => p.name === p1.name && p.made_team === true).map(p => p.year)
-  );
-  const bYears = new Set(
-    (allPlayers || []).filter(p => p.name === p2.name && p.made_team === true).map(p => p.year)
-  );
-  const sharedYears = [...aYears].filter(y => bYears.has(y));
+// computeCaptainChemScore — captain connection points against their squad and venue.
+// Categories:
+//   +1        captained at the selected venue (venue.year in captain.years)
+//   +1 each   drafted player on this captain's real roster (player.year in years, made_team===true, same nat)
+//   +1 each   Ryder Cup won in each year captained
+// Returns { points, tier: 'green'|'yellow'|'red', reward }.
+function computeCaptainChemScore(captain, draftedPlayers, _allPlayers, venue, cupResults) {
+  if (!captain) return { points: 0, tier: 'red', reward: 0 };
+  const cr      = cupResults || {};
+  const capYears = (captain.years || []).map(y => parseInt(y));
+  let pts = 0;
 
-  let history = 0;
-  if (sharedYears.length > 0) {
-    history = 4;
-    const sharedNat  = p1.nationality;
-    const cupRef     = cupResults || {};
-    const wonTogether = sharedYears.some(y => cupRef[String(y)] === sharedNat);
-    if (wonTogether) history += 3;
-    history += Math.min(3, sharedYears.length - 1);
-    history  = Math.min(10, history);
+  if (venue && capYears.includes(parseInt(venue.year))) pts += 1;
+
+  for (const p of (draftedPlayers || [])) {
+    if (p.made_team === true &&
+        p.nationality === captain.nationality &&
+        capYears.includes(parseInt(p.year))) pts += 1;
   }
 
-  return Math.min(20, Math.round(complementarity + history));
+  for (const y of capYears) {
+    if (cr[String(y)] === captain.nationality) pts += 1;
+  }
+
+  if (pts >= 8) return { points: pts, tier: 'green',  reward: 15 };
+  if (pts >= 5) return { points: pts, tier: 'yellow', reward: 10 };
+  return             { points: pts, tier: 'red',    reward:  0 };
 }
 
 // ─── Captain perk boost ───────────────────────────────────────────────────────
@@ -403,7 +442,10 @@ if (typeof module !== 'undefined' && module.exports) {
     getTalentScore,
     compositeScore,
     calculateVenueFit,
+    dominantStyleTag,
     computeChemistry,
+    computePlayerChemScore,
+    computeCaptainChemScore,
     captainPerkBoost,
     calculateMatchProbability,
     simulateMatch,

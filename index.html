@@ -839,7 +839,7 @@
   function tcClass(tier) { return `tc-${tier || 'bronze'}`; }
   function isHero(p)     { return p.tier === 'hero'; }
   function delay(ms)     { return new Promise(r => setTimeout(r, ms)); }
-  function chemClass(s)  { return s >= 14 ? 'chem-strong' : s >= 8 ? 'chem-neutral' : 'chem-weak'; }
+  function chemClass(s)  { return s >= 2 ? 'chem-strong' : s >= 1 ? 'chem-neutral' : 'chem-weak'; }
   function rClass(r)     { return r === 'win' ? 'r-win' : r === 'loss' ? 'r-loss' : 'r-half'; }
   function rLabel(r)     { return r === 'win' ? 'W' : r === 'loss' ? 'L' : 'H'; }
 

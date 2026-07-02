@@ -2,7 +2,10 @@ const {
   getTalentScore,
   compositeScore,
   calculateVenueFit,
+  dominantStyleTag,
   computeChemistry,
+  computePlayerChemScore,
+  computeCaptainChemScore,
   captainPerkBoost,
   calculateMatchProbability,
   simulateMatch,
@@ -228,64 +231,225 @@ console.log('\ncalculateVenueFit');
   }
 }
 
-console.log('\ncomputeChemistry — pillar 1: stat complementarity');
+// ─── Chemistry v2 test helpers ───────────────────────────────────────────────
+// powerDom: dominant tag = power (stat_driving_distance highest)
+const powerDom = makeTestPlayer('gold', {
+  id: 'pd', name: 'Power Dom',
+  stat_driving_distance: 99, stat_driving_accuracy: 70, stat_greens_in_regulation: 72,
+  stat_scrambling: 68, stat_birdie_rate: 70, stat_pressure_index: 65,
+});
+// shortDom: dominant tag = shortgame (stat_scrambling highest)
+const shortDom = makeTestPlayer('gold', {
+  id: 'sd', name: 'Short Dom',
+  stat_driving_distance: 68, stat_driving_accuracy: 70, stat_greens_in_regulation: 72,
+  stat_scrambling: 99, stat_birdie_rate: 70, stat_pressure_index: 65,
+});
+// accurateDom: dominant tag = accurate
+const accurateDom = makeTestPlayer('gold', {
+  id: 'ad', name: 'Accurate Dom',
+  stat_driving_distance: 68, stat_driving_accuracy: 99, stat_greens_in_regulation: 99,
+  stat_scrambling: 68, stat_birdie_rate: 70, stat_pressure_index: 65,
+});
+// Two EUR players who were teammates in the same year with a win
+const teamWin1 = makeTestPlayer('gold', {
+  id: 'tw1', name: 'Team Win 1', nationality: 'EUR', year: 2018, made_team: true,
+  stat_driving_distance: 75, stat_driving_accuracy: 70, stat_greens_in_regulation: 70,
+  stat_scrambling: 68, stat_birdie_rate: 70, stat_pressure_index: 65,
+});
+const teamWin2 = makeTestPlayer('gold', {
+  id: 'tw2', name: 'Team Win 2', nationality: 'EUR', year: 2018, made_team: true,
+  stat_driving_distance: 68, stat_driving_accuracy: 70, stat_greens_in_regulation: 70,
+  stat_scrambling: 99, stat_birdie_rate: 70, stat_pressure_index: 65, // shortDom
+});
+// Two EUR players same year but at least one snubbed
+const snub1 = makeTestPlayer('silver', {
+  id: 'sn1', name: 'Snub 1', nationality: 'EUR', year: 2021, made_team: false,
+});
+const snub2 = makeTestPlayer('silver', {
+  id: 'sn2', name: 'Snub 2', nationality: 'EUR', year: 2021, made_team: true,
+});
+// EUR player from different year, explicitly power-dominant to match teamWin1 (no comp bonus)
+const diffYear = makeTestPlayer('silver', {
+  id: 'dy', name: 'Diff Year', nationality: 'EUR', year: 2004, made_team: true,
+  stat_driving_distance: 85, stat_driving_accuracy: 68, stat_greens_in_regulation: 68,
+  stat_scrambling: 65, stat_birdie_rate: 65, stat_pressure_index: 65,
+});
+
+console.log('\ndominantStyleTag');
 {
-  // Identical profiles → minimal spread → low complementarity
-  const identicalChem = computeChemistry(playerA, playerA, ALL_PLAYERS, CUP_RESULTS);
-  // Wait — same name check: playerA.name === playerA.name → returns 0
-  assert('same player returns 0', identicalChem === 0);
+  assert('power dominant when stat_driving_distance highest', dominantStyleTag(powerDom) === 'power');
+  assert('shortgame dominant when stat_scrambling highest',   dominantStyleTag(shortDom) === 'shortgame');
+  assert('accurate dominant when accuracy+GIR highest',       dominantStyleTag(accurateDom) === 'accurate');
+}
 
-  // Very different style profiles → high complementarity
-  const highPower = makeTestPlayer('gold', {
-    id: 'hp', name: 'HighPower',
-    style_power: 95, style_accuracy: 60, style_aggression: 90,
-    style_consistency: 60, style_match_play_affinity: 65
+console.log('\ncomputeChemistry — v2 point model (0–3)');
+{
+  // Guard
+  assert('same player returns 0', computeChemistry(teamWin1, teamWin1, [], CUP_RESULTS) === 0);
+  assert('null p1 returns 0',     computeChemistry(null, teamWin1, [], CUP_RESULTS) === 0);
+  assert('null p2 returns 0',     computeChemistry(teamWin1, null, [], CUP_RESULTS) === 0);
+
+  // Teammates who won together: +1 teammates, +1 champion = 2 (no comp: both power vs short → check)
+  // teamWin1 dominant=power, teamWin2 dominant=shortgame → power+shortgame IS complementary → +1
+  const twChem = computeChemistry(teamWin1, teamWin2, [], CUP_RESULTS);
+  assert('teammates+champion+comp = 3', twChem === 3);
+
+  // Teammates who won but no complement: two identical-stat EUR players, same year, 2018 win
+  const teamWin3 = makeTestPlayer('gold', {
+    id: 'tw3', name: 'Team Win 3', nationality: 'EUR', year: 2018, made_team: true,
+    stat_driving_distance: 75, stat_driving_accuracy: 70, stat_greens_in_regulation: 70,
+    stat_scrambling: 68, stat_birdie_rate: 70, stat_pressure_index: 65,
   });
-  const highAcc = makeTestPlayer('gold', {
-    id: 'ha', name: 'HighAcc',
-    style_power: 62, style_accuracy: 95, style_aggression: 62,
-    style_consistency: 92, style_match_play_affinity: 90
+  const tw13 = computeChemistry(teamWin1, teamWin3, [], CUP_RESULTS);
+  assert('teammates+champion, same dominant tag = 2', tw13 === 2);
+
+  // Same season, not teammates (snub): +1
+  const snubChem = computeChemistry(snub1, snub2, [], CUP_RESULTS);
+  assert('same season, one snubbed = 1', snubChem === 1);
+
+  // Different years, same nat → only comp possible
+  const diffYearComp = computeChemistry(teamWin1, diffYear, [], CUP_RESULTS);
+  // teamWin1 dominant=power, diffYear default (from playerA copy) dominant=?
+  // diffYear uses playerA base: stat_driving_distance=90 → power. Same tag, no comp.
+  assert('different years, same dominant tag = 0', diffYearComp === 0);
+
+  // Cross-nationality: no year/nat match, only comp possible
+  const crossNat = computeChemistry(sharedPlayer1, playerA, [], CUP_RESULTS);
+  assert('cross-nationality has at most comp bonus (0 or 1)', crossNat <= 1);
+
+  // complementary styles alone (different years, different nat or same nat different years)
+  const compOnly = computeChemistry(powerDom, shortDom, [], {});
+  assert('complementary tags only = 1', compOnly === 1);
+
+  // accurate+clutch is complementary
+  const clutchDom = makeTestPlayer('silver', {
+    id: 'cd2', name: 'Clutch Dom2',
+    stat_driving_distance: 65, stat_driving_accuracy: 68, stat_greens_in_regulation: 70,
+    stat_scrambling: 65, stat_birdie_rate: 65, stat_pressure_index: 99,
   });
-  const mixedChem = computeChemistry(highPower, highAcc, [], {});
-  assert('very different profiles have positive complementarity', mixedChem > 5);
+  const compAC = computeChemistry(accurateDom, clutchDom, [], {});
+  assert('accurate+clutch complementary = 1', compAC === 1);
 
-  // Identical but different names → low complementarity (0 style diff), possible history bonus
-  const cloneA = { ...playerB, id: 'clone_a', name: 'Clone A' };
-  const cloneB = { ...playerB, id: 'clone_b', name: 'Clone B' };
-  const cloneChem = computeChemistry(cloneA, cloneB, [], {});
-  assert('identical-stat clones have zero complementarity (no history)', cloneChem === 0);
+  // Same dominant tag → no comp
+  const noComp = computeChemistry(powerDom, makeTestPlayer('silver', {
+    id: 'pd2', name: 'Power Dom2',
+    stat_driving_distance: 85, stat_driving_accuracy: 68, stat_greens_in_regulation: 70,
+    stat_scrambling: 65, stat_birdie_rate: 65, stat_pressure_index: 65,
+  }), [], {});
+  assert('same dominant tag = 0 comp', noComp === 0);
 
-  // Result is always 0–20
-  for (let i = 0; i < 20; i++) {
-    const pa = makeTestPlayer('gold', { id: `pa${i}`, name: `TestA${i}`, style_power: 60 + i, style_accuracy: 99 - i });
-    const pb = makeTestPlayer('silver', { id: `pb${i}`, name: `TestB${i}`, style_power: 99 - i, style_accuracy: 60 + i });
-    const c  = computeChemistry(pa, pb, [], {});
-    assert(`combo ${i}: result in 0–20`, c >= 0 && c <= 20);
+  // Result always 0–3
+  for (let i = 0; i < 10; i++) {
+    const pa = makeTestPlayer('gold', { id: `pa${i}`, name: `CTestA${i}`, nationality: 'EUR', year: 2018, made_team: i % 2 === 0 });
+    const pb = makeTestPlayer('silver', { id: `pb${i}`, name: `CTestB${i}`, nationality: 'EUR', year: 2018, made_team: true });
+    const c  = computeChemistry(pa, pb, [], CUP_RESULTS);
+    assert(`random combo ${i}: result 0–3`, c >= 0 && c <= 3);
   }
 }
 
-console.log('\ncomputeChemistry — pillar 2: shared history');
+console.log('\ncomputePlayerChemScore');
 {
-  // sharedPlayer1 + sharedPlayer2 were both on EUR Ryder Cup teams in 2018, 2021, 2023
-  const chem = computeChemistry(sharedPlayer1, sharedPlayer2, ALL_PLAYERS, CUP_RESULTS);
-  assert('shared history gives base 4 bonus', chem >= 4);
-  // Won together: 2018 EUR, 2023 EUR → wonTogether=true → +3
-  // Extra shared years: 3 total, extra=2, min(3,2)=2 → +2
-  // Expected history = min(10, 4+3+2) = 9; plus complementarity ≥ 0
-  assert('shared history with wins gives ≥ 9', chem >= 9);
+  // Pod of 4 EUR 2018 winners: each pair is teammates+champion → 2pts minimum per pair
+  // Pod member sees 3 podmates: teamWin2 (3pts with teamWin1) + two more at 2pts each = 7pts → green
+  const pod2018 = [teamWin2,
+    makeTestPlayer('gold', { id:'pod3', name:'Pod 3', nationality:'EUR', year:2018, made_team:true, stat_driving_distance:75, stat_driving_accuracy:70, stat_greens_in_regulation:70, stat_scrambling:68, stat_birdie_rate:70, stat_pressure_index:65 }),
+    makeTestPlayer('gold', { id:'pod4', name:'Pod 4', nationality:'EUR', year:2018, made_team:true, stat_driving_distance:75, stat_driving_accuracy:70, stat_greens_in_regulation:70, stat_scrambling:68, stat_birdie_rate:70, stat_pressure_index:65 }),
+  ];
+  const greenScore = computePlayerChemScore(teamWin1, pod2018, [], CUP_RESULTS);
+  assert('four 2018 EUR winners: player green tier (≥4pts)', greenScore.tier === 'green');
+  assert('green tier reward = 11', greenScore.reward === 11);
 
-  // No history: sharedPlayer1 vs strandedPlayer (stranded never made_team=true in allPlayers)
-  const noHistoryChem = computeChemistry(sharedPlayer1, strandedPlayer, ALL_PLAYERS, CUP_RESULTS);
-  const noHistoryMin  = 0;
-  assert('no shared history gives 0 history bonus', noHistoryChem < chem);
+  // Pod of strangers: different years/nats AND same dominant tag (power) as teamWin1 → 0 pts → red
+  const strangerPod = [
+    makeTestPlayer('bronze', { id:'s1', name:'Stranger 1', nationality:'USA', year:1999, made_team:false, stat_driving_distance:85, stat_driving_accuracy:68, stat_greens_in_regulation:68, stat_scrambling:65, stat_birdie_rate:65, stat_pressure_index:65 }),
+    makeTestPlayer('bronze', { id:'s2', name:'Stranger 2', nationality:'USA', year:2004, made_team:false, stat_driving_distance:85, stat_driving_accuracy:68, stat_greens_in_regulation:68, stat_scrambling:65, stat_birdie_rate:65, stat_pressure_index:65 }),
+    makeTestPlayer('bronze', { id:'s3', name:'Stranger 3', nationality:'USA', year:2010, made_team:false, stat_driving_distance:85, stat_driving_accuracy:68, stat_greens_in_regulation:68, stat_scrambling:65, stat_birdie_rate:65, stat_pressure_index:65 }),
+  ];
+  const redScore = computePlayerChemScore(teamWin1, strangerPod, [], {});
+  assert('strangers across years/nats: red tier', redScore.tier === 'red');
+  assert('red tier reward = 0', redScore.reward === 0);
 
-  // sharedPlayer1 vs playerA — no overlap in ALL_PLAYERS (playerA is USA, sharedPlayer1 is EUR)
-  const crossNatChem = computeChemistry(sharedPlayer1, playerA, ALL_PLAYERS, CUP_RESULTS);
-  assert('cross-nationality pair has no shared history', crossNatChem < 4);
+  // 2 podmates give 1pt each → total 2 → yellow
+  const yellowPod = [
+    makeTestPlayer('silver', { id:'y1', name:'Yellow 1', nationality:'EUR', year:2021, made_team:false }),
+    makeTestPlayer('silver', { id:'y2', name:'Yellow 2', nationality:'USD', year:2015, made_team:false }),
+  ];
+  // teamWin1 (EUR, 2018) vs yellow1 (EUR, 2021 snub): diff year → only comp; power vs power = 0
+  // teamWin1 vs yellow2 (USD, 2015): cross-nat → 0 unless comp
+  // Adjust yellow1 to have shortgame dominant so comp fires
+  const yellowPod2 = [
+    makeTestPlayer('silver', { id:'yy1', name:'Yellow Y1', nationality:'USA', year:2008, made_team:false,
+      stat_driving_distance:65, stat_driving_accuracy:70, stat_greens_in_regulation:70, stat_scrambling:99, stat_birdie_rate:70, stat_pressure_index:65 }),
+    makeTestPlayer('silver', { id:'yy2', name:'Yellow Y2', nationality:'USA', year:2010, made_team:false,
+      stat_driving_distance:65, stat_driving_accuracy:70, stat_greens_in_regulation:70, stat_scrambling:99, stat_birdie_rate:70, stat_pressure_index:65 }),
+  ];
+  // teamWin1 power vs yy1 shortgame → comp: 1pt. teamWin1 power vs yy2 shortgame → comp: 1pt. total=2 → yellow
+  const yellowScore = computePlayerChemScore(teamWin1, yellowPod2, [], {});
+  assert('2 comp-only podmates: yellow tier (2pts)', yellowScore.tier === 'yellow');
+  assert('yellow tier reward = 6', yellowScore.reward === 6);
 
-  // Null players
-  assert('null p1 returns 0', computeChemistry(null, sharedPlayer1, ALL_PLAYERS, CUP_RESULTS) === 0);
-  assert('null p2 returns 0', computeChemistry(sharedPlayer1, null, ALL_PLAYERS, CUP_RESULTS) === 0);
+  // Empty pod → 0 pts → red
+  const emptyScore = computePlayerChemScore(teamWin1, [], [], {});
+  assert('empty pod: red tier', emptyScore.tier === 'red');
+  assert('empty pod points = 0', emptyScore.points === 0);
+}
+
+console.log('\ncomputeCaptainChemScore');
+{
+  const eurCap = {
+    id: 'test_cap', name: 'Test Captain',
+    nationality: 'EUR', years: ['2018', '2021'],
+    perks: [], special: null,
+  };
+  const mockVenue2018 = { year: 2018 };
+  const mockVenue2004 = { year: 2004 };
+
+  // No drafted players, no venue match → only won cups
+  // 2018=EUR win, 2021=USA win → 1 cup win
+  const baseScore = computeCaptainChemScore(eurCap, [], [], mockVenue2004, CUP_RESULTS);
+  assert('no players, no venue: 1 cup win point', baseScore.points === 1);
+  assert('1pt → red tier', baseScore.tier === 'red');
+  assert('red reward = 0', baseScore.reward === 0);
+
+  // Venue match (2018): +1
+  const venueScore = computeCaptainChemScore(eurCap, [], [], mockVenue2018, CUP_RESULTS);
+  assert('venue match adds 1pt (total 2)', venueScore.points === 2);
+
+  // Add 4 drafted EUR players who were on the 2018 team: +4 pts
+  const squad2018 = Array.from({ length: 4 }, (_, i) => makeTestPlayer('gold', {
+    id: `sq${i}`, name: `Squad ${i}`, nationality: 'EUR', year: 2018, made_team: true,
+  }));
+  const squadScore = computeCaptainChemScore(eurCap, squad2018, [], mockVenue2018, CUP_RESULTS);
+  // venue(1) + 4 players(4) + cup win(1) = 6 → yellow
+  assert('venue + 4 players + 1 win = 6pts', squadScore.points === 6);
+  assert('6pts → yellow tier', squadScore.tier === 'yellow');
+  assert('yellow reward = 10', squadScore.reward === 10);
+
+  // 8 drafted players on their 2018 team: venue(1) + 8(8) + cup win(1) = 10 → green
+  const bigSquad = Array.from({ length: 8 }, (_, i) => makeTestPlayer('gold', {
+    id: `bs${i}`, name: `Big Squad ${i}`, nationality: 'EUR', year: 2018, made_team: true,
+  }));
+  const bigScore = computeCaptainChemScore(eurCap, bigSquad, [], mockVenue2018, CUP_RESULTS);
+  assert('venue + 8 players + 1 win = 10pts', bigScore.points === 10);
+  assert('10pts → green tier', bigScore.tier === 'green');
+  assert('green reward = 15', bigScore.reward === 15);
+
+  // Null captain returns red
+  const nullScore = computeCaptainChemScore(null, [], [], mockVenue2018, CUP_RESULTS);
+  assert('null captain: red tier', nullScore.tier === 'red');
+
+  // Players from wrong year or nationality don't score
+  const wrongYear = makeTestPlayer('gold', { id:'wy', name:'Wrong Year', nationality:'EUR', year:2004, made_team:true });
+  const wrongNat  = makeTestPlayer('gold', { id:'wn', name:'Wrong Nat',  nationality:'USA', year:2018, made_team:true });
+  const noMatchScore = computeCaptainChemScore(eurCap, [wrongYear, wrongNat], [], null, CUP_RESULTS);
+  assert('wrong year/nat players do not score roster pts', noMatchScore.points === 1); // only cup win
+
+  // Captain with 2 cup wins
+  const twoWinCap = { id:'twc', name:'Two Win Cap', nationality:'EUR',
+    years: ['2018', '2023'], perks: [], special: null };
+  const cr2 = { '2018': 'EUR', '2023': 'EUR' };
+  const twoWinScore = computeCaptainChemScore(twoWinCap, [], [], null, cr2);
+  assert('captain with 2 wins gets 2 cup win points', twoWinScore.points === 2);
 }
 
 console.log('\ncaptainPerkBoost');

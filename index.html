@@ -267,12 +267,19 @@
 
     /* ── RESPONSIVE ── */
     @media (max-width: 480px) {
-      /* Draft pick row and AI reveal: single column, pick area scrolls */
-      .pick-cards-row { grid-template-columns: 1fr; gap: 8px; }
-      .pick-area { max-height: 62vh; overflow-y: auto; }
+      /* Draft pick row stays 3-col on mobile — needed for drag target visibility */
+      .pick-cards-row { grid-template-columns: repeat(3, 1fr); gap: 6px; }
+      .pick-area { overflow-y: visible; }
       .ai-reveal-cards { grid-template-columns: 1fr; max-width: 300px; }
       /* Captain cards (also 3-up) */
       .captain-cards { grid-template-columns: 1fr; }
+      /* Compact pod slots on small screens */
+      .pod-slot { width: 54px; min-height: 58px; }
+      .pod-slot-inner { padding: 3px 2px 2px; gap: 1px; }
+      .pod-slot-name { font-size: 8px; }
+      .pod-slot-year { font-size: 7px; }
+      .captain-hub-node { width: 70px; min-height: 70px; }
+      .squad-hub-wrap { gap: 6px; padding: 3px 6px 4px; }
       /* Constrain tall trading-card to a readable height in single-column contexts */
       .pick-cards-row .player-card,
       .ai-reveal-cards .player-card { aspect-ratio: unset; min-height: 130px; max-height: 180px; }
@@ -314,6 +321,41 @@
     /* Empty slot placeholder */
     .pick-slot-empty { min-height: 44px; border: 1px dashed rgba(255,255,255,.1); border-radius: 5px; display: flex; align-items: center; justify-content: center; }
     .pse-num { font-size: 10px; color: var(--text-dim); font-weight: 600; }
+
+    /* ── POD BUILDER (captain hub + 3 pods) ── */
+    .squad-hub-area { position: relative; }
+    .squad-hub-wrap { display: flex; flex-direction: column; align-items: center; gap: 8px; padding: 4px 8px 6px; }
+    .pod-row-top, .pod-row-bot { display: flex; gap: 10px; justify-content: center; align-items: flex-start; }
+    .pod-row-mid { display: flex; justify-content: center; }
+    .pod-group { display: flex; flex-direction: column; align-items: center; gap: 3px; }
+    .pod-label { font-size: 8px; font-weight: 800; text-transform: uppercase; letter-spacing: .1em; color: var(--text-dim); }
+    .pod-slots { display: grid; grid-template-columns: 1fr 1fr; gap: 4px; }
+    .pod-slot { width: 64px; min-height: 68px; border: 1px dashed rgba(255,255,255,.13); border-radius: 7px; display: flex; flex-direction: column; align-items: center; justify-content: center; position: relative; transition: border-color .12s, background .12s; box-sizing: border-box; }
+    .pod-slot.filled { cursor: grab; border-style: solid; border-width: 1.5px; }
+    .pod-slot.filled:active { cursor: grabbing; }
+    .pod-slot.drop-ok { border-color: var(--green) !important; border-style: solid !important; background: rgba(34,197,94,.06); }
+    .pod-slot-inner { display: flex; flex-direction: column; align-items: center; gap: 1px; padding: 4px 3px 3px; width: 100%; }
+    .pod-slot-name { font-size: 9px; font-weight: 700; line-height: 1.2; text-align: center; width: 100%; padding: 0 2px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .pod-slot-year { font-size: 8px; color: var(--gold); }
+    .pod-slot-dot { position: absolute; top: 3px; right: 3px; width: 8px; height: 8px; border-radius: 50%; }
+    /* Captain hub node */
+    .captain-hub-node { width: 82px; min-height: 82px; border: 1.5px dashed rgba(201,168,76,.35); border-radius: 10px; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 5px 4px; gap: 2px; background: rgba(201,168,76,.03); transition: border-color .12s, background .12s; position: relative; box-sizing: border-box; }
+    .captain-hub-node.filled { border-style: solid; cursor: default; }
+    .captain-hub-node.drop-ok { border-color: var(--gold) !important; border-style: solid !important; background: rgba(201,168,76,.1); }
+    .captain-hub-badge { font-size: 7px; font-weight: 800; text-transform: uppercase; letter-spacing: .1em; color: rgba(201,168,76,.5); }
+    .captain-hub-name { font-size: 10px; font-weight: 700; text-align: center; color: var(--gold); line-height: 1.2; }
+    .captain-hub-years { font-size: 8px; color: var(--text-muted); }
+    .captain-hub-dot { position: absolute; top: 3px; right: 3px; width: 8px; height: 8px; border-radius: 50%; }
+    /* SVG connection lines overlay */
+    .conn-svg { position: absolute; inset: 0; pointer-events: none; overflow: visible; width: 100%; height: 100%; }
+    /* Drag ghost */
+    .drag-ghost { position: fixed; pointer-events: none; z-index: 999; border: 1.5px solid; border-radius: 5px; padding: 4px 8px; font-size: 10px; font-weight: 700; opacity: .88; transform: translate(-50%, -120%); white-space: nowrap; background: var(--surface2); }
+    /* Squad header row */
+    .squad-stat-row { display: flex; align-items: center; gap: 10px; padding: 3px 10px 0; font-size: 10px; }
+    .ssn-label { color: var(--text-dim); }
+    .ssn-val { color: var(--gold); font-weight: 700; }
+    /* Submit-to-pairings bar */
+    .pod-submit-bar { padding: 10px 12px 14px; background: var(--surface); border-top: 1px solid var(--border); display: flex; flex-direction: column; align-items: center; gap: 5px; }
 
     /* ── HELP BUTTON (persistent ?) ── */
     .help-btn { position: fixed; bottom: 16px; right: 16px; z-index: 90; width: 38px; height: 38px; border-radius: 50%; background: var(--surface2); border: 1px solid var(--border); color: var(--text-muted); font-size: 17px; font-weight: 700; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: background .15s, border-color .15s; box-shadow: 0 2px 10px rgba(0,0,0,.4); }
@@ -392,8 +434,8 @@
   // ─────────────────────────────────────────────────────────────────────────────
   // CONSTANTS
   // ─────────────────────────────────────────────────────────────────────────────
-  const STORAGE_KEY     = 'fourballs_state_v8';
-  const STORAGE_VERSION = 8;
+  const STORAGE_KEY     = 'fourballs_state_v9';
+  const STORAGE_VERSION = 9;
 
   const TIER_COLORS = {
     platinum: '#c084fc', gold: '#c9a84c', silver: '#94a3b8',
@@ -442,6 +484,7 @@
       pairingOptions: [],   // pre-computed options sorted by chemistry (best first)
       pairingIndex:   0,    // which option is currently displayed (cycles 0-3 on reshuffle)
       captain: null,
+      pods: [[null,null,null,null],[null,null,null,null],[null,null,null,null]],
       aiPicks: [],
       aiPairings: { fridayAM: [], fridayPM: [], saturdayAM: [], saturdayPM: [] },
       aiCaptain: null,
@@ -738,15 +781,24 @@
 
   function _pairKey(p1, p2) { return [p1.id, p2.id].sort().join('|'); }
 
-  function _scoreMatching(matching, format) {
+  // pods optional: if provided, same-pod pairs get a +5 bonus so the exhaustive
+  // matching search naturally prefers podmate pairings over equally-strong cross-pod ones.
+  function _scoreMatching(matching, format, pods) {
     return matching.reduce((s, [a, b]) => {
-      return s + (a && b ? computeChemistry(a, b, PLAYERS, CUP_RESULTS) : 0);
+      if (!a || !b) return s;
+      let score = computeChemistry(a, b, [], CUP_RESULTS);
+      if (pods) {
+        const pa = pods.findIndex(pod => pod.some(p => p && p.name === a.name));
+        const pb = pods.findIndex(pod => pod.some(p => p && p.name === b.name));
+        if (pa >= 0 && pa === pb) score += 5;
+      }
+      return s + score;
     }, 0);
   }
 
   // Generate 2 sessions for one format given per-player appearance counts.
   // optionSeed varies which "1-appearance" players go to session 1 vs session 2.
-  function _generateFormatSessions(picks, countMap, format, optionSeed) {
+  function _generateFormatSessions(picks, countMap, format, optionSeed, pods) {
     const both = picks.filter(p => countMap[p.id] === 2);
     const once = picks.filter(p => countMap[p.id] === 1);
 
@@ -764,7 +816,7 @@
     // Best matching for session 1 (exhaustive over 105 options)
     const matchings1 = _perfectMatchings(sess1);
     const best1 = matchings1.reduce((b, m) =>
-      _scoreMatching(m, format) > _scoreMatching(b, format) ? m : b, matchings1[0]);
+      _scoreMatching(m, format, pods) > _scoreMatching(b, format, pods) ? m : b, matchings1[0]);
 
     // Session 2: avoid repeating pairs from session 1 (first relaxation: allow cross-format repeats)
     const used = new Set(best1.map(([a, b]) => _pairKey(a, b)));
@@ -772,18 +824,19 @@
     const valid2  = matchings2.filter(m => m.every(([a, b]) => !used.has(_pairKey(a, b))));
     const pool2   = valid2.length ? valid2 : matchings2; // fallback: allow repeat if no valid option
     const best2   = pool2.reduce((b, m) =>
-      _scoreMatching(m, format) > _scoreMatching(b, format) ? m : b, pool2[0]);
+      _scoreMatching(m, format, pods) > _scoreMatching(b, format, pods) ? m : b, pool2[0]);
 
     return [best1, best2];
   }
 
   // Compute one complete pairing option using a given seed.
-  function _computeOneOption(picks, seed) {
+  // pods optional: passed to _scoreMatching to weight same-pod pairs higher.
+  function _computeOneOption(picks, seed, pods) {
     const { counts, effMax } = _assignMatchCounts(picks);
 
     const { fs, fb } = _splitFormatCounts(picks, counts, effMax);
-    const [fridayAM, saturdayAM] = _generateFormatSessions(picks, fs, 'foursomes', seed);
-    const [fridayPM, saturdayPM] = _generateFormatSessions(picks, fb, 'fourball',  seed);
+    const [fridayAM, saturdayAM] = _generateFormatSessions(picks, fs, 'foursomes', seed, pods);
+    const [fridayPM, saturdayPM] = _generateFormatSessions(picks, fb, 'fourball',  seed, pods);
 
     // Track appearance counts to identify fatigued players (4 team matches)
     const appearances = {};
@@ -795,20 +848,21 @@
       .filter(p => (appearances[p.id] || 0) >= 4)
       .map(p => p.id);
 
-    const score = _scoreMatching(fridayAM,   'foursomes') +
-                  _scoreMatching(saturdayAM, 'foursomes') +
-                  _scoreMatching(fridayPM,   'fourball')  +
-                  _scoreMatching(saturdayPM, 'fourball');
+    const score = _scoreMatching(fridayAM,   'foursomes', pods) +
+                  _scoreMatching(saturdayAM, 'foursomes', pods) +
+                  _scoreMatching(fridayPM,   'fourball',  pods) +
+                  _scoreMatching(saturdayPM, 'fourball',  pods);
 
     return { fridayAM, fridayPM, saturdayAM, saturdayPM, _score: score, _fatiguedIds: fatiguedIds };
   }
 
   // Compute up to N distinct options sorted by chemistry (best first).
-  // Pre-computed so reshuffle is instant.
-  function computePairingOptions(picks, n = 4) {
+  // pods optional (human team only): passed through to weight pod-mate pairings.
+  // AI always passes pods=null (no pod screen).
+  function computePairingOptions(picks, n = 4, pods = null) {
     const options = [], seen = new Set();
     for (let seed = 0; options.length < n && seed < n * 4; seed++) {
-      const opt = _computeOneOption(picks, seed);
+      const opt = _computeOneOption(picks, seed, pods);
       if (!opt) break;
       const fp = [...opt.fridayAM, ...opt.saturdayAM, ...opt.fridayPM, ...opt.saturdayPM]
         .map(([a, b]) => a && b ? _pairKey(a, b) : 'null').sort().join(',');
@@ -1180,6 +1234,7 @@
       // captain screen, and no separate one-shot AI captain draw either.
       G.aiCaptain   = null;
       G.captain     = null;
+      G.pods        = [[null,null,null,null],[null,null,null,null],[null,null,null,null]];
       G.phase       = 'draft';
       G.currentRound = 1;
       G.seenNames   = [];
@@ -1233,90 +1288,249 @@
   }
 
   // ─────────────────────────────────────────────────────────────────────────────
-  // SCREEN: DRAFT
+  // POD BUILDER — helpers
   // ─────────────────────────────────────────────────────────────────────────────
-  function renderDraft() {
-    const round = G.currentRound;
-    const cards = G.currentCards;
 
-    // 12-slot team board: filled picks + chem dot when 2+ players drafted
-    const slotsHTML = Array.from({ length: 12 }, (_, i) => {
-      if (i < G.picks.length) {
-        const p = G.picks[i];
-        let chemDotHTML = '';
-        if (G.picks.length >= 2) {
-          const others = G.picks.filter((_, j) => j !== i);
-          const scores = others.map(ep => computeChemistry(p, ep, PLAYERS, CUP_RESULTS));
-          const avg = Math.round(scores.reduce((a, b) => a + b, 0) / scores.length);
-          chemDotHTML = `<div class="pp-chem-chip ${chemClass(avg)}">${avg}</div>`;
-        }
-        return playerPickedHTML(p, chemDotHTML);
+  // Returns [podIdx, slotIdx] of the first empty pod slot, or [-1,-1].
+  function findFirstEmptyPodSlot() {
+    for (let pi = 0; pi < 3; pi++) {
+      for (let si = 0; si < 4; si++) {
+        if (!G.pods[pi][si]) return [pi, si];
       }
-      return `<div class="pick-slot-empty"><span class="pse-num">${i + 1}</span></div>`;
-    }).join('');
-
-    const captainStatusHTML = G.captain
-      ? `Captain: <strong>${G.captain.name}</strong>`
-      : `Captain: <span style="color:var(--text-dim)">Not yet selected</span>`;
-    const roundLabel = (G.picks.length === 12 && G.captain === null)
-      ? 'Round 13 — Choose Your Captain'
-      : `Round ${round} of 13 — Choose`;
-
-    document.getElementById('app').innerHTML = `
-      <div class="draft-full">
-        <div class="page-header">
-          <span class="page-title">Fourballs</span>
-          <span class="ticker-score">Round ${round} of 13</span>
-          <span style="flex:1"></span>
-          <span style="font-size:11px;color:var(--text-dim)">${G.side}</span>
-        </div>
-
-        ${courseProfileHTML(G.venue, G.captain)}
-
-        <div class="draft-team-area">
-          <div style="padding:4px 12px 2px;font-size:9px;text-transform:uppercase;letter-spacing:.07em;color:var(--text-dim);">Your Squad — ${G.picks.length}/12 · ${captainStatusHTML}</div>
-          <div class="picks-grid">${slotsHTML}</div>
-        </div>
-
-        <div class="pick-area">
-          <div class="pick-round-label">${roundLabel}</div>
-          <div class="pick-cards-row">
-            ${cards.map(c => isCaptainCard(c) ? captainCardHTML(c) : playerCardHTML(c, true)).join('')}
-          </div>
-        </div>
-      </div>`;
-
-    document.querySelectorAll('[data-pid]').forEach(el => {
-      el.addEventListener('click', () => {
-        const p = PLAYERS.find(x => x.id === el.dataset.pid);
-        if (p) handlePick(p);
-      });
-    });
-    document.querySelectorAll('[data-cid]').forEach(el => {
-      el.addEventListener('click', () => {
-        const c = CAPTAINS.find(x => x.id === el.dataset.cid);
-        if (c) handlePick(c);
-      });
-    });
+    }
+    return [-1, -1];
   }
 
-  // Handles either a player pick (fills one of the 12 player slots) or a captain
-  // pick (fills the separate captain slot — never consumes a player slot).
-  // The AI drafts the same 13-slot structure in parallel, one action per human
-  // round, via the same generateRoundCardsFor/aiBestFromCards path — it stops
-  // acting once it too has 12 players + a captain (aiIsDone below).
-  function handlePick(item) {
-    const captainPicked = isCaptainCard(item);
-    if (captainPicked) { G.captain = item; } else { G.picks.push(item); }
+  // Small polo icon SVG for a pod slot (32px, tier-colored, era-saturated).
+  function podShirtSVG(p) {
+    const tc  = TIER_COLORS[p.tier] || '#888';
+    const sat = Math.min(1, Math.max(0.45, 0.45 + (p.year - 1999) / 19 * 0.55));
+    return `<svg viewBox="0 0 24 24" width="30" height="30" fill="none" stroke="${tc}" stroke-width="1.15" stroke-linecap="round" stroke-linejoin="round" style="filter:saturate(${sat.toFixed(2)})"><path d="M9 3L4 6v4l3.5-1V20h9V9l3.5 1V6L21 3l-6 0"/><path d="M9 3c0 2 1.5 3 3 3s3-1 3-3"/></svg>`;
+  }
+
+  // Small blazer icon SVG for the captain hub.
+  function podJacketSVG(c) {
+    const tc = TIER_COLORS[c.tier] || TIER_COLORS.gold;
+    return `<svg viewBox="0 0 24 24" width="38" height="38" fill="none" stroke="${tc}" stroke-width="0.9" stroke-linecap="round" stroke-linejoin="round"><path d="M9 3L4 6v4l3.5-1V20h9V9l3.5 1V6L21 3"/><path d="M9 3c0 1.5 1.5 2.5 3 2.5S15 4.5 15 3"/><circle cx="12" cy="12" r="0.65" fill="${tc}"/><circle cx="12" cy="16" r="0.65" fill="${tc}"/><circle cx="15.3" cy="8.6" r="0.9" fill="#c9a84c"/></svg>`;
+  }
+
+  // HTML for one pod slot (filled or empty).
+  function podSlotHTML(pi, si) {
+    const p = G.pods[pi][si];
+    if (!p) {
+      return `<div class="pod-slot empty" data-pod="${pi}" data-slot="${si}"></div>`;
+    }
+    const tc = TIER_COLORS[p.tier] || '#888';
+    const podmates = G.pods[pi].filter((x, i) => x && i !== si);
+    const { tier: chemTier } = computePlayerChemScore(p, podmates, [], CUP_RESULTS, G.captain);
+    const dotColor = chemTier === 'green' ? '#22c55e' : chemTier === 'yellow' ? '#eab308' : '#ef4444';
+    const lastName = p.name.split(' ').pop();
+    return `<div class="pod-slot filled" data-pod="${pi}" data-slot="${si}" style="border-color:${tc}44">
+      <div class="pod-slot-dot" style="background:${dotColor}"></div>
+      <div class="pod-slot-inner">
+        ${podShirtSVG(p)}
+        <div class="pod-slot-name" style="color:${tc}">${lastName}</div>
+        <div class="pod-slot-year">${p.year}</div>
+      </div>
+    </div>`;
+  }
+
+  // HTML for the captain hub node.
+  function captainHubHTML() {
+    const c = G.captain;
+    if (!c) {
+      return `<div class="captain-hub-node empty" id="captain-hub-node">
+        <div class="captain-hub-badge">Captain</div>
+        <div style="font-size:8px;color:var(--text-dim);text-align:center;line-height:1.4;margin-top:4px">Drop<br>here</div>
+      </div>`;
+    }
+    const tc = TIER_COLORS[c.tier] || TIER_COLORS.gold;
+    const allPlayers = G.pods.flat().filter(Boolean);
+    const { tier: capTier } = computeCaptainChemScore(c, allPlayers, [], G.venue, CUP_RESULTS);
+    const dotColor = capTier === 'green' ? '#22c55e' : capTier === 'yellow' ? '#eab308' : '#ef4444';
+    const lastName = c.name.split(' ').pop();
+    const yearStr  = (c.years || []).join(', ');
+    return `<div class="captain-hub-node filled" id="captain-hub-node" style="border-color:${tc}">
+      <div class="captain-hub-dot" style="background:${dotColor}"></div>
+      <div class="captain-hub-badge" style="color:${tc}">CAPTAIN</div>
+      ${podJacketSVG(c)}
+      <div class="captain-hub-name">${lastName}</div>
+      <div class="captain-hub-years">${yearStr}</div>
+    </div>`;
+  }
+
+  // Full squad hub area HTML (SVG + 3 pods + captain hub).
+  function squadHubHTML() {
+    const podGroup = (pi, label) => `
+      <div class="pod-group" data-pod-group="${pi}">
+        <div class="pod-label">Pod ${label}</div>
+        <div class="pod-slots">
+          ${[0,1,2,3].map(si => podSlotHTML(pi, si)).join('')}
+        </div>
+      </div>`;
+    return `<div class="squad-hub-area" id="squad-hub-area">
+      <svg class="conn-svg" id="conn-svg"></svg>
+      <div class="squad-hub-wrap">
+        <div class="pod-row-top">${podGroup(0, 'A')}</div>
+        <div class="pod-row-mid">${captainHubHTML()}</div>
+        <div class="pod-row-bot">${podGroup(1, 'B')}${podGroup(2, 'C')}</div>
+      </div>
+    </div>`;
+  }
+
+  // Redraws SVG connection lines after any pod state change.
+  function updateConnectionLines() {
+    const area = document.getElementById('squad-hub-area');
+    const svg  = document.getElementById('conn-svg');
+    if (!area || !svg) return;
+    const aRect = area.getBoundingClientRect();
+    svg.innerHTML = '';
+    svg.setAttribute('width',  aRect.width);
+    svg.setAttribute('height', aRect.height);
+
+    function ctr(el) {
+      const r = el.getBoundingClientRect();
+      return { x: r.left + r.width / 2 - aRect.left, y: r.top + r.height / 2 - aRect.top };
+    }
+    function drawLine(c1, c2, stroke, dashed) {
+      const el = document.createElementNS('http://www.w3.org/2000/svg', 'line');
+      el.setAttribute('x1', c1.x); el.setAttribute('y1', c1.y);
+      el.setAttribute('x2', c2.x); el.setAttribute('y2', c2.y);
+      el.setAttribute('stroke', stroke);
+      el.setAttribute('stroke-width', '1.5');
+      el.setAttribute('stroke-linecap', 'round');
+      el.setAttribute('opacity', '0.55');
+      if (dashed) el.setAttribute('stroke-dasharray', '4 3');
+      svg.appendChild(el);
+    }
+
+    // Pod-to-pod chemistry lines
+    G.pods.forEach((pod, pi) => {
+      for (let i = 0; i < 4; i++) {
+        for (let j = i + 1; j < 4; j++) {
+          if (!pod[i] || !pod[j]) continue;
+          const el1 = document.querySelector(`[data-pod="${pi}"][data-slot="${i}"]`);
+          const el2 = document.querySelector(`[data-pod="${pi}"][data-slot="${j}"]`);
+          if (!el1 || !el2) continue;
+          const chem = computeChemistry(pod[i], pod[j], [], CUP_RESULTS);
+          const stroke = chem >= 2 ? '#22c55e' : chem >= 1 ? '#eab308' : '#ef4444';
+          drawLine(ctr(el1), ctr(el2), stroke, false);
+        }
+      }
+    });
+
+    // Captain-to-pod lines (gold dashed)
+    if (G.captain) {
+      const capNode = document.getElementById('captain-hub-node');
+      if (capNode) {
+        const capCtr = ctr(capNode);
+        [0, 1, 2].forEach(pi => {
+          const podEl = document.querySelector(`[data-pod-group="${pi}"]`);
+          if (!podEl) return;
+          drawLine(capCtr, ctr(podEl), '#c9a84c', true);
+        });
+      }
+    }
+  }
+
+  // ─────────────────────────────────────────────────────────────────────────────
+  // DRAG-AND-DROP SYSTEM
+  // ─────────────────────────────────────────────────────────────────────────────
+  let _drag = null; // { card, isCapt, source: {type,pi,si}, ghost, sourceEl }
+
+  function _startDrag(e, card, source, sourceEl) {
+    e.preventDefault();
+    const tc    = TIER_COLORS[card.tier] || '#888';
+    const ghost = document.createElement('div');
+    ghost.className = 'drag-ghost';
+    ghost.style.borderColor = tc;
+    ghost.style.color = tc;
+    ghost.textContent = card.name.split(' ').pop() + (card.year ? ` '${String(card.year).slice(2)}` : '');
+    ghost.style.left = e.clientX + 'px';
+    ghost.style.top  = e.clientY + 'px';
+    document.body.appendChild(ghost);
+    sourceEl.style.opacity = '0.3';
+    _drag = { card, isCapt: isCaptainCard(card), source, ghost, sourceEl };
+    try { e.target.setPointerCapture(e.pointerId); } catch(_) {}
+  }
+
+  function _moveGhost(e) {
+    if (!_drag) return;
+    e.preventDefault();
+    _drag.ghost.style.left = e.clientX + 'px';
+    _drag.ghost.style.top  = e.clientY + 'px';
+    // Highlight valid drop targets
+    document.querySelectorAll('.pod-slot.drop-ok, .captain-hub-node.drop-ok').forEach(el => el.classList.remove('drop-ok'));
+    if (_drag.isCapt) {
+      document.getElementById('captain-hub-node')?.classList.add('drop-ok');
+    } else {
+      document.querySelectorAll('.pod-slot').forEach(el => el.classList.add('drop-ok'));
+    }
+  }
+
+  function _endDrag(e) {
+    if (!_drag) return;
+    _drag.ghost.style.pointerEvents = 'none';
+    const under = document.elementFromPoint(e.clientX, e.clientY);
+    _drag.ghost.remove();
+    document.querySelectorAll('.pod-slot.drop-ok, .captain-hub-node.drop-ok').forEach(el => el.classList.remove('drop-ok'));
+
+    const slotEl = under?.closest('[data-pod][data-slot]');
+    const hubEl  = under?.closest('#captain-hub-node');
+
+    if (_drag.isCapt && hubEl) {
+      _dropOnHub();
+    } else if (!_drag.isCapt && slotEl) {
+      _dropOnSlot(parseInt(slotEl.dataset.pod), parseInt(slotEl.dataset.slot));
+    } else {
+      // Invalid drop — restore source opacity
+      if (_drag.sourceEl) _drag.sourceEl.style.opacity = '';
+      _drag = null;
+    }
+  }
+
+  function _dropOnHub() {
+    const { card, source } = _drag;
+    _drag = null;
+    G.captain = card;
+    if (source.type === 'tray') {
+      _advanceDraft(card, true);
+    } else {
+      save(); render();
+    }
+  }
+
+  function _dropOnSlot(pi, si) {
+    const { card, source } = _drag;
+    _drag = null;
+    const existing = G.pods[pi][si];
+
+    if (source.type === 'tray') {
+      G.pods[pi][si] = card;
+      G.picks.push(card);
+      if (existing) {
+        const [fp, fs] = findFirstEmptyPodSlot();
+        if (fp >= 0) G.pods[fp][fs] = existing;
+      }
+      _advanceDraft(card, false);
+    } else {
+      // Rearrange: swap source slot with target slot
+      G.pods[pi][si] = card;
+      G.pods[source.pi][source.si] = existing; // existing may be null
+      save(); render();
+    }
+  }
+
+  // Advances draft after a pick (AI pick + phase → ai_reveal).
+  function _advanceDraft(item, captainPicked) {
     G.lastPick          = item;
     G.lastPickIsCaptain = captainPicked;
-
     const aiIsDone = (G.aiPicks.length === 12 && G.aiCaptain !== null);
     if (!aiIsDone) {
       const aiCards = generateRoundCardsFor(opp(G.side), G.aiPicks, G.aiCaptain, G.aiSeenNames);
       G.aiRoundCards = aiCards;
-      const aiPick = aiBestFromCards(aiCards, G.aiPicks);
-      G.aiRoundPick = aiPick;
+      const aiPick   = aiBestFromCards(aiCards, G.aiPicks);
+      G.aiRoundPick  = aiPick;
       if (aiPick) {
         if (isCaptainCard(aiPick)) { G.aiCaptain = aiPick; } else { G.aiPicks.push(aiPick); }
       }
@@ -1324,10 +1538,104 @@
       G.aiRoundCards = [];
       G.aiRoundPick  = null;
     }
-
     G.phase = 'ai_reveal';
-    save();
-    render();
+    save(); render();
+  }
+
+  // Initialise the document-level drag listeners once.
+  (function initDrag() {
+    document.addEventListener('pointermove', _moveGhost, { passive: false });
+    document.addEventListener('pointerup',   _endDrag);
+    document.addEventListener('pointercancel', () => {
+      if (_drag) { _drag.ghost?.remove(); if (_drag.sourceEl) _drag.sourceEl.style.opacity = ''; _drag = null; }
+    });
+    // Delegate pointerdown from body so re-renders don't break listeners.
+    document.body.addEventListener('pointerdown', e => {
+      const trayCard = e.target.closest('.tray-card');
+      const podSlot  = e.target.closest('.pod-slot.filled');
+      if (trayCard) {
+        const pid = trayCard.dataset.pid, cid = trayCard.dataset.cid;
+        const card = pid ? PLAYERS.find(p => p.id === pid) : CAPTAINS.find(c => c.id === cid);
+        if (card) _startDrag(e, card, { type: 'tray' }, trayCard);
+      } else if (podSlot) {
+        const pi = parseInt(podSlot.dataset.pod), si = parseInt(podSlot.dataset.slot);
+        const card = G.pods[pi]?.[si];
+        if (card) _startDrag(e, card, { type: 'pod', pi, si }, podSlot);
+      }
+    });
+  })();
+
+  // ─────────────────────────────────────────────────────────────────────────────
+  // SCREEN: DRAFT
+  // ─────────────────────────────────────────────────────────────────────────────
+  function renderDraft() {
+    const round         = G.currentRound;
+    const cards         = G.currentCards;
+    const draftComplete = G.picks.length === 12 && G.captain !== null;
+
+    // Running Talent + Chem numbers
+    const talent = G.picks.reduce((s, p) => s + getTalentScore(p.tier), 0);
+    const chem   = computeTeamChemScore(G.pods, G.captain, G.venue, CUP_RESULTS);
+
+    const captainLabel = G.captain
+      ? `<strong>${G.captain.name}</strong>`
+      : `<span style="color:var(--text-dim)">No Captain</span>`;
+
+    let bottomHTML;
+    if (draftComplete) {
+      bottomHTML = `<div class="pod-submit-bar">
+        <div style="font-size:10px;color:var(--text-muted)">Rearrange pods to optimize chemistry, then submit</div>
+        <button class="btn btn-gold" id="submit-pairings-btn" style="width:100%;max-width:320px">Submit to Pairings →</button>
+      </div>`;
+    } else {
+      const roundLabel = (G.picks.length === 12 && G.captain === null)
+        ? 'Round 13 — Choose Your Captain'
+        : `Round ${round} of 13 — Drag a card to a pod slot`;
+      const trayHTML = cards.map(c => {
+        const isCapt = isCaptainCard(c);
+        const html   = isCapt ? captainCardHTML(c) : playerCardHTML(c, true);
+        const attr   = isCapt ? `data-cid="${c.id}"` : `data-pid="${c.id}"`;
+        return `<div class="tray-card" ${attr} style="cursor:grab">${html}</div>`;
+      }).join('');
+      bottomHTML = `<div class="pick-area">
+        <div class="pick-round-label">${roundLabel}</div>
+        <div class="pick-cards-row">${trayHTML}</div>
+      </div>`;
+    }
+
+    document.getElementById('app').innerHTML = `
+      <div class="draft-full">
+        <div class="page-header">
+          <span class="page-title">Fourballs</span>
+          <span class="ticker-score">Round ${Math.min(round, 13)} of 13</span>
+          <span style="flex:1"></span>
+          <span style="font-size:11px;color:var(--text-dim)">${G.side}</span>
+        </div>
+        ${courseProfileHTML(G.venue, G.captain)}
+        <div class="draft-team-area">
+          <div class="squad-stat-row">
+            <span><span class="ssn-label">Talent</span> <span class="ssn-val">${talent}</span></span>
+            <span><span class="ssn-label">Chem</span> <span class="ssn-val">${chem}</span></span>
+            <span style="flex:1"></span>
+            <span style="font-size:9px;color:var(--text-dim)">${G.picks.length}/12 · Captain: ${captainLabel}</span>
+          </div>
+          ${squadHubHTML()}
+        </div>
+        ${bottomHTML}
+      </div>`;
+
+    if (draftComplete) {
+      document.getElementById('submit-pairings-btn').addEventListener('click', submitToPairings);
+    }
+    requestAnimationFrame(updateConnectionLines);
+  }
+
+  // handlePick retained for Advanced Mode and any legacy code paths; pod builder
+  // uses _advanceDraft directly after pod placement via drag-and-drop.
+  function handlePick(item) {
+    const captainPicked = isCaptainCard(item);
+    if (captainPicked) { G.captain = item; } else { G.picks.push(item); }
+    _advanceDraft(item, captainPicked);
   }
 
   // ─────────────────────────────────────────────────────────────────────────────
@@ -1360,7 +1668,7 @@
         <div class="ai-reveal-sub">${aiDone ? "Opponent's squad is complete" : "Here's what they had to choose from"}</div>
         ${myPick ? `<div class="ai-your-pick">${myPickIsCaptain ? 'Your captain' : 'Your pick'}: <strong>${myPick.name}</strong>${myPickIsCaptain ? '' : ` (${myPick.year})`}</div>` : ''}
         <button class="btn btn-gold" id="ai-continue-btn" style="margin:8px 0 4px;">
-          ${isLast ? 'See Your Pairings →' : `Continue to Round ${round + 1} →`}
+          ${isLast ? 'Arrange Your Squad →' : `Continue to Round ${round + 1} →`}
         </button>
         ${courseProfileHTML(G.venue, G.captain)}
         <div class="ai-reveal-cards">${cardsHTML || (aiDone ? '' : '<p style="color:var(--text-muted)">No options available</p>')}</div>
@@ -1370,19 +1678,13 @@
   }
 
   function advanceFromAIReveal() {
-    // Draft ends once all 12 player slots AND the captain slot are filled —
-    // always 13 rounds total, regardless of which round the captain was taken in.
+    // Draft ends once all 12 player slots AND the captain slot are filled.
     if (G.picks.length === 12 && G.captain !== null) {
-      // Pre-compute 4 pairing options (best chemistry first); reshuffle cycles through them
-      G.pairingOptions = computePairingOptions(G.picks, 4);
-      G.pairingIndex   = 0;
-      G.pairings       = G.pairingOptions[0];
-      // AI always uses best option — no reshuffle
-      const aiOpts = computePairingOptions(G.aiPicks, 1);
-      G.aiPairings = aiOpts[0] || { fridayAM: [], fridayPM: [], saturdayAM: [], saturdayPM: [] };
-      G.phase = 'review';
+      // Return to draft screen — pod builder is now active, Submit to Pairings button appears.
+      G.currentCards = [];
+      G.phase = 'draft';
       save();
-      if (G.mode === 'advanced') { renderAdvancedPairing(); } else { render(); }
+      render();
     } else {
       G.currentRound = G.currentRound + 1;
       G.currentCards = nextRoundCards();
@@ -1390,6 +1692,17 @@
       save();
       render();
     }
+  }
+
+  function submitToPairings() {
+    G.pairingOptions = computePairingOptions(G.picks, 4, G.pods);
+    G.pairingIndex   = 0;
+    G.pairings       = G.pairingOptions[0];
+    const aiOpts = computePairingOptions(G.aiPicks, 1, null);
+    G.aiPairings = aiOpts[0] || { fridayAM: [], fridayPM: [], saturdayAM: [], saturdayPM: [] };
+    G.phase = 'review';
+    save();
+    if (G.mode === 'advanced') { renderAdvancedPairing(); } else { render(); }
   }
 
 
@@ -1938,7 +2251,8 @@
       </div>
       <div class="share-card fade-in" style="margin:0 14px 16px;">
         <h3>Match Summary</h3>
-        <p><strong>Final Score:</strong> ${G.side} ${r.finalScore.user} — ${oppSide} ${r.finalScore.ai}</p>
+        <p><strong>Match Score:</strong> ${G.side} ${r.finalScore.user} — ${oppSide} ${r.finalScore.ai}</p>
+        <p><strong>Performance Rating:</strong> ${computeTeamChemScore(G.pods, G.captain, G.venue, CUP_RESULTS) + G.picks.reduce((s,p) => s + getTalentScore(p.tier), 0) + r.finalScore.user} <span style="font-size:11px;color:var(--text-dim)">(Talent + Chem + Cup pts)</span></p>
         <p><strong>Venue:</strong> ${G.venue.name}</p>
         <p><strong>Your Captain:</strong> ${G.captain?.name || '—'}</p>
         <p><strong>Your Star:</strong> ${bestMy?.name} (${bestMy?.year})</p>

@@ -4,8 +4,10 @@ const {
   calculateVenueFit,
   dominantStyleTag,
   computeChemistry,
+  computePlayerCaptainConnection,
   computePlayerChemScore,
   computeCaptainChemScore,
+  computeTeamChemScore,
   captainPerkBoost,
   calculateMatchProbability,
   simulateMatch,
@@ -450,6 +452,70 @@ console.log('\ncomputeCaptainChemScore');
   const cr2 = { '2018': 'EUR', '2023': 'EUR' };
   const twoWinScore = computeCaptainChemScore(twoWinCap, [], [], null, cr2);
   assert('captain with 2 wins gets 2 cup win points', twoWinScore.points === 2);
+}
+
+console.log('\ncomputePlayerCaptainConnection');
+{
+  const eurCap2018 = { id:'ec18', name:'EUR Cap 2018', nationality:'EUR', years:['2018','2021'], perks:[], special:null };
+  const playerLed  = makeTestPlayer('gold', { id:'pl1', name:'Led Player',  nationality:'EUR', year:2018, made_team:true  });
+  const playerSnub = makeTestPlayer('silver',{ id:'pl2', name:'Snub Player', nationality:'EUR', year:2018, made_team:false });
+  const playerWrong= makeTestPlayer('silver',{ id:'pl3', name:'Wrong Year',  nationality:'EUR', year:2004, made_team:true  });
+  const playerUSA  = makeTestPlayer('gold',  { id:'pl4', name:'USA Player',  nationality:'USA', year:2018, made_team:true  });
+
+  // Led together in 2018 (EUR win): +1 led, +1 won = 2
+  assert('led+won = 2', computePlayerCaptainConnection(playerLed, eurCap2018, CUP_RESULTS) === 2);
+
+  // Led together in 2021 (USA win): +1 led, 0 won = 1
+  const playerLed21 = makeTestPlayer('gold', { id:'pl21', name:'Led 21', nationality:'EUR', year:2021, made_team:true });
+  assert('led but not won = 1', computePlayerCaptainConnection(playerLed21, eurCap2018, CUP_RESULTS) === 1);
+
+  // Snubbed (made_team=false) → 0
+  assert('snubbed player: 0', computePlayerCaptainConnection(playerSnub, eurCap2018, CUP_RESULTS) === 0);
+
+  // Wrong year → 0
+  assert('wrong year: 0', computePlayerCaptainConnection(playerWrong, eurCap2018, CUP_RESULTS) === 0);
+
+  // Cross-nationality → 0
+  assert('cross-nationality: 0', computePlayerCaptainConnection(playerUSA, eurCap2018, CUP_RESULTS) === 0);
+
+  // Null guards
+  assert('null player: 0', computePlayerCaptainConnection(null, eurCap2018, CUP_RESULTS) === 0);
+  assert('null captain: 0', computePlayerCaptainConnection(playerLed, null, CUP_RESULTS) === 0);
+}
+
+console.log('\ncomputeTeamChemScore');
+{
+  const eurCap2018 = { id:'tcs_cap', name:'TCS Cap', nationality:'EUR', years:['2018'], perks:[], special:null };
+  // Pod of 4 EUR 2018 winners (teamWin1+teamWin2 + 2 more)
+  const tw3 = makeTestPlayer('gold', { id:'tcw3', name:'TC Win 3', nationality:'EUR', year:2018, made_team:true,
+    stat_driving_distance:75, stat_driving_accuracy:70, stat_greens_in_regulation:70, stat_scrambling:68, stat_birdie_rate:70, stat_pressure_index:65 });
+  const tw4 = makeTestPlayer('gold', { id:'tcw4', name:'TC Win 4', nationality:'EUR', year:2018, made_team:true,
+    stat_driving_distance:65, stat_driving_accuracy:70, stat_greens_in_regulation:70, stat_scrambling:99, stat_birdie_rate:70, stat_pressure_index:65 });
+
+  // Pod A: teamWin1, teamWin2, tw3, tw4 (all EUR 2018 winners)
+  // Pod B+C: empty
+  const pods = [[teamWin1, teamWin2, tw3, tw4], [null,null,null,null], [null,null,null,null]];
+  const mockVenue2018b = { year: 2018 };
+
+  const teamScore = computeTeamChemScore(pods, eurCap2018, mockVenue2018b, CUP_RESULTS);
+  // Each player: 3 pod-pair connections (some mix of 2-3 pts each) + captain connection (led+won=2)
+  // Total per player easily >= 4 → green tier → points + 11 reward
+  // Plus captain: venue(1) + 4 players(4) + 1 win(1) = 6 → yellow(10 reward) → 6+10=16
+  assert('well-connected 2018 EUR pod gives substantial score', teamScore > 40);
+
+  // Empty pods + no captain: 0
+  const emptyPods = [[null,null,null,null],[null,null,null,null],[null,null,null,null]];
+  assert('empty pods + null captain: 0', computeTeamChemScore(emptyPods, null, null, {}) === 0);
+
+  // null pods: 0
+  assert('null pods: 0', computeTeamChemScore(null, null, null, {}) === 0);
+
+  // computePlayerChemScore now accepts optional captain (backward compat)
+  const noCapScore = computePlayerChemScore(teamWin1, [teamWin2], [], CUP_RESULTS);
+  assert('computePlayerChemScore: no captain param still works', noCapScore.points >= 0);
+
+  const withCapScore = computePlayerChemScore(teamWin1, [teamWin2], [], CUP_RESULTS, eurCap2018);
+  assert('computePlayerChemScore: captain param adds points', withCapScore.points > noCapScore.points);
 }
 
 console.log('\ncaptainPerkBoost');

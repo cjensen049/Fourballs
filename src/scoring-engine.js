@@ -71,13 +71,31 @@ function computeChemistry(p1, p2, _allPlayers, cupResults) {
   return pts; // 0–3
 }
 
-// computePlayerChemScore — sum pairwise points across a player's pod (up to 3 podmates).
+// computePlayerCaptainConnection — pairwise connection between a player and their captain (0–2).
+// +1 if captain actually led this player (player.year in captain.years, same nat, made_team===true)
+// +1 if they also won that year together
+// No complementary styles: captains have no stat_* fields.
+function computePlayerCaptainConnection(player, captain, cupResults) {
+  if (!player || !captain) return 0;
+  const capYears = (captain.years || []).map(y => parseInt(y));
+  const pYear    = parseInt(player.year);
+  if (!capYears.includes(pYear))                  return 0;
+  if (player.nationality !== captain.nationality) return 0;
+  if (player.made_team !== true)                  return 0;
+  let pts = 1; // led together
+  if ((cupResults || {})[String(pYear)] === player.nationality) pts += 1; // won together
+  return pts; // 0–2
+}
+
+// computePlayerChemScore — total connection points for a player in their pod + captain connection.
+// Points = within-pod pairwise (up to 3 podmates) + computePlayerCaptainConnection (0–2 if captain provided).
 // Returns { points, tier: 'green'|'yellow'|'red', reward }.
-function computePlayerChemScore(player, podmates, allPlayers, cupResults) {
+function computePlayerChemScore(player, podmates, allPlayers, cupResults, captain) {
   let total = 0;
   for (const mate of (podmates || [])) {
     total += computeChemistry(player, mate, allPlayers, cupResults);
   }
+  if (captain) total += computePlayerCaptainConnection(player, captain, cupResults);
   if (total >= 4) return { points: total, tier: 'green',  reward: 11 };
   if (total >= 2) return { points: total, tier: 'yellow', reward:  6 };
   return               { points: total, tier: 'red',    reward:  0 };
@@ -110,6 +128,27 @@ function computeCaptainChemScore(captain, draftedPlayers, _allPlayers, venue, cu
   if (pts >= 8) return { points: pts, tier: 'green',  reward: 15 };
   if (pts >= 5) return { points: pts, tier: 'yellow', reward: 10 };
   return             { points: pts, tier: 'red',    reward:  0 };
+}
+
+// computeTeamChemScore — total chemistry contribution for the team.
+// Sums (connection_points + tier_reward) for all 12 players across pods + captain.
+// pods: [[p,p,p,p],[p,p,p,p],[p,p,p,p]] (null slots skipped)
+function computeTeamChemScore(pods, captain, venue, cupResults) {
+  if (!pods) return 0;
+  const cr = cupResults || {};
+  let total = 0;
+  for (const pod of pods) {
+    const filled = pod.filter(Boolean);
+    for (const player of filled) {
+      const podmates = filled.filter(p => p.name !== player.name);
+      const { points, reward } = computePlayerChemScore(player, podmates, [], cr, captain);
+      total += points + reward;
+    }
+  }
+  const allDrafted = pods.flat().filter(Boolean);
+  const { points: capPts, reward: capReward } = computeCaptainChemScore(captain, allDrafted, [], venue, cr);
+  total += capPts + capReward;
+  return total;
 }
 
 // ─── Captain perk boost ───────────────────────────────────────────────────────
@@ -444,8 +483,10 @@ if (typeof module !== 'undefined' && module.exports) {
     calculateVenueFit,
     dominantStyleTag,
     computeChemistry,
+    computePlayerCaptainConnection,
     computePlayerChemScore,
     computeCaptainChemScore,
+    computeTeamChemScore,
     captainPerkBoost,
     calculateMatchProbability,
     simulateMatch,

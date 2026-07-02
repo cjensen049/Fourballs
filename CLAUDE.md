@@ -18,7 +18,7 @@ and a dramatic session-by-session results reveal.
 * No backend, no API calls during gameplay
 * All game data is hardcoded in /data/ JSON files
 * Scoring logic lives exclusively in /src/scoring-engine.js
-* Game state persisted in localStorage (key: `fourballs\_state\_v3`)
+* Game state persisted in localStorage (key: `fourballs_state_v9`)
 
 ## Project Structure
 
@@ -76,9 +76,40 @@ chemistry\_system\_spec.md # ACTIVE implementation spec for the talent/chemistry
 * **Captain score**: `computeCaptainChemScore(captain, drafted, _, venue, cupResults)` — venue
   match +1, +1 per drafted player on a real roster the captain led, +1 per cup win by that captain.
   Tier: green ≥8 (+15), yellow 5–7 (+10), red 0–4 (+0).
+* **Player-captain connection**: `computePlayerCaptainConnection(player, captain, cupResults)` → 0–2 pts.
+  +1 if player's year is in captain.years, same nationality, made_team: true. +1 if that year was a win.
+  Captains have no stat_* fields so complementary styles do NOT apply to player-captain pairs.
+* **Team chem score**: `computeTeamChemScore(pods, captain, venue, cupResults)` → total number.
+  Sums (points + reward) for every player across all pods, plus captain's (points + reward). Used
+  for the live Chem counter and end-of-game Performance Rating.
 * In-match effect of rewards not yet wired — do not invent a conversion formula without design input.
-* In-draft chip UI not redesigned for pods yet — `chemClass` thresholds are on the 0–3 pairwise scale.
-* `chemistry\_system\_v2.md` is the authoritative spec; `chemistry\_system\_spec.md` is archived.
+* `chemistry_system_v2.md` is the authoritative spec; `chemistry_system_spec.md` is archived.
+
+## Pod Builder (Squad Hub — active during Draft screen)
+
+* The flat 4×3 slot grid is replaced by a captain hub + 3 pods of 4 player slots each.
+* Layout: Pod A above, captain hub (gold dashed border) center, Pods B and C below-left and below-right.
+* `G.pods = [[null,null,null,null],[null,null,null,null],[null,null,null,null]]` — 3 pods × 4 slots.
+  All 12 player slots live here; `G.picks` is still the authoritative flat pick list.
+* **Pick interaction is drag-only**: tray cards (`.tray-card[data-pid]` or `.tray-card[data-cid]`)
+  are dragged to pod slots or the captain hub. Click-to-pick no longer exists for the pod builder
+  (Advanced Mode still uses `handlePick()` but that is a separate flow not yet updated).
+* Pointer Events API (`pointerdown` / `pointermove` / `pointerup`) handles mouse and touch.
+  Ghost element (`.drag-ghost`) follows cursor; source opacity dims to 0.3 during drag.
+* Drop rules: player cards → pod slots only; captain cards → captain hub only. Invalid drops snap back.
+* Dropping on a filled slot displaces the existing player to the first empty pod slot.
+* After draft ends, rearranging pods (dragging pod-to-pod) is free until "Submit to Pairings".
+* **Submit to Pairings** button appears only when `G.picks.length === 12 && G.captain !== null`.
+  Calls `submitToPairings()` which runs `computePairingOptions(G.picks, 4, G.pods)` — pods param
+  threads a +5 bonus into `_scoreMatching` for same-pod pairs, nudging podmates into real matches.
+* SVG connection lines overlay the hub area (`.conn-svg`, `position:absolute; inset:0`):
+  — Between filled players in the same pod: green (chem ≥2), yellow (1), red (0)
+  — Captain to each pod group: gold dashed (not a chemistry read, kept visually distinct)
+* Each filled node shows a chem dot (green/yellow/red) based on current pod pairwise points.
+* After round 13, `advanceFromAIReveal()` returns to the draft screen (pod builder view) instead of
+  jumping to review — the "Arrange Your Squad →" button brings user back to rearrange before submit.
+* Cross-pod chemistry is intentionally absent — no lines or scoring across pod boundaries.
+* Advanced Mode is NOT updated for pods yet — deferred.
 
 ## Game Flow (in order)
 
@@ -87,10 +118,13 @@ chemistry\_system\_spec.md # ACTIVE implementation spec for the talent/chemistry
 3. Venue spinner — animated slot-machine draw from venues.json, reveals selected venue
 4. Draft — 13 rounds: 12 player slots + 1 dedicated captain slot, captain selection
 happens inside the draft itself (see Captain Pick below) — there is no standalone
-pre-draft captain screen
+pre-draft captain screen. Picks are made by dragging tray cards to pod slots or the
+captain hub (Pod Builder — see below).
 5. AI reveal after each round — see what the AI saw and who they picked
-6. Auto-assigned pairings → Review screen
-7. Simulation → Results
+6. After round 13: returns to draft/pod builder screen — user may rearrange pods freely,
+then clicks "Submit to Pairings" to advance
+7. Auto-assigned pairings → Review screen
+8. Simulation → Results
 
 ## Venue
 

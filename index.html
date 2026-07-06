@@ -117,14 +117,16 @@
     /* ── DRAFT LAYOUT ── */
     /* 4 grid rows: header / course-strip / team-board(grows) / pick-area */
     /* 100dvh = real visible viewport on mobile (accounts for address bar) */
-    .draft-full { display: grid; grid-template-rows: auto auto 1fr auto; height: 100vh; height: 100dvh; overflow: hidden; }
-    .draft-team-area { overflow-y: auto; min-height: 0; }
+    .draft-full { display: grid; grid-template-columns: minmax(0, 1fr); grid-template-rows: auto auto 1fr auto; height: 100vh; height: 100dvh; overflow: hidden; }
+    .draft-team-area { display: flex; flex-direction: column; justify-content: safe center; overflow-y: auto; min-height: 0; }
 
     /* ── DRAFT PICK AREA ── */
     .pick-area { padding: 8px 10px 10px; background: var(--surface); border-top: 1px solid var(--border); }
     .pick-round-label { font-size: 11px; color: var(--text-muted); margin-bottom: 6px; text-transform: uppercase; letter-spacing: .05em; }
-    /* 3 fixed-width shield columns, centred */
-    .pick-cards-row { display: grid; grid-template-columns: repeat(3, 56px); gap: 8px; justify-content: center; }
+    /* 3 fixed-width shield columns, spread out (wide gap) rather than scrunched
+       together — kept centred rather than edge-to-edge so the rightmost card
+       never sits under the fixed help button in the bottom-right corner. */
+    .pick-cards-row { display: grid; grid-template-columns: repeat(3, 60px); gap: 36px; justify-content: center; }
 
     /* ── PLAYER MINI (reused in pairing seats) ── */
     .player-mini { width: 100%; padding: 5px 8px; border-radius: 4px; border-left: 3px solid var(--tc, #444); background: var(--surface3); }
@@ -265,26 +267,6 @@
     .rc-tired { font-size: 13px; color: var(--halve); opacity: .7; }
     .rc-day-summary { padding: 7px 14px; font-size: 11px; color: var(--gold); font-style: italic; text-align: center; background: rgba(201,168,76,.04); }
 
-    /* ── RESPONSIVE ── */
-    @media (max-width: 480px) {
-      /* Draft tray: 3-col fixed-width shields, centred */
-      .pick-cards-row { grid-template-columns: repeat(3, 56px); gap: 8px; justify-content: center; }
-      .pick-area { overflow-y: visible; }
-      .ai-reveal-cards { grid-template-columns: 1fr; max-width: 300px; }
-      .captain-cards { grid-template-columns: 1fr; }
-      /* Pod slots scale down via CSS (viewBox stays 56×72, CSS scales the SVG) */
-      .pod-slots { grid-template-columns: 44px 44px; }
-      .pod-slot { width: 44px; height: 57px; }
-      .pod-slot > svg { width: 44px !important; height: 57px !important; }
-      .captain-hub-node { width: 44px; height: 44px; font-size: 0.85em; }
-      .captain-hub-name { font-size: 8px; }
-      .squad-hub-wrap { gap: 5px; padding: 2px 4px 4px; }
-      .pod-row-top, .pod-row-bot { gap: 8px; }
-      .pod-label { font-size: 7px; }
-      /* Constrain full player-cards (AI reveal) on mobile */
-      .ai-reveal-cards .player-card { aspect-ratio: unset; min-height: 130px; max-height: 180px; }
-    }
-
     /* ── UTILS ── */
     .spinner { width: 14px; height: 14px; border: 2px solid var(--border); border-top-color: var(--green-bright); border-radius: 50%; animation: spin .7s linear infinite; flex-shrink: 0; }
     @keyframes spin { to { transform: rotate(360deg); } }
@@ -319,28 +301,31 @@
     .pse-num { font-size: 10px; color: var(--text-dim); font-weight: 600; }
 
     /* ── POD BUILDER (captain hub + 3 pods) ── */
+    /* Radial "upside-down tri-star" layout: Pod A straight up from the hub,
+       Pod B/C spread wide left/right and only shallowly below the hub (not
+       stacked directly underneath), so the three divider lines fan out at
+       roughly even angles instead of bunching near-parallel by the hub. */
     .squad-hub-area { position: relative; }
-    .squad-hub-wrap { display: flex; flex-direction: column; align-items: center; gap: 8px; padding: 4px 8px 6px; }
-    .pod-row-top, .pod-row-bot { display: flex; gap: 10px; justify-content: center; align-items: flex-start; }
-    .pod-row-mid { display: flex; justify-content: center; }
+    .squad-hub-wrap { position: relative; width: 100%; height: 300px; margin: 0 auto; padding: 4px 8px 6px; }
+    .pod-row-top { position: absolute; top: 0; left: 50%; transform: translateX(-50%); display: flex; justify-content: center; }
+    .pod-row-mid { position: absolute; top: 171px; left: 50%; transform: translate(-50%, -50%); display: flex; justify-content: center; }
+    .pod-row-bot { position: absolute; inset: 0; }
+    .pod-row-bot .pod-group:nth-child(1) { position: absolute; top: 192px; left: calc(50% - 158px); }
+    .pod-row-bot .pod-group:nth-child(2) { position: absolute; top: 192px; left: calc(50% + 20px); }
     .pod-group { display: flex; flex-direction: column; align-items: center; gap: 3px; }
     .pod-label { font-size: 8px; font-weight: 800; text-transform: uppercase; letter-spacing: .1em; color: var(--text-dim); }
-    .pod-slots { display: grid; grid-template-columns: 56px 56px; gap: 4px; }
+    .pod-slots { display: grid; grid-template-columns: 60px 60px; gap: 18px; }
     .tray-card { cursor: grab; touch-action: none; user-select: none; -webkit-user-select: none; }
     /* Pod slot: transparent container, SVG handles all visuals */
-    .pod-slot { width: 56px; height: 72px; position: relative; display: flex; align-items: center; justify-content: center; touch-action: none; flex-shrink: 0; }
+    .pod-slot { width: 60px; height: 60px; position: relative; display: flex; align-items: center; justify-content: center; touch-action: none; flex-shrink: 0; }
     .pod-slot > svg { pointer-events: none; display: block; }
     .pod-slot.filled { cursor: grab; }
     .pod-slot.filled:active { cursor: grabbing; }
     .pod-slot.drop-ok { filter: drop-shadow(0 0 5px #22c55e); }
-    /* Captain hub: circle */
-    .captain-hub-node { width: 52px; height: 52px; border-radius: 50%; border: 2px dashed rgba(201,168,76,.45); display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 1px; background: rgba(201,168,76,.04); transition: border-color .12s, background .12s; position: relative; flex-shrink: 0; touch-action: none; }
-    .captain-hub-node.filled { border-style: solid; border-color: var(--gold); }
-    .captain-hub-node.drop-ok { box-shadow: 0 0 10px rgba(201,168,76,.55); border-color: var(--gold) !important; }
-    .captain-hub-badge { font-size: 6px; font-weight: 800; text-transform: uppercase; letter-spacing: .08em; color: rgba(201,168,76,.55); }
-    .captain-hub-name { font-size: 9px; font-weight: 700; text-align: center; color: var(--gold); line-height: 1.1; max-width: 46px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-    .captain-hub-years { font-size: 7px; color: var(--text-muted); }
-    .captain-hub-dot { position: absolute; top: 3px; right: 3px; width: 7px; height: 7px; border-radius: 50%; }
+    /* Captain hub: same shield shape as draft/pod cards, sized 10% larger (see HUB_SIZE) */
+    .captain-hub-node { width: 66px; height: 66px; position: relative; display: flex; align-items: center; justify-content: center; flex-shrink: 0; touch-action: none; }
+    .captain-hub-node > svg { pointer-events: none; display: block; }
+    .captain-hub-node.drop-ok { filter: drop-shadow(0 0 8px rgba(201,168,76,.7)); }
     /* SVG connection lines overlay */
     .conn-svg { position: absolute; inset: 0; pointer-events: none; overflow: visible; width: 100%; height: 100%; }
     /* Drag ghost */
@@ -414,6 +399,33 @@
     .tut-dot.active { background: var(--gold); }
     .tut-actions { display: flex; gap: 10px; }
     .tut-actions .btn { flex: 1; font-size: 14px; padding: 10px; }
+
+    /* ── RESPONSIVE ── */
+    /* Placed last on purpose: at equal specificity CSS resolves ties by source
+       order, so a mobile override declared before the desktop rule it targets
+       silently loses even when its media query matches. This block must stay
+       after every rule it overrides. */
+    @media (max-width: 480px) {
+      /* Draft tray: 3-col fixed-width shields, spread out (wide gap), still
+         centred so the rightmost card clears the fixed help button corner. */
+      .pick-cards-row { grid-template-columns: repeat(3, 48px); gap: 26px; justify-content: center; }
+      .pick-area { overflow-y: visible; }
+      .ai-reveal-cards { grid-template-columns: 1fr; max-width: 300px; }
+      .captain-cards { grid-template-columns: 1fr; }
+      /* Pod slots scale down via CSS (viewBox is fixed, CSS scales the rendered SVG box) */
+      .pod-slots { grid-template-columns: 48px 48px; gap: 14px; }
+      .pod-slot { width: 48px; height: 48px; }
+      .pod-slot > svg { width: 48px; height: 48px; }
+      .captain-hub-node { width: 53px; height: 53px; }
+      .captain-hub-node > svg { width: 53px; height: 53px; }
+      .squad-hub-wrap { height: 270px; padding: 2px 4px 4px; }
+      .pod-row-mid { top: 142px; }
+      .pod-row-bot .pod-group:nth-child(1) { top: 130px; left: calc(50% - 145px); }
+      .pod-row-bot .pod-group:nth-child(2) { top: 130px; left: calc(50% + 35px); }
+      .pod-label { font-size: 7px; }
+      /* Constrain full player-cards (AI reveal) on mobile */
+      .ai-reveal-cards .player-card { aspect-ratio: unset; min-height: 130px; max-height: 180px; }
+    }
   </style>
 </head>
 <body>
@@ -897,38 +909,42 @@
     return Math.min(1, Math.max(0.45, 0.45 + (year - 1999) / 19 * 0.55)).toFixed(2);
   }
 
+  // Shared Tabler icon path fragments (viewBox 0 0 24 24) — reused by the full-size
+  // draft/review cards above and the pod-builder shield cards below.
+  const SHIRT_PATH  = `<path d="M15 4l6 2v5h-3v8a1 1 0 0 1 -1 1h-10a1 1 0 0 1 -1 -1v-8h-3v-5l6 -2a3 3 0 0 0 6 0"/>`;
+  const JACKET_PATH  = `<path d="M16 3l-4 5l-4 -5"/>
+      <path d="M12 19a2 2 0 0 1 -2 2h-4a2 2 0 0 1 -2 -2v-8.172a2 2 0 0 1 .586 -1.414l.828 -.828a2 2 0 0 0 .586 -1.414v-2.172a2 2 0 0 1 2 -2h8a2 2 0 0 1 2 2v2.172a2 2 0 0 0 .586 1.414l.828 .828a2 2 0 0 1 .586 1.414v8.172a2 2 0 0 1 -2 2h-4a2 2 0 0 1 -2 -2"/>
+      <path d="M20 13h-3a1 1 0 0 0 -1 1v2a1 1 0 0 0 1 1h3"/>
+      <path d="M4 17h3a1 1 0 0 0 1 -1v-2a1 1 0 0 0 -1 -1h-3"/>`;
+  const JACKET_TRIM  = `<circle cx="12" cy="12" r="0.5" fill="#c9a84c" stroke="none"/>
+      <circle cx="12" cy="16" r="0.5" fill="#c9a84c" stroke="none"/>
+      <circle cx="15.3" cy="8.6" r="1.6" fill="none" stroke="#c9a84c" stroke-width="0.55"/>
+      <path d="M14.6 8.1h1.4v0.4c0 0.6 -0.5 0.7 -0.7 0.7c-0.2 0 -0.7 -0.1 -0.7 -0.7z" fill="#c9a84c" stroke="none"/>`;
+  const FLAG_PATH    = `<path d="M5 14h14l-4.5 -4.5l4.5 -4.5h-14v16"/>`;
+  const TROPHY_PATH  = `<path d="M8 21l8 0"/><path d="M12 17l0 4"/><path d="M7 4l10 0"/>
+      <path d="M17 4v8a5 5 0 0 1 -10 0v-8"/>
+      <path d="M5 9m-2 0a2 2 0 1 0 4 0a2 2 0 1 0 -4 0"/>
+      <path d="M19 9m-2 0a2 2 0 1 0 4 0a2 2 0 1 0 -4 0"/>`;
+
   function shirtIconHTML(p) {
     const stroke = TIER_COLORS[p.tier] || '#888';
     const sat    = eraSat(p.year);
     return `<svg width="80" height="80" viewBox="0 0 24 24" fill="none" stroke="${stroke}"
       stroke-width="1.1" stroke-linecap="round" stroke-linejoin="round"
-      style="filter:saturate(${sat})" aria-hidden="true">
-      <path d="M15 4l6 2v5h-3v8a1 1 0 0 1 -1 1h-10a1 1 0 0 1 -1 -1v-8h-3v-5l6 -2a3 3 0 0 0 6 0"/>
-    </svg>`;
+      style="filter:saturate(${sat})" aria-hidden="true">${SHIRT_PATH}</svg>`;
   }
 
   function jacketIconHTML(c) {
     const stroke = TIER_COLORS[c.tier] || '#888';
     return `<svg width="80" height="80" viewBox="0 0 24 24" fill="none" stroke="${stroke}"
-      stroke-width="0.85" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-      <path d="M16 3l-4 5l-4 -5"/>
-      <path d="M12 19a2 2 0 0 1 -2 2h-4a2 2 0 0 1 -2 -2v-8.172a2 2 0 0 1 .586 -1.414l.828 -.828a2 2 0 0 0 .586 -1.414v-2.172a2 2 0 0 1 2 -2h8a2 2 0 0 1 2 2v2.172a2 2 0 0 0 .586 1.414l.828 .828a2 2 0 0 1 .586 1.414v8.172a2 2 0 0 1 -2 2h-4a2 2 0 0 1 -2 -2"/>
-      <path d="M20 13h-3a1 1 0 0 0 -1 1v2a1 1 0 0 0 1 1h3"/>
-      <path d="M4 17h3a1 1 0 0 0 1 -1v-2a1 1 0 0 0 -1 -1h-3"/>
-      <circle cx="12" cy="12" r="0.5" fill="#c9a84c" stroke="none"/>
-      <circle cx="12" cy="16" r="0.5" fill="#c9a84c" stroke="none"/>
-      <circle cx="15.3" cy="8.6" r="1.6" fill="none" stroke="#c9a84c" stroke-width="0.55"/>
-      <path d="M14.6 8.1h1.4v0.4c0 0.6 -0.5 0.7 -0.7 0.7c-0.2 0 -0.7 -0.1 -0.7 -0.7z" fill="#c9a84c" stroke="none"/>
-    </svg>`;
+      stroke-width="0.85" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${JACKET_PATH}${JACKET_TRIM}</svg>`;
   }
 
   function flagHTML(p) {
     if (p.made_team !== true) return '';
     return `<svg class="ci-icon ci-flag" viewBox="0 0 24 24" fill="none" stroke="currentColor"
       stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-      <path stroke="none" d="M0 0h24v24H0z" fill="none"/>
-      <path d="M5 14h14l-4.5 -4.5l4.5 -4.5h-14v16"/>
-    </svg>`;
+      <path stroke="none" d="M0 0h24v24H0z" fill="none"/>${FLAG_PATH}</svg>`;
   }
 
   function trophyIconHTML(p) {
@@ -937,12 +953,7 @@
     const cls = won ? 'ci-trophy-won' : 'ci-trophy-lost';
     return `<svg class="ci-icon ${cls}" viewBox="0 0 24 24" fill="none" stroke="currentColor"
       stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-      <path stroke="none" d="M0 0h24v24H0z" fill="none"/>
-      <path d="M8 21l8 0"/><path d="M12 17l0 4"/><path d="M7 4l10 0"/>
-      <path d="M17 4v8a5 5 0 0 1 -10 0v-8"/>
-      <path d="M5 9m-2 0a2 2 0 1 0 4 0a2 2 0 1 0 -4 0"/>
-      <path d="M19 9m-2 0a2 2 0 1 0 4 0a2 2 0 1 0 -4 0"/>
-    </svg>`;
+      <path stroke="none" d="M0 0h24v24H0z" fill="none"/>${TROPHY_PATH}</svg>`;
   }
 
   const ATTR_META = [
@@ -1314,44 +1325,72 @@
     return `<g transform="translate(${(cx - size/2).toFixed(1)},${(cy - size/2).toFixed(1)}) scale(${sc.toFixed(3)})" fill="${color}" stroke="${color}" stroke-width="${(1.4/sc).toFixed(2)}" stroke-linecap="round" stroke-linejoin="round">${paths}</g>`;
   }
 
-  // Shield path string for a w×h card with taper starting at 65% height.
-  function _shieldPath(w, h) {
-    const py = Math.round(h * 0.65);
-    return `M1,1 L${w-1},1 L${w-1},${py} L${w/2},${h-1} L1,${py} Z`;
-  }
+  // Shield outline extracted directly from the official Ryder Cup crest vector
+  // (outer silhouette layer), normalized to a 64×64 coordinate space: pointed
+  // top, rounded shoulders, a nameplate ledge flaring to full width around
+  // y=34, tapering to a point at the bottom. Not hand-traced — the numbers
+  // come from the source SVG's path data, translated/scaled to this box.
+  const SHIELD_OUTLINE = 'M57.85,33.32 c2.17,-10.38,0.42,-18.87,0.35,-19.23 l-0.06,-0.29 l-0.19,-0.23 c-0.09,-0.10,-2.24,-2.68,-6.50,-5.63 c-3.90,-2.72,-10.41,-6.28,-19.22,-7.90 l-0.22,-0.04 l-0.22,0.04 c-8.81,1.62,-15.31,5.18,-19.22,7.90 c-4.26,2.95,-6.42,5.53,-6.50,5.63 l-0.19,0.23 l-0.06,0.29 c-0.08,0.36,-1.82,8.85,0.35,19.23 l-6.15,1.01 l3.90,15.46 l10.77,1.71 c4.28,5.22,9.94,9.38,16.85,12.38 l0.49,0.22 l0.49,-0.22 c6.92,-3.01,12.58,-7.17,16.85,-12.38 l10.77,-1.71 L64.00,34.33 Z';
+  const CHEM_DOT_COLOR = { green: '#22c55e', yellow: '#eab308', red: '#ef4444' };
 
-  // Shield SVG for a filled pod slot (56×72 viewport).
-  function _filledShieldSVG(player, dotColor) {
-    const W=56, H=72, cx=28;
-    const tc = TIER_COLORS[player.tier] || '#888';
-    const parts = player.name.split(' ');
-    const label = parts.length > 1
-      ? `${parts[0][0]}. ${parts.slice(1).join(' ').toUpperCase()}`
-      : player.name.toUpperCase();
-    const shortLabel = label.length > 12 ? label.slice(0,11) + '…' : label;
-    const dom = dominantStyleTag(player);
-    const yr  = String(player.year);
-    const won = CUP_RESULTS[yr] === player.nationality && player.made_team === true;
-    const badgeParts = [];
-    if (player.made_team === true) badgeParts.push(`<tspan fill="#22c55e">✓</tspan>`);
-    if (won)                        badgeParts.push(`<tspan fill="#c9a84c"> ★</tspan>`);
-    const badges = badgeParts.length
-      ? `<text x="${cx}" y="44" text-anchor="middle" font-size="9" font-family="system-ui,sans-serif">${badgeParts.join('')}</text>`
+  // Shield SVG for an empty pod slot placeholder (or the empty captain hub at a larger size).
+  function _emptyShieldSVG(size = 60, label = '') {
+    const labelText = label
+      ? `<text x="32" y="36" text-anchor="middle" font-size="7" fill="rgba(201,168,76,.55)" font-weight="800" letter-spacing="0.08em" font-family="system-ui,sans-serif">${label}</text>`
       : '';
-    return `<svg viewBox="0 0 ${W} ${H}" width="${W}" height="${H}">
-      <path d="${_shieldPath(W,H)}" fill="${tc}22" stroke="${tc}" stroke-width="1.5"/>
-      ${_styleIconEl(dom, cx, 13, 12)}
-      <text x="${cx}" y="27" text-anchor="middle" font-size="7" fill="white" font-family="system-ui,sans-serif" font-weight="700">${shortLabel}</text>
-      <text x="${cx}" y="37" text-anchor="middle" font-size="7" fill="${tc}" font-family="system-ui,sans-serif">${player.year}</text>
-      ${badges}
-      <circle cx="${W-5}" cy="5" r="3.5" fill="${dotColor}"/>
+    return `<svg viewBox="0 0 64 64" width="${size}" height="${size}">
+      <path d="${SHIELD_OUTLINE}" fill="rgba(255,255,255,0.03)" stroke="rgba(255,255,255,0.12)" stroke-width="1.6" stroke-dasharray="5 3.5"/>
+      ${labelText}
     </svg>`;
   }
 
-  // Shield SVG for an empty pod slot placeholder.
-  function _emptyShieldSVG() {
-    return `<svg viewBox="0 0 56 72" width="56" height="72">
-      <path d="${_shieldPath(56,72)}" fill="rgba(255,255,255,0.03)" stroke="rgba(255,255,255,0.12)" stroke-width="1.5" stroke-dasharray="4 3"/>
+  // Shield SVG shared by pod slots, draft tray cards, and the captain hub — same
+  // shape/content for both players and captains. `chem` is { points, tier } from
+  // computePlayerChemScore/computeCaptainChemScore (omit for tray cards, which
+  // aren't placed in a pod yet). `size` overrides the rendered width/height
+  // (viewBox stays fixed at 64x64) — used to render the captain hub 10% larger.
+  function _shieldCardSVG(entity, isCaptain, chem, size = 60) {
+    const tc = TIER_COLORS[entity.tier] || (isCaptain ? '#c9a84c' : '#888');
+    const parts = entity.name.split(' ');
+    const label = parts.length > 1
+      ? `${parts[0][0]}. ${parts.slice(1).join(' ').toUpperCase()}`
+      : entity.name.toUpperCase();
+    const shortLabel = label.length > 12 ? label.slice(0, 11) + '…' : label;
+    const yearLabel = isCaptain ? (entity.years || []).slice(0, 2).join('/') : String(entity.year);
+
+    // Shirt/jacket icon is now the dominant central element (matching where the
+    // trophy graphic sits on the real crest) — flag/trophy flank it lower down.
+    const bodyIcon = isCaptain
+      ? `<svg x="16" y="2" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="${tc}" stroke-width="0.9" stroke-linecap="round" stroke-linejoin="round">${JACKET_PATH}${JACKET_TRIM}</svg>`
+      : `<svg x="16" y="2" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="${tc}" stroke-width="1.1" stroke-linecap="round" stroke-linejoin="round">${SHIRT_PATH}</svg>`;
+
+    // Attribute icon overlays centered inside the shirt/jacket silhouette.
+    const styleIcon = isCaptain ? '' : _styleIconEl(dominantStyleTag(entity), 32, 18, 16);
+
+    // Played/won-cup icons centered vertically between the shoulder width and
+    // the nameplate ledge, flanking the shirt left/right.
+    let indicators = '';
+    if (!isCaptain && entity.made_team === true) {
+      const won = CUP_RESULTS[String(entity.year)] === entity.nationality;
+      indicators = `
+        <svg x="6" y="25" width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="#7dd3fc" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">${FLAG_PATH}</svg>
+        <svg x="49" y="25" width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="${won ? '#c9a84c' : '#3a4a3a'}" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">${TROPHY_PATH}</svg>`;
+    }
+
+    const chemBadge = chem
+      ? `<circle cx="59" cy="6" r="6" fill="${CHEM_DOT_COLOR[chem.tier]}"/>
+         <text x="59" y="8.7" text-anchor="middle" font-size="7" fill="#111" font-weight="800" font-family="system-ui,sans-serif">${chem.points}</text>`
+      : '';
+
+    return `<svg viewBox="0 0 64 64" width="${size}" height="${size}">
+      <path d="${SHIELD_OUTLINE}" fill="${tc}22" stroke="${tc}" stroke-width="1.6" ${isCaptain ? 'stroke-dasharray="4 2.5"' : ''}/>
+      ${indicators}
+      ${bodyIcon}
+      ${styleIcon}
+      <rect x="7" y="35" width="50" height="11" rx="1" fill="rgba(0,0,0,.4)"/>
+      <text x="32" y="43.5" text-anchor="middle" font-size="8.5" fill="white" font-family="system-ui,sans-serif" font-weight="700">${shortLabel}</text>
+      <text x="32" y="56" text-anchor="middle" font-size="7" fill="${tc}" font-family="system-ui,sans-serif">${yearLabel}</text>
+      ${chemBadge}
     </svg>`;
   }
 
@@ -1362,32 +1401,20 @@
       return `<div class="pod-slot empty" data-pod="${pi}" data-slot="${si}">${_emptyShieldSVG()}</div>`;
     }
     const podmates = G.pods[pi].filter((x, i) => x && i !== si);
-    const { tier: chemTier } = computePlayerChemScore(p, podmates, [], CUP_RESULTS, G.captain);
-    const dotColor = chemTier === 'green' ? '#22c55e' : chemTier === 'yellow' ? '#eab308' : '#ef4444';
-    return `<div class="pod-slot filled" data-pod="${pi}" data-slot="${si}">${_filledShieldSVG(p, dotColor)}</div>`;
+    const chem = computePlayerChemScore(p, podmates, [], CUP_RESULTS, G.captain);
+    return `<div class="pod-slot filled" data-pod="${pi}" data-slot="${si}">${_shieldCardSVG(p, false, chem)}</div>`;
   }
 
-  // HTML for the captain hub node (circle).
+  // HTML for the captain hub node — same shield shape as draft/pod cards, 10% larger.
+  const HUB_SIZE = 66;
   function captainHubHTML() {
     const c = G.captain;
     if (!c) {
-      return `<div class="captain-hub-node empty" id="captain-hub-node">
-        <div class="captain-hub-badge">CAPT</div>
-        <div style="font-size:7px;color:var(--text-dim);text-align:center;line-height:1.4">Drop<br>here</div>
-      </div>`;
+      return `<div class="captain-hub-node empty" id="captain-hub-node">${_emptyShieldSVG(HUB_SIZE, 'CAPT')}</div>`;
     }
-    const tc = TIER_COLORS[c.tier] || TIER_COLORS.gold;
     const allPlayers = G.pods.flat().filter(Boolean);
-    const { tier: capTier } = computeCaptainChemScore(c, allPlayers, [], G.venue, CUP_RESULTS);
-    const dotColor = capTier === 'green' ? '#22c55e' : capTier === 'yellow' ? '#eab308' : '#ef4444';
-    const lastName = c.name.split(' ').pop();
-    const yearStr  = (c.years || []).slice(0,2).join('/');
-    return `<div class="captain-hub-node filled" id="captain-hub-node" style="border-color:${tc}">
-      <div class="captain-hub-dot" style="background:${dotColor}"></div>
-      <div class="captain-hub-badge" style="color:${tc}">CAPT</div>
-      <div class="captain-hub-name">${lastName}</div>
-      <div class="captain-hub-years">${yearStr}</div>
-    </div>`;
+    const capChem = computeCaptainChemScore(c, allPlayers, [], G.venue, CUP_RESULTS);
+    return `<div class="captain-hub-node filled" id="captain-hub-node">${_shieldCardSVG(c, true, capChem, HUB_SIZE)}</div>`;
   }
 
   // Full squad hub area HTML (SVG + 3 pods + captain hub).
@@ -1434,47 +1461,159 @@
       if (dashed) el.setAttribute('stroke-dasharray', '4 3');
       svg.appendChild(el);
     }
+    // How far along ray (dx,dy) from `center` you must travel before clearing
+    // rect's bounding box in that direction (corner projection, not straight-
+    // line corner distance — a diagonal corner distance overshoots for a rect
+    // that isn't directly on the ray). Shared by every "stop at the edge, not
+    // the centre" line below: divider-to-hub, divider-to-pod, and card-to-card.
+    function reachToEdge(rect, center, dx, dy) {
+      const corners = [
+        { x: rect.left - aRect.left,  y: rect.top - aRect.top },
+        { x: rect.right - aRect.left, y: rect.top - aRect.top },
+        { x: rect.left - aRect.left,  y: rect.bottom - aRect.top },
+        { x: rect.right - aRect.left, y: rect.bottom - aRect.top },
+      ];
+      return Math.max(...corners.map(c => (c.x - center.x) * dx + (c.y - center.y) * dy));
+    }
+    // Proper ray/box slab intersection — returns the {enter, exit} distances
+    // (from `center`, along unit direction dx,dy) where the ray crosses rect,
+    // or null if it never does. Unlike reachToEdge (which only bounds the
+    // box's farthest extent along the ray, guaranteeing an endpoint clears it)
+    // this tells us whether the ray's PATH actually clips through the box —
+    // needed because a box that isn't centred on the ray can still get clipped
+    // partway along a segment whose endpoint is legitimately past it.
+    function rayBoxHit(rect, center, dx, dy) {
+      const left = rect.left - aRect.left, right = rect.right - aRect.left;
+      const top = rect.top - aRect.top, bottom = rect.bottom - aRect.top;
+      let tmin = -Infinity, tmax = Infinity;
+      if (Math.abs(dx) < 1e-9) {
+        if (center.x < left || center.x > right) return null;
+      } else {
+        let t1 = (left - center.x) / dx, t2 = (right - center.x) / dx;
+        if (t1 > t2) [t1, t2] = [t2, t1];
+        tmin = Math.max(tmin, t1); tmax = Math.min(tmax, t2);
+      }
+      if (Math.abs(dy) < 1e-9) {
+        if (center.y < top || center.y > bottom) return null;
+      } else {
+        let t1 = (top - center.y) / dy, t2 = (bottom - center.y) / dy;
+        if (t1 > t2) [t1, t2] = [t2, t1];
+        tmin = Math.max(tmin, t1); tmax = Math.min(tmax, t2);
+      }
+      if (tmax < tmin || tmax < 0) return null;
+      return { enter: tmin, exit: tmax };
+    }
+    // Point on el's own bounding-box edge, along the ray from el's centre
+    // toward `towardPoint` — i.e. where a line from el to towardPoint should
+    // actually start/end so it never overlaps el's own card art.
+    function edgePoint(el, towardPoint) {
+      const r = el.getBoundingClientRect();
+      const c = { x: r.left + r.width / 2 - aRect.left, y: r.top + r.height / 2 - aRect.top };
+      const dist = Math.hypot(towardPoint.x - c.x, towardPoint.y - c.y);
+      if (dist === 0) return c;
+      const dx = (towardPoint.x - c.x) / dist, dy = (towardPoint.y - c.y) / dist;
+      const reach = reachToEdge(r, c, dx, dy);
+      return { x: c.x + dx * reach, y: c.y + dy * reach };
+    }
+    // Edge-to-edge line between two elements — never passes through either
+    // element's own art, only the gap between them.
+    function drawEdgeLine(el1, el2, stroke, dashed, width, opacity) {
+      const c1 = ctr(el1), c2 = ctr(el2);
+      drawLine(edgePoint(el1, c2), edgePoint(el2, c1), stroke, dashed, width, opacity);
+    }
 
-    // Structural divider lines — always visible, radiate from captain hub centre.
+    // Structural divider lines — always visible, radiate from the captain hub's
+    // edge (not its centre, so they never cut across the hub shield itself).
     // Upper-left separates Pod A / Pod B; upper-right A / C; straight down B / C.
+    // Direction is the true angular bisector between each pair of pods' actual
+    // rendered positions (not a fixed 60°-from-vertical constant) — a fixed
+    // angle only matches the pod layout it was tuned against, and drifts out
+    // of alignment (cutting across a pod's cards instead of skirting them)
+    // the moment pod positions change. Length is measured from the actual
+    // rendered pod clusters it borders, so it stops just outside their edge.
     const capHub = document.getElementById('captain-hub-node');
     if (capHub) {
-      const cc  = ctr(capHub);
-      const len = Math.max(aRect.width, aRect.height) * 0.7;
+      const hubRect = capHub.getBoundingClientRect();
+      const cc = ctr(capHub);
+      const DIVIDER_MARGIN = 10;
+
+      function podAngle(pi) {
+        const c = ctr(document.querySelector(`[data-pod-group="${pi}"]`));
+        return Math.atan2(c.y - cc.y, c.x - cc.x);
+      }
+      // Angle exactly between a1 and a2, taken the short way around.
+      function bisect(a1, a2) {
+        let diff = a2 - a1;
+        while (diff > Math.PI) diff -= 2 * Math.PI;
+        while (diff < -Math.PI) diff += 2 * Math.PI;
+        return a1 + diff / 2;
+      }
+      function podReach(pi, dx, dy) {
+        const el = document.querySelector(`[data-pod-group="${pi}"]`);
+        if (!el) return 0;
+        return reachToEdge(el.getBoundingClientRect(), cc, dx, dy);
+      }
+
+      const angleA = podAngle(0), angleB = podAngle(1), angleC = podAngle(2);
       [
-        { dx: -0.5, dy: -0.866 },
-        { dx:  0.5, dy: -0.866 },
-        { dx:  0,   dy:  1     },
-      ].forEach(({ dx, dy }) => {
-        drawLine(cc, { x: cc.x + dx * len, y: cc.y + dy * len }, '#7a6520', false, '2.5', '0.75');
+        { angle: bisect(angleA, angleB), pods: [0, 1] }, // A / B
+        { angle: bisect(angleA, angleC), pods: [0, 2] }, // A / C
+        { angle: bisect(angleB, angleC), pods: [1, 2] }, // B / C
+      ].forEach(({ angle, pods: [pi1, pi2] }) => {
+        const dx = Math.cos(angle), dy = Math.sin(angle);
+        let start = reachToEdge(hubRect, cc, dx, dy);
+        const end = Math.max(podReach(pi1, dx, dy), podReach(pi2, dx, dy)) + DIVIDER_MARGIN;
+        // If the ray actually clips through either pod's box before reaching
+        // the endpoint (not just failing to clear its farthest corner — the
+        // two aren't the same thing for a box that's off to one side of the
+        // ray), push the start point past that box's exit instead of through it.
+        [pi1, pi2].forEach(pi => {
+          const el = document.querySelector(`[data-pod-group="${pi}"]`);
+          if (!el) return;
+          const hit = rayBoxHit(el.getBoundingClientRect(), cc, dx, dy);
+          if (hit && hit.exit < end - 1) start = Math.max(start, hit.exit + 2.5);
+        });
+        drawLine(
+          { x: cc.x + dx * start, y: cc.y + dy * start },
+          { x: cc.x + dx * end, y: cc.y + dy * end },
+          '#7a6520', false, '2.5', '0.75'
+        );
       });
     }
 
-    // Chemistry lines within each pod (thin, coloured)
+    // Connector lines within each pod — every pair of the 4 slots (a box plus
+    // both diagonals), edge-to-edge so they run in the gaps between cards
+    // rather than passing behind them. Drawn faint white as placeholders even
+    // before both slots are filled, so the relationship grid reads immediately.
     G.pods.forEach((pod, pi) => {
       for (let i = 0; i < 4; i++) {
         for (let j = i + 1; j < 4; j++) {
-          if (!pod[i] || !pod[j]) continue;
           const el1 = document.querySelector(`[data-pod="${pi}"][data-slot="${i}"]`);
           const el2 = document.querySelector(`[data-pod="${pi}"][data-slot="${j}"]`);
           if (!el1 || !el2) continue;
+          if (!pod[i] || !pod[j]) {
+            drawEdgeLine(el1, el2, '#ffffff', false, '1', '0.15');
+            continue;
+          }
           const chem = computeChemistry(pod[i], pod[j], [], CUP_RESULTS);
           const stroke = chem >= 2 ? '#22c55e' : chem >= 1 ? '#eab308' : '#ef4444';
-          drawLine(ctr(el1), ctr(el2), stroke, false, '1.5', '0.6');
+          drawEdgeLine(el1, el2, stroke, false, '1.5', '0.6');
         }
       }
     });
 
     // Captain-to-pod group lines (gold dashed) — only once captain selected
     if (G.captain && capHub) {
-      const cc = ctr(capHub);
       [0, 1, 2].forEach(pi => {
         const podEl = document.querySelector(`[data-pod-group="${pi}"]`);
         if (!podEl) return;
-        drawLine(cc, ctr(podEl), '#c9a84c', true, '1.5', '0.5');
+        drawEdgeLine(capHub, podEl, '#c9a84c', true, '1.5', '0.5');
       });
     }
   }
+  // Redraw on resize/orientation change so divider lines stay pinned to the
+  // pod clusters instead of the coordinates computed at a since-changed width.
+  window.addEventListener('resize', () => { if (document.getElementById('squad-hub-area')) updateConnectionLines(); });
 
   // ─────────────────────────────────────────────────────────────────────────────
   // DRAG-AND-DROP SYSTEM
@@ -1612,47 +1751,12 @@
 
   // Shield SVG for a player card in the draft tray (no chem dot — not yet placed).
   function _trayShieldHTML(player) {
-    const W=56, H=72, cx=28;
-    const tc = TIER_COLORS[player.tier] || '#888';
-    const parts = player.name.split(' ');
-    const label = parts.length > 1
-      ? `${parts[0][0]}. ${parts.slice(1).join(' ').toUpperCase()}`
-      : player.name.toUpperCase();
-    const shortLabel = label.length > 12 ? label.slice(0,11) + '…' : label;
-    const dom = dominantStyleTag(player);
-    const yr  = String(player.year);
-    const won = CUP_RESULTS[yr] === player.nationality && player.made_team === true;
-    const badgeParts = [];
-    if (player.made_team === true) badgeParts.push(`<tspan fill="#22c55e">✓</tspan>`);
-    if (won)                        badgeParts.push(`<tspan fill="#c9a84c"> ★</tspan>`);
-    const badges = badgeParts.length
-      ? `<text x="${cx}" y="44" text-anchor="middle" font-size="9" font-family="system-ui,sans-serif">${badgeParts.join('')}</text>`
-      : '';
-    return `<svg viewBox="0 0 ${W} ${H}" width="${W}" height="${H}">
-      <path d="${_shieldPath(W,H)}" fill="${tc}22" stroke="${tc}" stroke-width="1.5"/>
-      ${_styleIconEl(dom, cx, 13, 12)}
-      <text x="${cx}" y="27" text-anchor="middle" font-size="7" fill="white" font-family="system-ui,sans-serif" font-weight="700">${shortLabel}</text>
-      <text x="${cx}" y="37" text-anchor="middle" font-size="7" fill="${tc}" font-family="system-ui,sans-serif">${player.year}</text>
-      ${badges}
-    </svg>`;
+    return _shieldCardSVG(player, false, null);
   }
 
   // Shield SVG for a captain card in the draft tray.
   function _trayCaptainShieldHTML(captain) {
-    const W=56, H=72, cx=28;
-    const tc = TIER_COLORS[captain.tier] || '#c9a84c';
-    const parts = captain.name.split(' ');
-    const label = parts.length > 1
-      ? `${parts[0][0]}. ${parts.slice(1).join(' ').toUpperCase()}`
-      : captain.name.toUpperCase();
-    const shortLabel = label.length > 12 ? label.slice(0,11) + '…' : label;
-    const yearStr = (captain.years || []).slice(0,2).join('/');
-    return `<svg viewBox="0 0 ${W} ${H}" width="${W}" height="${H}">
-      <path d="${_shieldPath(W,H)}" fill="${tc}22" stroke="${tc}" stroke-width="1.5" stroke-dasharray="3 2"/>
-      <text x="${cx}" y="14" text-anchor="middle" font-size="6" fill="${tc}" font-family="system-ui,sans-serif" font-weight="800" letter-spacing="0.08em">CAPTAIN</text>
-      <text x="${cx}" y="27" text-anchor="middle" font-size="7" fill="white" font-family="system-ui,sans-serif" font-weight="700">${shortLabel}</text>
-      <text x="${cx}" y="37" text-anchor="middle" font-size="7" fill="${tc}" font-family="system-ui,sans-serif">${yearStr}</text>
-    </svg>`;
+    return _shieldCardSVG(captain, true, null);
   }
 
   // ─────────────────────────────────────────────────────────────────────────────

@@ -421,11 +421,17 @@
        silently loses even when its media query matches. This block must stay
        after every rule it overrides. */
     @media (max-width: 480px) {
-      /* Draft tray: 3-col fixed-width shields, spread out (wide gap). No
-         longer has to dodge a fixed help-button corner (moved into the pod
-         section on this screen — see positionHelpBtn), so these can be
-         bigger than before instead of leaving that corner as dead space. */
-      .pick-cards-row { grid-template-columns: repeat(3, 78px); gap: 20px; justify-content: center; }
+      /* Draft tray: fr-based columns capped by max-width instead of a fixed
+         per-card px value — the card fills whatever its grid cell gives it
+         (via the aspect-ratio + 100% svg override below), so it can be sized
+         up here without a fixed number that overflows on a narrower phone.
+         ~1.5x (3:2) the pod card's typical rendered size, since these need
+         to be the most legible things on screen — no longer has to dodge a
+         fixed help-button corner either (moved into the pod section — see
+         positionHelpBtn). */
+      .pick-cards-row { grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 14px; width: 100%; max-width: 330px; margin: 0 auto; justify-content: unset; }
+      .tray-card { width: 100%; aspect-ratio: 1; }
+      .tray-card svg { width: 100%; height: 100%; }
       .pick-area { overflow-y: visible; padding: 14px 10px 16px; }
       .captain-cards { grid-template-columns: 1fr; }
       /* Anchor the pod cluster near the top of its flex row instead of
@@ -436,35 +442,43 @@
          auto-fit that fills desktop windows also sizes things here, capped
          by whichever of available width/height is tighter. */
       .draft-team-area { justify-content: flex-start; padding-top: 6px; }
-      /* Mobile pod layout: captain on the left, Pod A/B/C stacked in a
-         column to the right (each keeps its own 2x2 slot grid), instead of
-         the desktop radial triangle. A phone has height to spare but not
-         width, and the triangle is fundamentally width-bound there — no
-         amount of auto-fit scaling fixes a layout shape that doesn't suit a
-         narrow screen. Divider/captain-line drawing is skipped for this
-         layout in updateConnectionLines() (see isMobileStack there); the
-         within-pod connector lines still apply since they're edge-to-edge
-         between a pod's own slots regardless of layout. */
+      /* Mobile pod layout: a triangle rather than the desktop's radial
+         version OR a plain stacked column. Pod A and Pod C sit centrally in
+         one column, stacked above the captain (bottom of that same column);
+         Pod B — the "middle" pod by name only, not position — sits off to
+         the right, vertically centered against the A/C/captain column. That
+         gives three visual points (top-center, bottom-center, right) instead
+         of a flat line, closer to the desktop shape's feel while staying
+         narrow enough for a phone. `display:contents` on pod-row-bot lets
+         its two children (Pod B, Pod C) place directly into this grid
+         instead of being stuck in one shared cell together. Divider/captain
+         lines are skipped for this layout in updateConnectionLines() (see
+         isMobileStack there) — the angle-based math they rely on doesn't
+         mean anything for this shape; within-pod connector lines are
+         unaffected since those are edge-to-edge between a pod's own slots
+         regardless of layout. */
       .squad-hub-wrap {
         display: grid;
-        grid-template-columns: auto 1fr;
-        grid-template-rows: auto auto;
+        grid-template-columns: auto auto;
+        grid-template-rows: auto auto auto;
+        justify-content: center;
         align-items: center;
-        column-gap: 14px;
-        row-gap: 10px;
+        row-gap: 8px;
+        column-gap: 12px;
         height: auto;
-        padding: 10px 8px;
+        padding: 8px 4px;
       }
-      .pod-row-top, .pod-row-mid, .pod-row-bot { position: static; transform: none; }
-      .pod-row-mid { grid-column: 1; grid-row: 1 / span 2; justify-self: center; }
-      .pod-row-top { grid-column: 2; grid-row: 1; justify-self: center; }
-      .pod-row-bot {
-        grid-column: 2; grid-row: 2;
-        display: flex; flex-direction: column; align-items: center; gap: 10px;
-        pointer-events: auto;
-      }
-      .pod-row-bot .pod-group:nth-child(1),
-      .pod-row-bot .pod-group:nth-child(2) { position: static; top: auto; left: auto; }
+      .pod-row-top, .pod-row-mid { position: static; transform: none; }
+      .pod-row-top { grid-column: 1; grid-row: 1; justify-self: center; } /* Pod A */
+      .pod-row-mid { grid-column: 1; grid-row: 3; justify-self: center; } /* Captain */
+      .pod-row-bot { display: contents; }
+      .pod-row-bot .pod-group:nth-child(1) { grid-column: 2; grid-row: 1 / span 3; align-self: center; justify-self: center; position: static; top: auto; left: auto; } /* Pod B */
+      .pod-row-bot .pod-group:nth-child(2) { grid-column: 1; grid-row: 2; justify-self: center; position: static; top: auto; left: auto; } /* Pod C */
+      /* Tighter internal pod gap than desktop, purely to reclaim width for a
+         bigger --hub-scale on mobile (see the isMobile branch in
+         fitSquadHub) — the pod triangle here is width-bound, so shaving the
+         gap between a pod's own 4 slots buys more scale than anything else. */
+      .pod-slots { gap: calc(12px * var(--hub-scale, 1)); }
     }
   </style>
 </head>
@@ -1536,12 +1550,19 @@
       minX = Math.min(minX, r.left); maxX = Math.max(maxX, r.right);
       minY = Math.min(minY, r.top);  maxY = Math.max(maxY, r.bottom);
     });
-    const naturalW = (maxX - minX) + 16; // buffer matching wrap's own padding
-    const naturalH = (maxY - minY) + 34; // extra: divider lines run ~10-20px past the lowest pod's edge
+    // The +34/+16 buffers exist for the desktop radial layout's divider
+    // lines, which run ~10-20px past a pod's edge — mobile's triangle
+    // layout skips those lines entirely (see isMobileStack in
+    // updateConnectionLines), so that margin is just unused width/height
+    // it's width-bound on a phone, so reclaiming it here is what actually
+    // buys a visibly bigger scale, not just headroom nothing uses.
+    const isMobile = window.innerWidth <= 480;
+    const naturalW = (maxX - minX) + (isMobile ? 6  : 16);
+    const naturalH = (maxY - minY) + (isMobile ? 12 : 34);
     if (!naturalW || !naturalH) return;
     const statRow = document.querySelector('.squad-stat-row');
-    const availH  = area.clientHeight - (statRow ? statRow.offsetHeight : 0) - 16;
-    const availW  = area.clientWidth - 16;
+    const availH  = area.clientHeight - (statRow ? statRow.offsetHeight : 0) - (isMobile ? 8 : 16);
+    const availW  = area.clientWidth - (isMobile ? 8 : 16);
     const scale   = Math.max(Math.min(availH / naturalH, availW / naturalW, 2.2), 0.9);
     wrap.style.setProperty('--hub-scale', scale);
   }

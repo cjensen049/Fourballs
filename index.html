@@ -287,12 +287,20 @@
        Pod B/C spread wide left/right and only shallowly below the hub (not
        stacked directly underneath), so the three divider lines fan out at
        roughly even angles instead of bunching near-parallel by the hub. */
+    /* Golf-green backdrop: a kidney-shaped green (mowed stripe pattern
+       clipped to that outline) surrounded by darker rough, plus a bunker and
+       a water hazard for a real course feel — not just a green rectangle.
+       Colors are muted/dark on their own (not a bright render + opacity
+       trick) so it reads as a background, not the focal point, behind the
+       pod cards. Built as a single SVG data-URI so it needs no separate
+       image asset. */
     .squad-hub-area {
       position: relative;
       border-radius: 12px;
-      background:
-        repeating-linear-gradient(115deg, rgba(76,175,80,.06) 0px, rgba(76,175,80,.06) 22px, rgba(45,106,45,.10) 22px, rgba(45,106,45,.10) 44px),
-        radial-gradient(ellipse at 50% 35%, rgba(76,175,80,.12) 0%, rgba(8,15,8,0) 72%);
+      background-color: #14301b;
+      background-image: url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg'%20viewBox%3D'0%200%20800%20400'%3E%3Cdefs%3E%3CclipPath%20id%3D'g'%3E%3Cpath%20d%3D'M410%2C36%20C540%2C28%20640%2C74%20672%2C156%20C706%2C240%20664%2C330%20566%2C358%20C478%2C383%20372%2C378%20288%2C346%20C192%2C309%20130%2C242%20142%2C168%20C154%2C96%20238%2C52%20322%2C42%20C352%2C38%20382%2C38%20410%2C36%20Z'%2F%3E%3C%2FclipPath%3E%3Cpattern%20id%3D's'%20width%3D'42'%20height%3D'42'%20patternUnits%3D'userSpaceOnUse'%20patternTransform%3D'rotate(115)'%3E%3Crect%20width%3D'42'%20height%3D'42'%20fill%3D'%232f6a38'%2F%3E%3Crect%20width%3D'21'%20height%3D'42'%20fill%3D'%23356f3d'%2F%3E%3C%2Fpattern%3E%3C%2Fdefs%3E%3Crect%20width%3D'800'%20height%3D'400'%20fill%3D'%2314301b'%2F%3E%3Cg%20clip-path%3D'url(%23g)'%3E%3Crect%20width%3D'800'%20height%3D'400'%20fill%3D'url(%23s)'%2F%3E%3C%2Fg%3E%3Cpath%20d%3D'M556%2C296%20C594%2C291%20622%2C308%20624%2C334%20C626%2C357%20600%2C370%20570%2C366%20C544%2C362%20528%2C344%20534%2C324%20C538%2C310%20546%2C301%20556%2C296%20Z'%20fill%3D'%23b8a273'%20opacity%3D'0.85'%2F%3E%3Cellipse%20cx%3D'196'%20cy%3D'298'%20rx%3D'44'%20ry%3D'23'%20fill%3D'%232a5474'%20opacity%3D'0.85'%2F%3E%3C%2Fsvg%3E");
+      background-size: cover;
+      background-position: center;
     }
     /* --hub-scale is set by fitSquadHub() (JS) to fill the leftover vertical
        space in draft-team-area instead of sitting at a fixed size in a much
@@ -337,6 +345,10 @@
 
     /* ── HELP BUTTON (persistent ?) ── */
     .help-btn { position: fixed; bottom: 16px; right: 16px; z-index: 90; width: 38px; height: 38px; border-radius: 50%; background: var(--surface2); border: 1px solid var(--border); color: var(--text-muted); font-size: 17px; font-weight: 700; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: background .15s, border-color .15s; box-shadow: 0 2px 10px rgba(0,0,0,.4); }
+    /* On the draft screen the same button is re-parented into squad-hub-area
+       instead of floating fixed over the bottom-right corner — that corner is
+       where the draft tray needs the room, especially on mobile. */
+    .help-btn.help-btn-inline { position: absolute; top: 6px; right: 6px; bottom: auto; width: 26px; height: 26px; font-size: 13px; z-index: 5; }
     .help-btn:hover { background: var(--surface3); border-color: var(--green); color: var(--text); }
 
     /* ── HELP MODAL ── */
@@ -404,9 +416,11 @@
        silently loses even when its media query matches. This block must stay
        after every rule it overrides. */
     @media (max-width: 480px) {
-      /* Draft tray: 3-col fixed-width shields, spread out (wide gap), still
-         centred so the rightmost card clears the fixed help button corner. */
-      .pick-cards-row { grid-template-columns: repeat(3, 55px); gap: 30px; justify-content: center; }
+      /* Draft tray: 3-col fixed-width shields, spread out (wide gap). No
+         longer has to dodge a fixed help-button corner (moved into the pod
+         section on this screen — see positionHelpBtn), so these can be
+         bigger than before instead of leaving that corner as dead space. */
+      .pick-cards-row { grid-template-columns: repeat(3, 68px); gap: 24px; justify-content: center; }
       .pick-area { overflow-y: visible; }
       .captain-cards { grid-template-columns: 1fr; }
       /* Anchor the pod cluster near the top of its flex row instead of
@@ -1088,6 +1102,13 @@
   // RENDER DISPATCH
   // ─────────────────────────────────────────────────────────────────────────────
   function render() {
+    // Must run BEFORE the phase dispatch, not just after: if the help button
+    // is currently nested inside #app (moved there by a previous call to
+    // positionHelpBtn for the draft screen), the phase render below wipes
+    // #app via innerHTML — which destroys any element still inside it,
+    // button included. Pull it out to <body> first so it always survives.
+    const helpBtn = document.getElementById('global-help-btn');
+    if (helpBtn && helpBtn.parentElement !== document.body) document.body.appendChild(helpBtn);
     const p = G.phase;
     if      (p === 'landing')      renderLanding();
     else if (p === 'nationality')  renderNationality();
@@ -1097,6 +1118,26 @@
     else if (p === 'review')       renderReview();
     else if (p === 'complete')     renderResults();
     else renderLanding();
+    positionHelpBtn();
+  }
+
+  // Each screen's render() rebuilds #app from scratch via innerHTML, which
+  // would destroy the persistent help button if it were ever moved inside
+  // #app — so re-parent it fresh after every render instead of once at init.
+  // On the draft screen it moves into squad-hub-area (freeing the fixed
+  // bottom-right corner for the tray); everywhere else it's the normal fixed
+  // button on <body>.
+  function positionHelpBtn() {
+    const btn = document.getElementById('global-help-btn');
+    if (!btn) return;
+    const hubArea = G.phase === 'draft' ? document.getElementById('squad-hub-area') : null;
+    if (hubArea) {
+      btn.classList.add('help-btn-inline');
+      hubArea.appendChild(btn);
+    } else {
+      btn.classList.remove('help-btn-inline');
+      document.body.appendChild(btn);
+    }
   }
 
   // ─────────────────────────────────────────────────────────────────────────────
@@ -1366,17 +1407,20 @@
       ? `<svg x="16" y="2" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="${tc}" stroke-width="0.9" stroke-linecap="round" stroke-linejoin="round">${JACKET_PATH}${JACKET_TRIM}</svg>`
       : `<svg x="16" y="2" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="${tc}" stroke-width="1.1" stroke-linecap="round" stroke-linejoin="round">${SHIRT_PATH}</svg>`;
 
-    // Attribute icon overlays centered inside the shirt/jacket silhouette.
-    const styleIcon = isCaptain ? '' : _styleIconEl(dominantStyleTag(entity), 32, 18, 16);
+    // Attribute icon overlays centered inside the shirt/jacket silhouette —
+    // sized down further so it reads as an accent on the shirt, not a second
+    // icon competing with it.
+    const styleIcon = isCaptain ? '' : _styleIconEl(dominantStyleTag(entity), 32, 18, 12);
 
-    // Played/won-cup icons centered vertically between the shoulder width and
-    // the nameplate ledge, flanking the shirt left/right.
+    // Played/won-cup icons sit at shoulder height, snug against the shirt's
+    // own edges (rather than down near the hem) so they read as flanking the
+    // shirt instead of floating separately near the nameplate.
     let indicators = '';
     if (!isCaptain && entity.made_team === true) {
       const won = CUP_RESULTS[String(entity.year)] === entity.nationality;
       indicators = `
-        <svg x="6" y="25" width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="#7dd3fc" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">${FLAG_PATH}</svg>
-        <svg x="49" y="25" width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="${won ? '#c9a84c' : '#3a4a3a'}" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">${TROPHY_PATH}</svg>`;
+        <svg x="8" y="14" width="8" height="8" viewBox="0 0 24 24" fill="none" stroke="#7dd3fc" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">${FLAG_PATH}</svg>
+        <svg x="48" y="14" width="8" height="8" viewBox="0 0 24 24" fill="none" stroke="${won ? '#c9a84c' : '#3a4a3a'}" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">${TROPHY_PATH}</svg>`;
     }
 
     const chemBadge = chem

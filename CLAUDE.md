@@ -120,7 +120,9 @@ chemistry\_system\_spec.md # ACTIVE implementation spec for the talent/chemistry
 happens inside the draft itself (see Captain Pick below) — there is no standalone
 pre-draft captain screen. Picks are made by dragging tray cards to pod slots or the
 captain hub (Pod Builder — see below).
-5. AI reveal after each round — see what the AI saw and who they picked
+5. After each pick, a "Next Selection" prompt (inline on the draft/pod builder screen,
+not a separate screen) shows the user's pick and the opponent's pick, then advances
+to the next round on click
 6. After round 13: returns to draft/pod builder screen — user may rearrange pods freely,
 then clicks "Submit to Pairings" to advance
 7. Auto-assigned pairings → Review screen
@@ -132,7 +134,7 @@ then clicks "Submit to Pairings" to advance
 * Course style tags are hidden from the user but drive probability calculations
 * Venue is shown with user-friendly descriptors (e.g. "Power Course", "Links Test")
 mapped from hidden tags — do not expose raw tag values
-* Course profile bar displayed during draft and AI reveal: shows venue name,
+* Course profile bar displayed during draft: shows venue name,
 user\_descriptors, and the top-3 demand chips (from courseProfileHTML's DEMAND\_META,
 still Power / Accurate / Short Game / Consistent / Clutch — 5 labels only) using the
 same colors as player style tag chips
@@ -196,10 +198,11 @@ drawn from ANY year (1999–2025) based on tier weighting
 appear again in a subsequent round — prevents repeat Montgomeries / Johnsons.
 Captains are exempt from this rule (see Captain Pick above).
 * Cards shown match the user's chosen nationality (USA or EUR)
-* After user picks, show AI round: display the 3 options the AI saw (opposing nationality,
-same tier weighting, players only) and highlight which player the AI selected. AI drafts
-exactly 12 players total — once it reaches 12, it stops drafting even if the human's
-draft continues (e.g. the human's round-13 captain-only round).
+* After user picks, the AI drafts its own pick in parallel (opposing nationality, same
+tier weighting) and the draft screen shows a "Next Selection" prompt naming both picks
+before advancing — there is no separate full-screen reveal of the AI's other options.
+AI drafts exactly 12 players total — once it reaches 12, it stops drafting even if the
+human's draft continues (e.g. the human's round-13 captain-only round).
 * AI pick priority: (1) always draft a hero if one is available, (2) otherwise optimize
 for pairing chemistry potential with its existing picks, (3) fallback to highest composite
 score when no existing picks (round 1 only)

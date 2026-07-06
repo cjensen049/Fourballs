@@ -133,22 +133,6 @@
     .pm-name { font-size: 12px; font-weight: 700; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
     .pm-meta { font-size: 10px; color: var(--text-muted); }
 
-    /* ── AI REVEAL SCREEN ── */
-    .ai-reveal-screen { min-height: 100vh; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 28px 16px; text-align: center; background: radial-gradient(ellipse at 50% 0%, #1a0505 0%, var(--bg) 65%); }
-    .ai-reveal-eyebrow { font-size: 11px; text-transform: uppercase; letter-spacing: .12em; color: var(--text-muted); margin-bottom: 6px; }
-    .ai-reveal-title { font-size: 26px; font-weight: 700; margin-bottom: 8px; }
-    .ai-reveal-sub { font-size: 13px; color: var(--text-muted); margin-bottom: 24px; }
-    .ai-reveal-cards { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; width: 100%; max-width: 500px; margin: 16px auto 0; }
-    /* All three wrappers get the same padding-top so cards sit at identical heights */
-    .ai-card-wrap { position: relative; padding-top: 18px; }
-    .ai-card-wrap .player-card { width: 100%; }
-    .ai-card-wrap.ai-picked .player-card { border-color: #e53935 !important; box-shadow: 0 0 18px rgba(229,57,53,.35); cursor: default; }
-    .ai-card-wrap.ai-not-picked .player-card { opacity: .35; cursor: default; pointer-events: none; }
-    .ai-card-wrap.ai-picked .player-card:hover { transform: none; }
-    .ai-picked-badge { position: absolute; top: 2px; left: 50%; transform: translateX(-50%); background: #c62828; color: #fff; font-size: 10px; font-weight: 700; padding: 2px 9px; border-radius: 10px; white-space: nowrap; text-transform: uppercase; letter-spacing: .05em; z-index: 5; }
-    .ai-your-pick { background: var(--surface2); border: 1px solid var(--border); border-radius: var(--radius); padding: 10px 16px; margin-bottom: 20px; font-size: 13px; }
-    .ai-your-pick strong { color: var(--green-bright); }
-
     /* ── CAPTAIN SCREEN ── */
     .captain-screen { display: flex; flex-direction: column; align-items: center; padding: 20px 14px 40px; background: radial-gradient(ellipse at 50% 0%, #1a0a2a 0%, var(--bg) 70%); min-height: 100vh; }
     .captain-title { font-size: 26px; font-weight: 800; color: var(--gold); text-align: center; margin-bottom: 6px; }
@@ -282,8 +266,6 @@
     .attr-icon-item { display: flex; flex-direction: column; align-items: center; gap: 2px; }
     .attr-icon-svg { width: 13px; height: 13px; display: block; }
     .attr-icon-label { font-size: 7px; font-weight: 700; text-transform: uppercase; letter-spacing: .02em; line-height: 1; }
-    /* Cap card size in AI reveal */
-    .ai-reveal-cards .player-card { max-width: 160px; margin: 0 auto; }
 
     /* ── TEAM BOARD (top of draft screen) ── */
     .picks-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 5px; padding: 5px 10px 6px; }
@@ -305,31 +287,47 @@
        Pod B/C spread wide left/right and only shallowly below the hub (not
        stacked directly underneath), so the three divider lines fan out at
        roughly even angles instead of bunching near-parallel by the hub. */
-    .squad-hub-area { position: relative; }
-    .squad-hub-wrap { position: relative; width: 100%; height: 300px; margin: 0 auto; padding: 4px 8px 6px; }
+    .squad-hub-area {
+      position: relative;
+      border-radius: 12px;
+      background:
+        repeating-linear-gradient(115deg, rgba(76,175,80,.06) 0px, rgba(76,175,80,.06) 22px, rgba(45,106,45,.10) 22px, rgba(45,106,45,.10) 44px),
+        radial-gradient(ellipse at 50% 35%, rgba(76,175,80,.12) 0%, rgba(8,15,8,0) 72%);
+    }
+    /* --hub-scale is set by fitSquadHub() (JS) to fill the leftover vertical
+       space in draft-team-area instead of sitting at a fixed size in a much
+       taller flex box. Defaults to 1 so the layout is correct even before
+       JS runs. Every size/offset below that was originally a tuned literal
+       px value is expressed as calc(literal * var(--hub-scale,1)) so the
+       whole cluster scales as one unit — a transform:scale() was tried
+       first but squad-hub-wrap's own box is `width:100%` (mostly empty
+       space around the centered content), so scaling the element scaled
+       that phantom box too and blew out the page's scrollWidth. Scaling
+       the real literals instead has no such phantom box to inflate. */
+    .squad-hub-wrap { position: relative; width: 100%; height: calc(300px * var(--hub-scale, 1)); margin: 0 auto; padding: 4px 8px 6px; }
     .pod-row-top { position: absolute; top: 0; left: 50%; transform: translateX(-50%); display: flex; justify-content: center; }
-    .pod-row-mid { position: absolute; top: 171px; left: 50%; transform: translate(-50%, -50%); display: flex; justify-content: center; }
-    .pod-row-bot { position: absolute; inset: 0; }
-    .pod-row-bot .pod-group:nth-child(1) { position: absolute; top: 192px; left: calc(50% - 158px); }
-    .pod-row-bot .pod-group:nth-child(2) { position: absolute; top: 192px; left: calc(50% + 20px); }
-    .pod-group { display: flex; flex-direction: column; align-items: center; gap: 3px; }
-    .pod-label { font-size: 8px; font-weight: 800; text-transform: uppercase; letter-spacing: .1em; color: var(--text-dim); }
-    .pod-slots { display: grid; grid-template-columns: 60px 60px; gap: 18px; }
+    .pod-row-mid { position: absolute; top: calc(171px * var(--hub-scale, 1)); left: 50%; transform: translate(-50%, -50%); display: flex; justify-content: center; }
+    .pod-row-bot { position: absolute; inset: 0; pointer-events: none; }
+    .pod-row-bot .pod-group:nth-child(1) { position: absolute; top: calc(192px * var(--hub-scale, 1)); left: calc(50% - (158px * var(--hub-scale, 1))); }
+    .pod-row-bot .pod-group:nth-child(2) { position: absolute; top: calc(192px * var(--hub-scale, 1)); left: calc(50% + (20px * var(--hub-scale, 1))); }
+    .pod-group { display: flex; flex-direction: column; align-items: center; gap: calc(3px * var(--hub-scale, 1)); pointer-events: auto; }
+    .pod-label { font-size: calc(8px * var(--hub-scale, 1)); font-weight: 800; text-transform: uppercase; letter-spacing: .1em; color: var(--text-dim); }
+    .pod-slots { display: grid; grid-template-columns: calc(60px * var(--hub-scale, 1)) calc(60px * var(--hub-scale, 1)); gap: calc(18px * var(--hub-scale, 1)); }
     .tray-card { cursor: grab; touch-action: none; user-select: none; -webkit-user-select: none; }
     /* Pod slot: transparent container, SVG handles all visuals */
-    .pod-slot { width: 60px; height: 60px; position: relative; display: flex; align-items: center; justify-content: center; touch-action: none; flex-shrink: 0; }
-    .pod-slot > svg { pointer-events: none; display: block; }
+    .pod-slot { width: calc(60px * var(--hub-scale, 1)); height: calc(60px * var(--hub-scale, 1)); position: relative; display: flex; align-items: center; justify-content: center; touch-action: none; flex-shrink: 0; }
+    .pod-slot > svg { pointer-events: none; display: block; width: 100%; height: 100%; }
     .pod-slot.filled { cursor: grab; }
     .pod-slot.filled:active { cursor: grabbing; }
     .pod-slot.drop-ok { filter: drop-shadow(0 0 5px #22c55e); }
     /* Captain hub: same shield shape as draft/pod cards, sized 10% larger (see HUB_SIZE) */
-    .captain-hub-node { width: 66px; height: 66px; position: relative; display: flex; align-items: center; justify-content: center; flex-shrink: 0; touch-action: none; }
-    .captain-hub-node > svg { pointer-events: none; display: block; }
+    .captain-hub-node { width: calc(66px * var(--hub-scale, 1)); height: calc(66px * var(--hub-scale, 1)); position: relative; display: flex; align-items: center; justify-content: center; flex-shrink: 0; touch-action: none; }
+    .captain-hub-node > svg { pointer-events: none; display: block; width: 100%; height: 100%; }
     .captain-hub-node.drop-ok { filter: drop-shadow(0 0 8px rgba(201,168,76,.7)); }
     /* SVG connection lines overlay */
     .conn-svg { position: absolute; inset: 0; pointer-events: none; overflow: visible; width: 100%; height: 100%; }
     /* Drag ghost */
-    .drag-ghost { position: fixed; pointer-events: none; z-index: 999; border: 1.5px solid; border-radius: 5px; padding: 4px 8px; font-size: 10px; font-weight: 700; opacity: .88; transform: translate(-50%, -120%); white-space: nowrap; background: var(--surface2); }
+    .drag-ghost { position: fixed; pointer-events: none; z-index: 999; opacity: .92; transform: translate(-50%, -65%); filter: drop-shadow(0 4px 10px rgba(0,0,0,.55)); }
     /* Squad header row */
     .squad-stat-row { display: flex; align-items: center; gap: 10px; padding: 3px 10px 0; font-size: 10px; }
     .ssn-label { color: var(--text-dim); }
@@ -408,23 +406,28 @@
     @media (max-width: 480px) {
       /* Draft tray: 3-col fixed-width shields, spread out (wide gap), still
          centred so the rightmost card clears the fixed help button corner. */
-      .pick-cards-row { grid-template-columns: repeat(3, 48px); gap: 26px; justify-content: center; }
+      .pick-cards-row { grid-template-columns: repeat(3, 55px); gap: 30px; justify-content: center; }
       .pick-area { overflow-y: visible; }
-      .ai-reveal-cards { grid-template-columns: 1fr; max-width: 300px; }
       .captain-cards { grid-template-columns: 1fr; }
-      /* Pod slots scale down via CSS (viewBox is fixed, CSS scales the rendered SVG box) */
-      .pod-slots { grid-template-columns: 48px 48px; gap: 14px; }
-      .pod-slot { width: 48px; height: 48px; }
-      .pod-slot > svg { width: 48px; height: 48px; }
-      .captain-hub-node { width: 53px; height: 53px; }
-      .captain-hub-node > svg { width: 53px; height: 53px; }
-      .squad-hub-wrap { height: 270px; padding: 2px 4px 4px; }
-      .pod-row-mid { top: 142px; }
-      .pod-row-bot .pod-group:nth-child(1) { top: 130px; left: calc(50% - 145px); }
-      .pod-row-bot .pod-group:nth-child(2) { top: 130px; left: calc(50% + 35px); }
+      /* Anchor the pod cluster near the top of its flex row instead of
+         vertical-centering it — centering left a large empty gap above AND
+         below the hub on tall phone screens (600px+ of available height for
+         a 310px-tall cluster). Top-anchoring uses that space instead of
+         wasting half of it above the fold. */
+      .draft-team-area { justify-content: flex-start; padding-top: 6px; }
+      /* Pod slots scale down via CSS (viewBox is fixed, CSS scales the rendered SVG box).
+         Sized ~15% up from an earlier, tighter pass per feedback that mobile had
+         too much dead space around a too-small hub. */
+      .pod-slots { grid-template-columns: 55px 55px; gap: 16px; }
+      .pod-slot { width: 55px; height: 55px; }
+      .pod-slot > svg { width: 55px; height: 55px; }
+      .captain-hub-node { width: 61px; height: 61px; }
+      .captain-hub-node > svg { width: 61px; height: 61px; }
+      .squad-hub-wrap { height: 310px; padding: 2px 4px 4px; }
+      .pod-row-mid { top: 163px; }
+      .pod-row-bot .pod-group:nth-child(1) { top: 150px; left: calc(50% - 167px); }
+      .pod-row-bot .pod-group:nth-child(2) { top: 150px; left: calc(50% + 40px); }
       .pod-label { font-size: 7px; }
-      /* Constrain full player-cards (AI reveal) on mobile */
-      .ai-reveal-cards .player-card { aspect-ratio: unset; min-height: 130px; max-height: 180px; }
     }
   </style>
 </head>
@@ -499,10 +502,10 @@
       aiSeenNames: [],
       currentRound: 1,
       currentCards: [],
-      aiRoundCards: [],
       aiRoundPick:  null,
       lastPick:           null,  // last item the human picked this round (player or captain)
       lastPickIsCaptain:  false,
+      awaitingNext:       false, // true between a pick and the user clicking "Next Selection"
       results: null
     };
   }
@@ -1091,7 +1094,6 @@
     else if (p === 'venue_spinner')renderVenueSpinner();
     else if (p === 'venue')        renderVenueReveal();
     else if (p === 'draft')        renderDraft();
-    else if (p === 'ai_reveal')    renderAIReveal();
     else if (p === 'review')       renderReview();
     else if (p === 'complete')     renderResults();
     else renderLanding();
@@ -1436,6 +1438,46 @@
     </div>`;
   }
 
+  // Scales the whole pod cluster up to fill the leftover vertical space in
+  // draft-team-area instead of sitting at a fixed size in a much taller flex
+  // box (the "wasted space" on tall desktop windows). Drives the `--hub-scale`
+  // CSS variable that every pod/hub size and offset is expressed in terms of
+  // (see the .squad-hub-wrap rule) rather than a `transform: scale()` on the
+  // wrap — that was tried first, but squad-hub-wrap's own box is `width:100%`
+  // (mostly empty space around the centered content), so scaling the element
+  // scaled that phantom box too and blew out the page's scrollWidth. Scaling
+  // the underlying literals has no such phantom box to inflate. Skipped on
+  // mobile, where sizing is already hand-tuned via the max-width:480px media
+  // query (which doesn't use --hub-scale at all).
+  function fitSquadHub() {
+    const area = document.querySelector('.draft-team-area');
+    const wrap = document.querySelector('.squad-hub-wrap');
+    if (!area || !wrap) return;
+    wrap.style.setProperty('--hub-scale', '1');
+    if (window.innerWidth <= 480) return;
+    // Measure the real rendered union of the pod groups + hub at scale 1 —
+    // wrap's own declared height (300px) is only a nominal approximation
+    // (pods B/C's real content actually runs a bit past it), and its width
+    // is 100% of the container (tells us nothing about the actual cluster
+    // footprint), so neither is trustworthy as a "natural size" on its own.
+    const groups = document.querySelectorAll('.pod-group, .captain-hub-node');
+    if (!groups.length) return;
+    let minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity;
+    groups.forEach(el => {
+      const r = el.getBoundingClientRect();
+      minX = Math.min(minX, r.left); maxX = Math.max(maxX, r.right);
+      minY = Math.min(minY, r.top);  maxY = Math.max(maxY, r.bottom);
+    });
+    const naturalW = (maxX - minX) + 16; // buffer matching wrap's own padding
+    const naturalH = (maxY - minY) + 34; // extra: divider lines run ~10-20px past the lowest pod's edge
+    if (!naturalW || !naturalH) return;
+    const statRow = document.querySelector('.squad-stat-row');
+    const availH  = area.clientHeight - (statRow ? statRow.offsetHeight : 0) - 16;
+    const availW  = area.clientWidth - 16;
+    const scale   = Math.max(Math.min(availH / naturalH, availW / naturalW, 2.2), 0.9);
+    wrap.style.setProperty('--hub-scale', scale);
+  }
+
   // Redraws SVG connection lines after any pod state change.
   function updateConnectionLines() {
     const area = document.getElementById('squad-hub-area');
@@ -1613,7 +1655,7 @@
   }
   // Redraw on resize/orientation change so divider lines stay pinned to the
   // pod clusters instead of the coordinates computed at a since-changed width.
-  window.addEventListener('resize', () => { if (document.getElementById('squad-hub-area')) updateConnectionLines(); });
+  window.addEventListener('resize', () => { if (document.getElementById('squad-hub-area')) { fitSquadHub(); updateConnectionLines(); } });
 
   // ─────────────────────────────────────────────────────────────────────────────
   // DRAG-AND-DROP SYSTEM
@@ -1622,17 +1664,15 @@
 
   function _startDrag(e, card, source, sourceEl) {
     e.preventDefault();
-    const tc    = TIER_COLORS[card.tier] || '#888';
-    const ghost = document.createElement('div');
+    const isCapt = isCaptainCard(card);
+    const ghost  = document.createElement('div');
     ghost.className = 'drag-ghost';
-    ghost.style.borderColor = tc;
-    ghost.style.color = tc;
-    ghost.textContent = card.name.split(' ').pop() + (card.year ? ` '${String(card.year).slice(2)}` : '');
+    ghost.innerHTML  = _shieldCardSVG(card, isCapt, null, 58);
     ghost.style.left = e.clientX + 'px';
     ghost.style.top  = e.clientY + 'px';
     document.body.appendChild(ghost);
     sourceEl.style.opacity = '0.3';
-    _drag = { card, isCapt: isCaptainCard(card), source, ghost, sourceEl };
+    _drag = { card, isCapt, source, ghost, sourceEl };
     try { sourceEl.setPointerCapture(e.pointerId); } catch(_) {}
   }
 
@@ -1703,24 +1743,33 @@
     }
   }
 
-  // Advances draft after a pick (AI pick + phase → ai_reveal).
+  // Advances draft after a pick: runs the AI's parallel pick, then stays on the
+  // draft screen with a "Next Selection" prompt instead of a dedicated reveal
+  // screen (the pod board itself is the reveal — no need to leave it).
   function _advanceDraft(item, captainPicked) {
     G.lastPick          = item;
     G.lastPickIsCaptain = captainPicked;
     const aiIsDone = (G.aiPicks.length === 12 && G.aiCaptain !== null);
     if (!aiIsDone) {
       const aiCards = generateRoundCardsFor(opp(G.side), G.aiPicks, G.aiCaptain, G.aiSeenNames);
-      G.aiRoundCards = aiCards;
-      const aiPick   = aiBestFromCards(aiCards, G.aiPicks);
-      G.aiRoundPick  = aiPick;
+      const aiPick  = aiBestFromCards(aiCards, G.aiPicks);
+      G.aiRoundPick = aiPick;
       if (aiPick) {
         if (isCaptainCard(aiPick)) { G.aiCaptain = aiPick; } else { G.aiPicks.push(aiPick); }
       }
     } else {
-      G.aiRoundCards = [];
-      G.aiRoundPick  = null;
+      G.aiRoundPick = null;
     }
-    G.phase = 'ai_reveal';
+    G.awaitingNext = true;
+    save(); render();
+  }
+
+  // "Next Selection" button handler — advances to the next round's tray once
+  // the user has reviewed their pick and the pod board.
+  function advanceToNextRound() {
+    G.awaitingNext = false;
+    G.currentRound = G.currentRound + 1;
+    G.currentCards = nextRoundCards();
     save(); render();
   }
 
@@ -1781,6 +1830,19 @@
         <div style="font-size:10px;color:var(--text-muted)">Rearrange pods to optimize chemistry, then submit</div>
         <button class="btn btn-gold" id="submit-pairings-btn" style="width:100%;max-width:320px">Submit to Pairings →</button>
       </div>`;
+    } else if (G.awaitingNext) {
+      const aiIsDone = (G.aiPicks.length === 12 && G.aiCaptain !== null);
+      const aiLine   = G.aiRoundPick
+        ? `Opponent picked <strong>${G.aiRoundPick.name}</strong>`
+        : (aiIsDone ? 'Opponent\'s squad is complete' : '');
+      const nextIsCaptainRound = (G.picks.length === 12 && G.captain === null);
+      bottomHTML = `<div class="pod-submit-bar">
+        <div style="font-size:11px;color:var(--text)">You picked <strong>${G.lastPick.name}</strong></div>
+        ${aiLine ? `<div style="font-size:10px;color:var(--text-muted)">${aiLine}</div>` : ''}
+        <button class="btn btn-gold" id="next-selection-btn" style="width:100%;max-width:320px">
+          ${nextIsCaptainRound ? 'Choose Your Captain →' : 'Next Selection →'}
+        </button>
+      </div>`;
     } else {
       const roundLabel = (G.picks.length === 12 && G.captain === null)
         ? 'Round 13 — Choose Your Captain'
@@ -1820,8 +1882,10 @@
 
     if (draftComplete) {
       document.getElementById('submit-pairings-btn').addEventListener('click', submitToPairings);
+    } else if (G.awaitingNext) {
+      document.getElementById('next-selection-btn').addEventListener('click', advanceToNextRound);
     }
-    requestAnimationFrame(updateConnectionLines);
+    requestAnimationFrame(() => { fitSquadHub(); updateConnectionLines(); });
   }
 
   // handlePick retained for Advanced Mode and any legacy code paths; pod builder
@@ -1830,62 +1894,6 @@
     const captainPicked = isCaptainCard(item);
     if (captainPicked) { G.captain = item; } else { G.picks.push(item); }
     _advanceDraft(item, captainPicked);
-  }
-
-  // ─────────────────────────────────────────────────────────────────────────────
-  // SCREEN: AI REVEAL
-  // ─────────────────────────────────────────────────────────────────────────────
-  function renderAIReveal() {
-    const round   = G.currentRound;
-    const aiCards = G.aiRoundCards || [];
-    const aiPick  = G.aiRoundPick;
-    const myPick  = G.lastPick;
-    const myPickIsCaptain = G.lastPickIsCaptain;
-    const isLast  = (G.picks.length === 12 && G.captain !== null);
-    const aiDone  = (G.aiPicks.length === 12 && G.aiCaptain !== null);
-
-    const cardsHTML = aiCards.map(p => {
-      const picked   = aiPick && p.id === aiPick.id;
-      const wrapCls  = picked ? 'ai-picked' : 'ai-not-picked';
-      const badge    = picked ? '<div class="ai-picked-badge">Opponent picked</div>' : '';
-      const cardHTML = isCaptainCard(p) ? captainCardHTML(p) : playerCardHTML(p, false);
-      return `<div class="ai-card-wrap ${wrapCls}">
-        ${badge}
-        ${cardHTML}
-      </div>`;
-    }).join('');
-
-    document.getElementById('app').innerHTML = `
-      <div class="ai-reveal-screen fade-in">
-        <div class="ai-reveal-eyebrow">Round ${round} of 13</div>
-        <div class="ai-reveal-title">Opponent's Pick — ${opp(G.side)}</div>
-        <div class="ai-reveal-sub">${aiDone ? "Opponent's squad is complete" : "Here's what they had to choose from"}</div>
-        ${myPick ? `<div class="ai-your-pick">${myPickIsCaptain ? 'Your captain' : 'Your pick'}: <strong>${myPick.name}</strong>${myPickIsCaptain ? '' : ` (${myPick.year})`}</div>` : ''}
-        <button class="btn btn-gold" id="ai-continue-btn" style="margin:8px 0 4px;">
-          ${isLast ? 'Arrange Your Squad →' : `Continue to Round ${round + 1} →`}
-        </button>
-        ${courseProfileHTML(G.venue, G.captain)}
-        <div class="ai-reveal-cards">${cardsHTML || (aiDone ? '' : '<p style="color:var(--text-muted)">No options available</p>')}</div>
-      </div>`;
-
-    document.getElementById('ai-continue-btn').addEventListener('click', advanceFromAIReveal);
-  }
-
-  function advanceFromAIReveal() {
-    // Draft ends once all 12 player slots AND the captain slot are filled.
-    if (G.picks.length === 12 && G.captain !== null) {
-      // Return to draft screen — pod builder is now active, Submit to Pairings button appears.
-      G.currentCards = [];
-      G.phase = 'draft';
-      save();
-      render();
-    } else {
-      G.currentRound = G.currentRound + 1;
-      G.currentCards = nextRoundCards();
-      G.phase = 'draft';
-      save();
-      render();
-    }
   }
 
   function submitToPairings() {

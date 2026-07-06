@@ -287,18 +287,21 @@
        Pod B/C spread wide left/right and only shallowly below the hub (not
        stacked directly underneath), so the three divider lines fan out at
        roughly even angles instead of bunching near-parallel by the hub. */
-    /* Golf-green backdrop: a kidney-shaped green (mowed stripe pattern
-       clipped to that outline) surrounded by darker rough, plus a bunker and
-       a water hazard for a real course feel — not just a green rectangle.
-       Colors are muted/dark on their own (not a bright render + opacity
-       trick) so it reads as a background, not the focal point, behind the
-       pod cards. Built as a single SVG data-URI so it needs no separate
-       image asset. */
+    /* Golf-course backdrop: fairway (outer blob), a lighter mowed green
+       (inner blob with its own stripe pattern + flagstick), two bunkers, and
+       a water hazard — modeled on an overhead course-hole graphic, just the
+       turf/sand/water shapes with no tree border. A flat dark linear-gradient
+       is layered OVER the art (not baked into its own colors) so it reads as
+       a faint backdrop rather than competing with the pod cards on top of
+       it — easy to tune by adjusting that overlay's alpha alone. Built as a
+       single SVG data-URI so it needs no separate image asset. */
     .squad-hub-area {
       position: relative;
       border-radius: 12px;
-      background-color: #14301b;
-      background-image: url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg'%20viewBox%3D'0%200%20800%20400'%3E%3Cdefs%3E%3CclipPath%20id%3D'g'%3E%3Cpath%20d%3D'M410%2C36%20C540%2C28%20640%2C74%20672%2C156%20C706%2C240%20664%2C330%20566%2C358%20C478%2C383%20372%2C378%20288%2C346%20C192%2C309%20130%2C242%20142%2C168%20C154%2C96%20238%2C52%20322%2C42%20C352%2C38%20382%2C38%20410%2C36%20Z'%2F%3E%3C%2FclipPath%3E%3Cpattern%20id%3D's'%20width%3D'42'%20height%3D'42'%20patternUnits%3D'userSpaceOnUse'%20patternTransform%3D'rotate(115)'%3E%3Crect%20width%3D'42'%20height%3D'42'%20fill%3D'%232f6a38'%2F%3E%3Crect%20width%3D'21'%20height%3D'42'%20fill%3D'%23356f3d'%2F%3E%3C%2Fpattern%3E%3C%2Fdefs%3E%3Crect%20width%3D'800'%20height%3D'400'%20fill%3D'%2314301b'%2F%3E%3Cg%20clip-path%3D'url(%23g)'%3E%3Crect%20width%3D'800'%20height%3D'400'%20fill%3D'url(%23s)'%2F%3E%3C%2Fg%3E%3Cpath%20d%3D'M556%2C296%20C594%2C291%20622%2C308%20624%2C334%20C626%2C357%20600%2C370%20570%2C366%20C544%2C362%20528%2C344%20534%2C324%20C538%2C310%20546%2C301%20556%2C296%20Z'%20fill%3D'%23b8a273'%20opacity%3D'0.85'%2F%3E%3Cellipse%20cx%3D'196'%20cy%3D'298'%20rx%3D'44'%20ry%3D'23'%20fill%3D'%232a5474'%20opacity%3D'0.85'%2F%3E%3C%2Fsvg%3E");
+      background-color: #10281a;
+      background-image:
+        linear-gradient(rgba(8,15,8,.62), rgba(8,15,8,.62)),
+        url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg'%20viewBox%3D'0%200%20800%20420'%3E%3Cdefs%3E%3CclipPath%20id%3D'green'%3E%3Cpath%20d%3D'M320%2C88%20C390%2C66%20468%2C76%20512%2C116%20C556%2C156%20552%2C228%20496%2C260%20C438%2C294%20352%2C290%20308%2C250%20C266%2C212%20256%2C132%20320%2C88%20Z'%2F%3E%3C%2FclipPath%3E%3Cpattern%20id%3D'stripes'%20width%3D'40'%20height%3D'40'%20patternUnits%3D'userSpaceOnUse'%20patternTransform%3D'rotate(112)'%3E%3Crect%20width%3D'40'%20height%3D'40'%20fill%3D'%233a8446'%2F%3E%3Crect%20width%3D'20'%20height%3D'40'%20fill%3D'%23347a3f'%2F%3E%3C%2Fpattern%3E%3C%2Fdefs%3E%3Cpath%20d%3D'M120%2C58%20C260%2C16%20560%2C18%20704%2C88%20C784%2C138%20764%2C262%20682%2C332%20C560%2C400%20258%2C400%20128%2C338%20C36%2C296%2026%2C156%20120%2C58%20Z'%20fill%3D'%231f4a29'%2F%3E%3Cg%20clip-path%3D'url(%23green)'%3E%3Crect%20x%3D'240'%20y%3D'40'%20width%3D'320'%20height%3D'260'%20fill%3D'url(%23stripes)'%2F%3E%3C%2Fg%3E%3Cpath%20d%3D'M320%2C88%20C390%2C66%20468%2C76%20512%2C116%20C556%2C156%20552%2C228%20496%2C260%20C438%2C294%20352%2C290%20308%2C250%20C266%2C212%20256%2C132%20320%2C88%20Z'%20fill%3D'none'%20stroke%3D'%23255e2e'%20stroke-width%3D'3'%2F%3E%3Cpath%20d%3D'M120%2C332%20C144%2C322%20168%2C326%20172%2C344%20C176%2C362%20156%2C376%20132%2C372%20C110%2C368%20100%2C352%20108%2C340%20C112%2C334%20116%2C332%20120%2C332%20Z'%20fill%3D'%23c9b483'%2F%3E%3Cpath%20d%3D'M636%2C296%20C666%2C286%20696%2C296%20700%2C318%20C704%2C340%20678%2C356%20648%2C350%20C622%2C344%20610%2C324%20618%2C310%20C622%2C302%20628%2C298%20636%2C296%20Z'%20fill%3D'%23c9b483'%2F%3E%3Cpath%20d%3D'M320%2C318%20C368%2C304%20430%2C308%20460%2C332%20C486%2C352%20470%2C372%20420%2C376%20C368%2C380%20320%2C368%20302%2C348%20C292%2C336%20300%2C324%20320%2C318%20Z'%20fill%3D'%232a5474'%2F%3E%3Cline%20x1%3D'402'%20y1%3D'108'%20x2%3D'402'%20y2%3D'150'%20stroke%3D'%23dcdcdc'%20stroke-width%3D'1.5'%2F%3E%3Cpath%20d%3D'M402%2C108%20L424%2C116%20L402%2C124%20Z'%20fill%3D'%23c0392b'%2F%3E%3C%2Fsvg%3E");
       background-size: cover;
       background-position: center;
     }
@@ -420,28 +423,21 @@
          longer has to dodge a fixed help-button corner (moved into the pod
          section on this screen — see positionHelpBtn), so these can be
          bigger than before instead of leaving that corner as dead space. */
-      .pick-cards-row { grid-template-columns: repeat(3, 68px); gap: 24px; justify-content: center; }
-      .pick-area { overflow-y: visible; }
+      .pick-cards-row { grid-template-columns: repeat(3, 78px); gap: 20px; justify-content: center; }
+      .pick-area { overflow-y: visible; padding: 14px 10px 16px; }
       .captain-cards { grid-template-columns: 1fr; }
       /* Anchor the pod cluster near the top of its flex row instead of
          vertical-centering it — centering left a large empty gap above AND
-         below the hub on tall phone screens (600px+ of available height for
-         a 310px-tall cluster). Top-anchoring uses that space instead of
-         wasting half of it above the fold. */
+         below the hub on tall phone screens. Pod slot/hub/gap/offset sizing
+         is NOT overridden here anymore — those are the calc(literal *
+         var(--hub-scale,1)) rules above, and fitSquadHub() (JS) now runs on
+         mobile too instead of skipping it, so the same auto-fit that fills
+         desktop windows also sizes things here, capped by whichever of
+         available width/height is tighter. A hand-tuned fixed mobile size
+         kept needing to be bumped larger every time content felt cramped;
+         letting the real available space drive it fixes that at the root. */
       .draft-team-area { justify-content: flex-start; padding-top: 6px; }
-      /* Pod slots scale down via CSS (viewBox is fixed, CSS scales the rendered SVG box).
-         Sized ~15% up from an earlier, tighter pass per feedback that mobile had
-         too much dead space around a too-small hub. */
-      .pod-slots { grid-template-columns: 55px 55px; gap: 16px; }
-      .pod-slot { width: 55px; height: 55px; }
-      .pod-slot > svg { width: 55px; height: 55px; }
-      .captain-hub-node { width: 61px; height: 61px; }
-      .captain-hub-node > svg { width: 61px; height: 61px; }
-      .squad-hub-wrap { height: 310px; padding: 2px 4px 4px; }
-      .pod-row-mid { top: 163px; }
-      .pod-row-bot .pod-group:nth-child(1) { top: 150px; left: calc(50% - 167px); }
-      .pod-row-bot .pod-group:nth-child(2) { top: 150px; left: calc(50% + 40px); }
-      .pod-label { font-size: 7px; }
+      .squad-hub-wrap { padding: 2px 4px 4px; }
     }
   </style>
 </head>
@@ -1490,15 +1486,16 @@
   // wrap — that was tried first, but squad-hub-wrap's own box is `width:100%`
   // (mostly empty space around the centered content), so scaling the element
   // scaled that phantom box too and blew out the page's scrollWidth. Scaling
-  // the underlying literals has no such phantom box to inflate. Skipped on
-  // mobile, where sizing is already hand-tuned via the max-width:480px media
-  // query (which doesn't use --hub-scale at all).
+  // the underlying literals has no such phantom box to inflate. Runs on
+  // mobile too (not just desktop) — availW naturally becomes the binding
+  // constraint on a narrow phone, so this can't overflow the viewport; a
+  // fixed mobile breakpoint size kept needing to be hand-bumped larger every
+  // time the pod cards felt cramped, so let real available space drive it.
   function fitSquadHub() {
     const area = document.querySelector('.draft-team-area');
     const wrap = document.querySelector('.squad-hub-wrap');
     if (!area || !wrap) return;
     wrap.style.setProperty('--hub-scale', '1');
-    if (window.innerWidth <= 480) return;
     // Measure the real rendered union of the pod groups + hub at scale 1 —
     // wrap's own declared height (300px) is only a nominal approximation
     // (pods B/C's real content actually runs a bit past it), and its width

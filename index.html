@@ -287,21 +287,23 @@
        Pod B/C spread wide left/right and only shallowly below the hub (not
        stacked directly underneath), so the three divider lines fan out at
        roughly even angles instead of bunching near-parallel by the hub. */
-    /* Golf-course backdrop: fairway (outer blob), a lighter mowed green
-       (inner blob with its own stripe pattern + flagstick), two bunkers, and
-       a water hazard — modeled on an overhead course-hole graphic, just the
-       turf/sand/water shapes with no tree border. A flat dark linear-gradient
-       is layered OVER the art (not baked into its own colors) so it reads as
-       a faint backdrop rather than competing with the pod cards on top of
-       it — easy to tune by adjusting that overlay's alpha alone. Built as a
-       single SVG data-URI so it needs no separate image asset. */
+    /* Golf-green backdrop: a single asymmetric mowed green (an oblong/kidney
+       silhouette, not a plain oval or circle — loosely modeled on Augusta
+       National's 12th, which reads more like a squash than a round green),
+       with its own stripe pattern and a flagstick. No fairway/bunker/water
+       shapes anymore — just the green, kept simple per feedback. A flat
+       dark linear-gradient is layered OVER the art (not baked into its own
+       colors) so it reads as a faint backdrop rather than competing with
+       the pod cards on top of it — easy to tune by adjusting that overlay's
+       alpha alone. Built as a single SVG data-URI so it needs no separate
+       image asset. */
     .squad-hub-area {
       position: relative;
       border-radius: 12px;
-      background-color: #10281a;
+      background-color: #0e2015;
       background-image:
-        linear-gradient(rgba(8,15,8,.62), rgba(8,15,8,.62)),
-        url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg'%20viewBox%3D'0%200%20800%20420'%3E%3Cdefs%3E%3CclipPath%20id%3D'green'%3E%3Cpath%20d%3D'M320%2C88%20C390%2C66%20468%2C76%20512%2C116%20C556%2C156%20552%2C228%20496%2C260%20C438%2C294%20352%2C290%20308%2C250%20C266%2C212%20256%2C132%20320%2C88%20Z'%2F%3E%3C%2FclipPath%3E%3Cpattern%20id%3D'stripes'%20width%3D'40'%20height%3D'40'%20patternUnits%3D'userSpaceOnUse'%20patternTransform%3D'rotate(112)'%3E%3Crect%20width%3D'40'%20height%3D'40'%20fill%3D'%233a8446'%2F%3E%3Crect%20width%3D'20'%20height%3D'40'%20fill%3D'%23347a3f'%2F%3E%3C%2Fpattern%3E%3C%2Fdefs%3E%3Cpath%20d%3D'M120%2C58%20C260%2C16%20560%2C18%20704%2C88%20C784%2C138%20764%2C262%20682%2C332%20C560%2C400%20258%2C400%20128%2C338%20C36%2C296%2026%2C156%20120%2C58%20Z'%20fill%3D'%231f4a29'%2F%3E%3Cg%20clip-path%3D'url(%23green)'%3E%3Crect%20x%3D'240'%20y%3D'40'%20width%3D'320'%20height%3D'260'%20fill%3D'url(%23stripes)'%2F%3E%3C%2Fg%3E%3Cpath%20d%3D'M320%2C88%20C390%2C66%20468%2C76%20512%2C116%20C556%2C156%20552%2C228%20496%2C260%20C438%2C294%20352%2C290%20308%2C250%20C266%2C212%20256%2C132%20320%2C88%20Z'%20fill%3D'none'%20stroke%3D'%23255e2e'%20stroke-width%3D'3'%2F%3E%3Cpath%20d%3D'M120%2C332%20C144%2C322%20168%2C326%20172%2C344%20C176%2C362%20156%2C376%20132%2C372%20C110%2C368%20100%2C352%20108%2C340%20C112%2C334%20116%2C332%20120%2C332%20Z'%20fill%3D'%23c9b483'%2F%3E%3Cpath%20d%3D'M636%2C296%20C666%2C286%20696%2C296%20700%2C318%20C704%2C340%20678%2C356%20648%2C350%20C622%2C344%20610%2C324%20618%2C310%20C622%2C302%20628%2C298%20636%2C296%20Z'%20fill%3D'%23c9b483'%2F%3E%3Cpath%20d%3D'M320%2C318%20C368%2C304%20430%2C308%20460%2C332%20C486%2C352%20470%2C372%20420%2C376%20C368%2C380%20320%2C368%20302%2C348%20C292%2C336%20300%2C324%20320%2C318%20Z'%20fill%3D'%232a5474'%2F%3E%3Cline%20x1%3D'402'%20y1%3D'108'%20x2%3D'402'%20y2%3D'150'%20stroke%3D'%23dcdcdc'%20stroke-width%3D'1.5'%2F%3E%3Cpath%20d%3D'M402%2C108%20L424%2C116%20L402%2C124%20Z'%20fill%3D'%23c0392b'%2F%3E%3C%2Fsvg%3E");
+        linear-gradient(rgba(8,15,8,.7), rgba(8,15,8,.7)),
+        url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg'%20viewBox%3D'0%200%20800%20420'%3E%3Cdefs%3E%3CclipPath%20id%3D'green'%3E%3Cpath%20d%3D'M110%2C229.9%20C108.5%2C214.4%20108.5%2C186.9%20120%2C167.6%20C131.4%2C148.2%20155.3%2C127.5%20178.6%2C113.9%20C201.9%2C100.4%20231.6%2C93.2%20259.7%2C86.5%20C287.7%2C79.9%20322%2C74.4%20347%2C74%20C371.9%2C73.6%20390.6%2C79.9%20409.4%2C84%20C428.1%2C88.2%20440.5%2C96.9%20459.2%2C99%20C478%2C101.1%20500.8%2C95.4%20521.6%2C96.5%20C542.4%2C97.5%20564.2%2C99.6%20584%2C105.2%20C603.7%2C110.8%20623.9%2C119.8%20640.1%2C130.2%20C656.3%2C140.6%20673%2C155.1%20681.3%2C167.6%20C689.6%2C180.1%20691.7%2C192.5%20690%2C205%20C688.3%2C217.5%20681.7%2C229.9%20671.3%2C242.4%20C660.9%2C254.9%20646.3%2C268.8%20627.6%2C279.8%20C608.9%2C290.9%20585%2C300.2%20559%2C308.5%20C533%2C316.8%20502.9%2C325.2%20471.7%2C329.7%20C440.5%2C334.3%20405.2%2C336.6%20371.9%2C336%20C338.7%2C335.3%20303.3%2C332.2%20272.2%2C326%20C241%2C319.8%20208.7%2C309.4%20184.8%2C298.5%20C160.9%2C287.7%20141.2%2C272.6%20128.7%2C261.1%20C116.2%2C249.7%20111.5%2C245.5%20110%2C229.9%20Z'%2F%3E%3C%2FclipPath%3E%3Cpattern%20id%3D'stripes'%20width%3D'40'%20height%3D'40'%20patternUnits%3D'userSpaceOnUse'%20patternTransform%3D'rotate(112)'%3E%3Crect%20width%3D'40'%20height%3D'40'%20fill%3D'%233a8446'%2F%3E%3Crect%20width%3D'20'%20height%3D'40'%20fill%3D'%23347a3f'%2F%3E%3C%2Fpattern%3E%3C%2Fdefs%3E%3Cg%20clip-path%3D'url(%23green)'%3E%3Crect%20x%3D'90'%20y%3D'60'%20width%3D'620'%20height%3D'300'%20fill%3D'url(%23stripes)'%2F%3E%3C%2Fg%3E%3Cpath%20d%3D'M110%2C229.9%20C108.5%2C214.4%20108.5%2C186.9%20120%2C167.6%20C131.4%2C148.2%20155.3%2C127.5%20178.6%2C113.9%20C201.9%2C100.4%20231.6%2C93.2%20259.7%2C86.5%20C287.7%2C79.9%20322%2C74.4%20347%2C74%20C371.9%2C73.6%20390.6%2C79.9%20409.4%2C84%20C428.1%2C88.2%20440.5%2C96.9%20459.2%2C99%20C478%2C101.1%20500.8%2C95.4%20521.6%2C96.5%20C542.4%2C97.5%20564.2%2C99.6%20584%2C105.2%20C603.7%2C110.8%20623.9%2C119.8%20640.1%2C130.2%20C656.3%2C140.6%20673%2C155.1%20681.3%2C167.6%20C689.6%2C180.1%20691.7%2C192.5%20690%2C205%20C688.3%2C217.5%20681.7%2C229.9%20671.3%2C242.4%20C660.9%2C254.9%20646.3%2C268.8%20627.6%2C279.8%20C608.9%2C290.9%20585%2C300.2%20559%2C308.5%20C533%2C316.8%20502.9%2C325.2%20471.7%2C329.7%20C440.5%2C334.3%20405.2%2C336.6%20371.9%2C336%20C338.7%2C335.3%20303.3%2C332.2%20272.2%2C326%20C241%2C319.8%20208.7%2C309.4%20184.8%2C298.5%20C160.9%2C287.7%20141.2%2C272.6%20128.7%2C261.1%20C116.2%2C249.7%20111.5%2C245.5%20110%2C229.9%20Z'%20fill%3D'none'%20stroke%3D'%23255e2e'%20stroke-width%3D'3'%2F%3E%3Cline%20x1%3D'300'%20y1%3D'120'%20x2%3D'300'%20y2%3D'160'%20stroke%3D'%23dcdcdc'%20stroke-width%3D'1.5'%2F%3E%3Cpath%20d%3D'M300%2C120%20L322%2C128%20L300%2C136%20Z'%20fill%3D'%23c0392b'%2F%3E%3C%2Fsvg%3E");
       background-size: cover;
       background-position: center;
     }
@@ -428,16 +430,41 @@
       .captain-cards { grid-template-columns: 1fr; }
       /* Anchor the pod cluster near the top of its flex row instead of
          vertical-centering it — centering left a large empty gap above AND
-         below the hub on tall phone screens. Pod slot/hub/gap/offset sizing
-         is NOT overridden here anymore — those are the calc(literal *
-         var(--hub-scale,1)) rules above, and fitSquadHub() (JS) now runs on
-         mobile too instead of skipping it, so the same auto-fit that fills
-         desktop windows also sizes things here, capped by whichever of
-         available width/height is tighter. A hand-tuned fixed mobile size
-         kept needing to be bumped larger every time content felt cramped;
-         letting the real available space drive it fixes that at the root. */
+         below the hub on tall phone screens. Pod slot/hub/gap sizing is NOT
+         overridden here — those are the calc(literal * var(--hub-scale,1))
+         rules above, and fitSquadHub() (JS) runs on mobile too, so the same
+         auto-fit that fills desktop windows also sizes things here, capped
+         by whichever of available width/height is tighter. */
       .draft-team-area { justify-content: flex-start; padding-top: 6px; }
-      .squad-hub-wrap { padding: 2px 4px 4px; }
+      /* Mobile pod layout: captain on the left, Pod A/B/C stacked in a
+         column to the right (each keeps its own 2x2 slot grid), instead of
+         the desktop radial triangle. A phone has height to spare but not
+         width, and the triangle is fundamentally width-bound there — no
+         amount of auto-fit scaling fixes a layout shape that doesn't suit a
+         narrow screen. Divider/captain-line drawing is skipped for this
+         layout in updateConnectionLines() (see isMobileStack there); the
+         within-pod connector lines still apply since they're edge-to-edge
+         between a pod's own slots regardless of layout. */
+      .squad-hub-wrap {
+        display: grid;
+        grid-template-columns: auto 1fr;
+        grid-template-rows: auto auto;
+        align-items: center;
+        column-gap: 14px;
+        row-gap: 10px;
+        height: auto;
+        padding: 10px 8px;
+      }
+      .pod-row-top, .pod-row-mid, .pod-row-bot { position: static; transform: none; }
+      .pod-row-mid { grid-column: 1; grid-row: 1 / span 2; justify-self: center; }
+      .pod-row-top { grid-column: 2; grid-row: 1; justify-self: center; }
+      .pod-row-bot {
+        grid-column: 2; grid-row: 2;
+        display: flex; flex-direction: column; align-items: center; gap: 10px;
+        pointer-events: auto;
+      }
+      .pod-row-bot .pod-group:nth-child(1),
+      .pod-row-bot .pod-group:nth-child(2) { position: static; top: auto; left: auto; }
     }
   </style>
 </head>
@@ -1614,8 +1641,16 @@
     // of alignment (cutting across a pod's cards instead of skirting them)
     // the moment pod positions change. Length is measured from the actual
     // rendered pod clusters it borders, so it stops just outside their edge.
+    // Mobile uses a stacked layout (captain left, Pod A/B/C stacked in a
+    // column to the right — see the max-width:480px media query) instead of
+    // the desktop radial triangle. The angle-based divider/captain lines
+    // below are meaningless for a linear stack (there's no "between two
+    // pods" wedge to bisect), so they're skipped there; the within-pod
+    // connector lines still apply to any layout, since they're just edge-to-
+    // edge between a pod's own 4 slots wherever it's rendered.
+    const isMobileStack = window.innerWidth <= 480;
     const capHub = document.getElementById('captain-hub-node');
-    if (capHub) {
+    if (capHub && !isMobileStack) {
       const hubRect = capHub.getBoundingClientRect();
       const cc = ctr(capHub);
       const DIVIDER_MARGIN = 10;
@@ -1686,7 +1721,7 @@
     });
 
     // Captain-to-pod group lines (gold dashed) — only once captain selected
-    if (G.captain && capHub) {
+    if (G.captain && capHub && !isMobileStack) {
       [0, 1, 2].forEach(pi => {
         const podEl = document.querySelector(`[data-pod-group="${pi}"]`);
         if (!podEl) return;

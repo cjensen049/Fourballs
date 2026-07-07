@@ -342,9 +342,10 @@
     /* Drag ghost */
     .drag-ghost { position: fixed; pointer-events: none; z-index: 999; opacity: .92; transform: translate(-50%, -65%); filter: drop-shadow(0 4px 10px rgba(0,0,0,.55)); }
     /* Squad header row */
-    .squad-stat-row { display: flex; align-items: center; gap: 10px; padding: 3px 10px 0; font-size: 10px; }
-    .ssn-label { color: var(--text-dim); }
-    .ssn-val { color: var(--gold); font-weight: 700; }
+    .squad-stat-row { display: flex; align-items: center; gap: 16px; padding: 4px 10px; font-size: 13px; }
+    .ssn-label { color: var(--text-dim); font-size: 10px; text-transform: uppercase; letter-spacing: .04em; }
+    .ssn-val { color: var(--gold); font-weight: 800; font-size: 16px; }
+    .ssn-total .ssn-val { color: #7dd3fc; }
     /* Submit-to-pairings bar */
     .pod-submit-bar { padding: 10px 12px 14px; background: var(--surface); border-top: 1px solid var(--border); display: flex; flex-direction: column; align-items: center; gap: 5px; }
 
@@ -426,7 +427,7 @@
          cell gives it, via the aspect-ratio + 100% svg override below), so
          these scale up with the actual device width instead of topping out
          at a number picked for one phone size. */
-      .pick-cards-row { grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px; width: 100%; margin: 0 auto; justify-content: unset; }
+      .pick-cards-row { grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px; width: 88%; margin: 0 auto; justify-content: unset; }
       .tray-card { width: 100%; aspect-ratio: 1; }
       .tray-card svg { width: 100%; height: 100%; }
       .pick-area { overflow-y: visible; padding: 14px 6px 16px; }
@@ -1445,7 +1446,7 @@
     // Attribute icon overlays centered inside the shirt/jacket silhouette —
     // sized down further so it reads as an accent on the shirt, not a second
     // icon competing with it.
-    const styleIcon = isCaptain ? '' : _styleIconEl(dominantStyleTag(entity), 32, 18, 12);
+    const styleIcon = isCaptain ? '' : _styleIconEl(dominantStyleTag(entity), 32, 21, 12);
 
     // Played/won-cup icons sit at shoulder height, snug against the shirt's
     // own edges (rather than down near the hem) so they read as flanking the
@@ -1470,7 +1471,7 @@
       ${styleIcon}
       <rect x="7" y="35" width="50" height="11" rx="1" fill="rgba(0,0,0,.4)"/>
       <text x="32" y="43.5" text-anchor="middle" font-size="8.5" fill="white" font-family="system-ui,sans-serif" font-weight="700">${shortLabel}</text>
-      <text x="32" y="56" text-anchor="middle" font-size="7" fill="${tc}" font-family="system-ui,sans-serif">${yearLabel}</text>
+      <text x="32" y="56" text-anchor="middle" font-size="7.5" fill="white" font-weight="800" font-family="system-ui,sans-serif">${yearLabel}</text>
       ${chemBadge}
     </svg>`;
   }
@@ -1915,10 +1916,6 @@
     const talent = G.picks.reduce((s, p) => s + getTalentScore(p.tier), 0);
     const chem   = computeTeamChemScore(G.pods, G.captain, G.venue, CUP_RESULTS);
 
-    const captainLabel = G.captain
-      ? `<strong>${G.captain.name}</strong>`
-      : `<span style="color:var(--text-dim)">No Captain</span>`;
-
     let bottomHTML;
     if (draftComplete) {
       bottomHTML = `<div class="pod-submit-bar">
@@ -1967,8 +1964,9 @@
           <div class="squad-stat-row">
             <span><span class="ssn-label">Talent</span> <span class="ssn-val">${talent}</span></span>
             <span><span class="ssn-label">Chem</span> <span class="ssn-val">${chem}</span></span>
+            <span class="ssn-total"><span class="ssn-label">Total</span> <span class="ssn-val">${talent + chem}</span></span>
             <span style="flex:1"></span>
-            <span style="font-size:9px;color:var(--text-dim)">${G.picks.length}/12 · Captain: ${captainLabel}</span>
+            <span style="font-size:9px;color:var(--text-dim)">${G.picks.length}/12</span>
           </div>
           ${squadHubHTML()}
         </div>

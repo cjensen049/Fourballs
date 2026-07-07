@@ -421,18 +421,15 @@
        silently loses even when its media query matches. This block must stay
        after every rule it overrides. */
     @media (max-width: 480px) {
-      /* Draft tray: fr-based columns capped by max-width instead of a fixed
-         per-card px value — the card fills whatever its grid cell gives it
-         (via the aspect-ratio + 100% svg override below), so it can be sized
-         up here without a fixed number that overflows on a narrower phone.
-         ~1.5x (3:2) the pod card's typical rendered size, since these need
-         to be the most legible things on screen — no longer has to dodge a
-         fixed help-button corner either (moved into the pod section — see
-         positionHelpBtn). */
-      .pick-cards-row { grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 14px; width: 100%; max-width: 330px; margin: 0 auto; justify-content: unset; }
+      /* Draft tray: fr-based columns filling the available width (no
+         artificial max-width cap anymore — the card fills whatever its grid
+         cell gives it, via the aspect-ratio + 100% svg override below), so
+         these scale up with the actual device width instead of topping out
+         at a number picked for one phone size. */
+      .pick-cards-row { grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px; width: 100%; margin: 0 auto; justify-content: unset; }
       .tray-card { width: 100%; aspect-ratio: 1; }
       .tray-card svg { width: 100%; height: 100%; }
-      .pick-area { overflow-y: visible; padding: 14px 10px 16px; }
+      .pick-area { overflow-y: visible; padding: 14px 6px 16px; }
       .captain-cards { grid-template-columns: 1fr; }
       /* Anchor the pod cluster near the top of its flex row instead of
          vertical-centering it — centering left a large empty gap above AND
@@ -442,43 +439,44 @@
          auto-fit that fills desktop windows also sizes things here, capped
          by whichever of available width/height is tighter. */
       .draft-team-area { justify-content: flex-start; padding-top: 6px; }
-      /* Mobile pod layout: a triangle rather than the desktop's radial
-         version OR a plain stacked column. Pod A and Pod C sit centrally in
-         one column, stacked above the captain (bottom of that same column);
-         Pod B — the "middle" pod by name only, not position — sits off to
-         the right, vertically centered against the A/C/captain column. That
-         gives three visual points (top-center, bottom-center, right) instead
-         of a flat line, closer to the desktop shape's feel while staying
-         narrow enough for a phone. `display:contents` on pod-row-bot lets
-         its two children (Pod B, Pod C) place directly into this grid
-         instead of being stuck in one shared cell together. Divider/captain
-         lines are skipped for this layout in updateConnectionLines() (see
-         isMobileStack there) — the angle-based math they rely on doesn't
-         mean anything for this shape; within-pod connector lines are
+      /* Mobile pod layout: a 3-column diamond — captain on the left,
+         vertically between Pod A (above) and Pod C (below) in the middle
+         column, Pod B on the right spanning/centered against that whole
+         column. Four points (captain-left, A-top, C-bottom, B-right)
+         instead of a flat stack, closer to the desktop radial shape's feel
+         while staying narrow enough for a phone. `display:contents` on
+         pod-row-bot lets its two children (Pod B, Pod C) land in different
+         cells of this grid instead of being stuck sharing one. Divider/
+         captain lines are skipped for this layout in updateConnectionLines()
+         (see isMobileStack there) — the angle-based math they rely on
+         doesn't mean anything for this shape; within-pod connector lines are
          unaffected since those are edge-to-edge between a pod's own slots
          regardless of layout. */
       .squad-hub-wrap {
         display: grid;
-        grid-template-columns: auto auto;
+        grid-template-columns: auto auto auto;
         grid-template-rows: auto auto auto;
         justify-content: center;
         align-items: center;
-        row-gap: 8px;
-        column-gap: 12px;
+        row-gap: 6px;
+        column-gap: 6px;
         height: auto;
-        padding: 8px 4px;
+        padding: 6px 2px;
       }
       .pod-row-top, .pod-row-mid { position: static; transform: none; }
-      .pod-row-top { grid-column: 1; grid-row: 1; justify-self: center; } /* Pod A */
-      .pod-row-mid { grid-column: 1; grid-row: 3; justify-self: center; } /* Captain */
+      .pod-row-mid { grid-column: 1; grid-row: 2; justify-self: center; } /* Captain: left, middle row */
+      .pod-row-top { grid-column: 2; grid-row: 1; justify-self: center; } /* Pod A: middle column, top row */
       .pod-row-bot { display: contents; }
-      .pod-row-bot .pod-group:nth-child(1) { grid-column: 2; grid-row: 1 / span 3; align-self: center; justify-self: center; position: static; top: auto; left: auto; } /* Pod B */
-      .pod-row-bot .pod-group:nth-child(2) { grid-column: 1; grid-row: 2; justify-self: center; position: static; top: auto; left: auto; } /* Pod C */
-      /* Tighter internal pod gap than desktop, purely to reclaim width for a
-         bigger --hub-scale on mobile (see the isMobile branch in
-         fitSquadHub) — the pod triangle here is width-bound, so shaving the
-         gap between a pod's own 4 slots buys more scale than anything else. */
-      .pod-slots { gap: calc(12px * var(--hub-scale, 1)); }
+      .pod-row-bot .pod-group:nth-child(1) { grid-column: 3; grid-row: 1 / span 3; align-self: center; justify-self: center; position: static; top: auto; left: auto; } /* Pod B: right, spans all rows */
+      .pod-row-bot .pod-group:nth-child(2) { grid-column: 2; grid-row: 3; justify-self: center; position: static; top: auto; left: auto; } /* Pod C: middle column, bottom row */
+      /* Tighter internal pod gap than desktop, and a smaller captain hub
+         than desktop's 66px — purely to reclaim width for a bigger
+         --hub-scale. The 3-column diamond is more width-hungry than the
+         previous 2-column version (an extra column for the captain), and
+         this layout is width-bound, so every px shaved off gaps/the hub
+         directly buys back rendered pod size. */
+      .pod-slots { gap: calc(8px * var(--hub-scale, 1)); }
+      .captain-hub-node { width: calc(46px * var(--hub-scale, 1)); height: calc(46px * var(--hub-scale, 1)); }
     }
   </style>
 </head>

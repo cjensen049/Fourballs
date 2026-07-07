@@ -63,6 +63,10 @@ chemistry\_system\_spec.md # ACTIVE implementation spec for the talent/chemistry
 ## Chemistry System
 
 * Talent score: flat per-tier value from `talent\_scores.json`, looked up at calc time.
+  The live draft stat row and the end-of-game Performance Rating both sum talent across the
+  12 drafted players AND the captain's own tier — a hero/platinum captain visibly raises Talent,
+  not just Chem. This is a display-total change only; captain tier does not feed into the
+  per-match win-probability formula (that's `captainPerkBoost`/factor 5, a separate mechanic).
 * Player attributes: 4 total — Power, Accurate, Short Game, Clutch. (A 5th, Steady/Consistent,
   was removed — as a `min()` of two other stats it could structurally never win the argmax, so
   it was dead weight in `dominantStyleTag` and only ever showed as a 2nd/3rd chip on cards.)

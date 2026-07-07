@@ -1955,8 +1955,9 @@
     const cards         = G.currentCards;
     const draftComplete = G.picks.length === 12 && G.captain !== null;
 
-    // Running Talent + Chem numbers
-    const talent = G.picks.reduce((s, p) => s + getTalentScore(p.tier, TALENT_SCORES), 0);
+    // Running Talent + Chem numbers — captain's tier counts toward Talent too
+    const talent = G.picks.reduce((s, p) => s + getTalentScore(p.tier, TALENT_SCORES), 0)
+      + (G.captain ? getTalentScore(G.captain.tier, TALENT_SCORES) : 0);
     const chem   = computeTeamChemScore(G.pods, G.captain, G.venue, CUP_RESULTS);
 
     let bottomHTML;
@@ -2596,7 +2597,8 @@
     const topAI = topScorer(allAI, aiMatchPts);
     const fmtP  = p => p % 1 === 0 ? String(p) : p.toFixed(1);
 
-    const talentTotal = G.picks.reduce((s, p) => s + getTalentScore(p.tier, TALENT_SCORES), 0);
+    const talentTotal = G.picks.reduce((s, p) => s + getTalentScore(p.tier, TALENT_SCORES), 0)
+      + (G.captain ? getTalentScore(G.captain.tier, TALENT_SCORES) : 0);
     const chemTotal   = computeTeamChemScore(G.pods, G.captain, G.venue, CUP_RESULTS);
     const cupPts      = r.finalScore.user;
     const perfTotal   = talentTotal + chemTotal + cupPts;

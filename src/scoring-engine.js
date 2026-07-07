@@ -2,7 +2,7 @@
 
 // ─── Talent score (tier → baseline match advantage) ──────────────────────────
 const _TALENT = { hero: 12, platinum: 8, gold: 5, silver: 3, bronze: 1 };
-function getTalentScore(tier) { return _TALENT[tier] || 7; }
+function getTalentScore(tier, talentScores) { return (talentScores || _TALENT)[tier] || 7; }
 
 // ─── Composite score ──────────────────────────────────────────────────────────
 function compositeScore(player) {
@@ -125,7 +125,9 @@ function computeCaptainChemScore(captain, draftedPlayers, _allPlayers, venue, cu
 }
 
 // computeTeamChemScore — total chemistry contribution for the team.
-// Sums tier_reward only (not raw points) for all 12 players across pods + captain.
+// Sums (points + reward) for every player across all pods, plus the captain's (points + reward) —
+// every chemistry point counts toward the live score, with the tier reward as a bonus on top for
+// well-connected pods/captains, not a replacement for the raw points.
 // pods: [[p,p,p,p],[p,p,p,p],[p,p,p,p]] (null slots skipped)
 function computeTeamChemScore(pods, captain, venue, cupResults) {
   if (!pods) return 0;
@@ -135,13 +137,13 @@ function computeTeamChemScore(pods, captain, venue, cupResults) {
     const filled = pod.filter(Boolean);
     for (const player of filled) {
       const podmates = filled.filter(p => p.name !== player.name);
-      const { reward } = computePlayerChemScore(player, podmates, [], cr, captain);
-      total += reward;
+      const { points, reward } = computePlayerChemScore(player, podmates, [], cr, captain);
+      total += points + reward;
     }
   }
   const allDrafted = pods.flat().filter(Boolean);
-  const { reward: capReward } = computeCaptainChemScore(captain, allDrafted, [], venue, cr);
-  total += capReward;
+  const { points: capPoints, reward: capReward } = computeCaptainChemScore(captain, allDrafted, [], venue, cr);
+  total += capPoints + capReward;
   return total;
 }
 

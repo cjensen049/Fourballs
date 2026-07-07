@@ -495,9 +495,10 @@ console.log('\ncomputeTeamChemScore');
 
   const teamScore = computeTeamChemScore(pods, eurCap2018, mockVenue2018b, CUP_RESULTS);
   // Each player: 3 pod-pair connections (2-3pts each, some sharing a dominant tag) + captain
-  // connection (led+won=2) → 9pts each → green tier → 4 * 11 reward = 44
-  // Plus captain: venue(1) + 4 players(4) + 1 win(1) = 6 → green (new threshold) → 15 reward
-  assert('well-connected 2018 EUR pod gives substantial score', teamScore > 40);
+  // connection (led+won=2) → 9pts each → green tier → 4 * (9 points + 11 reward) = 80
+  // Plus captain: venue(1) + 4 players(4) + 1 win(1) = 6 points → green → 6 + 15 reward = 21
+  // Total = 80 + 21 = 101 — points always count, reward is a bonus on top, not a replacement
+  assert('team score sums points + reward, not reward alone', teamScore === 101);
 
   // Empty pods + no captain: 0
   const emptyPods = [[null,null,null,null],[null,null,null,null],[null,null,null,null]];

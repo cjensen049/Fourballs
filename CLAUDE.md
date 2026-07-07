@@ -89,8 +89,10 @@ chemistry\_system\_spec.md # ACTIVE implementation spec for the talent/chemistry
   +1 if player's year is in captain.years, same nationality, made_team: true. +1 if that year was a win.
   Captains have no stat_* fields so the same-attribute bonus does NOT apply to player-captain pairs.
 * **Team chem score**: `computeTeamChemScore(pods, captain, venue, cupResults)` → total number.
-  Sums `reward` only (not raw points) for every player across all pods, plus the captain's reward.
-  Used for the live Chem counter and end-of-game Performance Rating.
+  Sums (points + reward) for every player across all pods, plus the captain's (points + reward) —
+  every chemistry point counts toward the live score; the tier reward is a bonus on top for
+  well-connected pods/captains, not a replacement for the raw points. Used for the live Chem
+  counter and end-of-game Performance Rating.
 * In-match effect of rewards not yet wired — do not invent a conversion formula without design input.
 * Course-profile venue-attribute chemistry match (player gets a chem point if their dominant
   attribute is one of the venue's top demand attributes) is a planned addition, not yet implemented —

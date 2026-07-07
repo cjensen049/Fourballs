@@ -1,7 +1,7 @@
 // scoring-engine.js — pure JS module, no UI dependencies
 
 // ─── Talent score (tier → baseline match advantage) ──────────────────────────
-const _TALENT = { hero: 20, platinum: 15, gold: 10, silver: 7, bronze: 3 };
+const _TALENT = { hero: 12, platinum: 8, gold: 5, silver: 3, bronze: 1 };
 function getTalentScore(tier) { return _TALENT[tier] || 7; }
 
 // ─── Composite score ──────────────────────────────────────────────────────────

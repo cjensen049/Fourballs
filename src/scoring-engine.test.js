@@ -196,11 +196,11 @@ function assertApprox(label, value, target, tolerance = 3) {
 
 console.log('\ngetTalentScore');
 {
-  assert('hero = 20',     getTalentScore('hero')     === 20);
-  assert('platinum = 15', getTalentScore('platinum') === 15);
-  assert('gold = 10',     getTalentScore('gold')     === 10);
-  assert('silver = 7',    getTalentScore('silver')   === 7);
-  assert('bronze = 3',    getTalentScore('bronze')   === 3);
+  assert('hero = 12',     getTalentScore('hero')     === 12);
+  assert('platinum = 8',  getTalentScore('platinum') === 8);
+  assert('gold = 5',      getTalentScore('gold')     === 5);
+  assert('silver = 3',    getTalentScore('silver')   === 3);
+  assert('bronze = 1',    getTalentScore('bronze')   === 1);
   assert('unknown tier defaults to 7', getTalentScore('legendary') === 7);
   assert('hero > platinum > gold > silver > bronze',
     getTalentScore('hero') > getTalentScore('platinum') &&
@@ -587,10 +587,10 @@ console.log('\ncalculateMatchProbability — 20 combinations');
   const withoutCap = calculateMatchProbability(playerA, playerB, powerVenue, 'foursomes', null, playerA);
   assert('captain perk boost increases win probability', withCap.win > withoutCap.win);
 
-  // Hero vs platinum — hero's talent score (20) > platinum (15), should win more often
+  // Hero vs platinum — hero's talent score (12) > platinum (8), should win more often
   const heroProb = calculateMatchProbability(heroPlayer, playerA, powerVenue, 'singles', null);
-  // heroPlayer has lower raw stats but +20 talent vs +15 for platinum
-  // Net talent delta: heroPlayer composite ~70 + 20 = 90 vs playerA composite ~89 + 15 = 104
+  // heroPlayer has lower raw stats but +12 talent vs +8 for platinum
+  // Net talent delta: heroPlayer composite ~70 + 12 = 82 vs playerA composite ~89 + 8 = 97
   // playerA is still expected to win on raw+talent; just verify probabilities are valid
   assert('hero vs platinum: valid probabilities', heroProb.win + heroProb.halve + heroProb.loss > 99);
 }

@@ -32,8 +32,8 @@ and a dramatic session-by-session results reveal.
                          # UI as a small "✓ Made the Team" badge (playerCardHTML /
                          # playerPickedHTML) — used by the chemistry system's teammate
                          # and champion connection categories (see Chemistry System below).
-  talent\_scores.json    # tier -> flat baseline talent score (hero:20, platinum:15,
-                         # gold:10, silver:7, bronze:3). Looked up at calculation time
+  talent\_scores.json    # tier -> flat baseline talent score (hero:12, platinum:8,
+                         # gold:5, silver:3, bronze:1). Looked up at calculation time
                          # from a card's tier, not stored on the player record.
   cup\_results.json      # Ryder Cup year -> winning nationality. Used by the chemistry
                          # system's champion connection category.
@@ -261,8 +261,10 @@ tier probabilities are naturally weighted higher without manual adjustment.
 
 * Hero cards can appear in ANY round (graduated probability above)
 * Heroes are fan favorites, cult legends, Ryder Cup icons
-* Hero advantage is entirely tier-based: `getTalentScore('hero') = 20` (vs platinum's 15,
-  gold's 10, etc.) — looked up from `talent_scores.json` at match-calculation time.
+* Hero advantage is entirely tier-based: `getTalentScore('hero') = 12` (vs platinum's 8,
+  gold's 5, etc.) — looked up from `talent_scores.json` at match-calculation time. Rebalanced
+  down from 20/15/10/7/3 after playtesting showed talent overweighting chemistry in the
+  Performance Rating total (see Chemistry System).
   There are no per-player `hero_bonus` objects, `home_boost`, `fatigue_immune`, or any
   other per-player bonus fields — those were removed when the schema migrated to flat
   `stat_*` / `style_*` fields.

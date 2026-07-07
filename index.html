@@ -1541,35 +1541,48 @@
     const area = document.querySelector('.draft-team-area');
     const wrap = document.querySelector('.squad-hub-wrap');
     if (!area || !wrap) return;
-    wrap.style.setProperty('--hub-scale', '1');
-    // Measure the real rendered union of the pod groups + hub at scale 1 —
-    // wrap's own declared height (300px) is only a nominal approximation
-    // (pods B/C's real content actually runs a bit past it), and its width
-    // is 100% of the container (tells us nothing about the actual cluster
-    // footprint), so neither is trustworthy as a "natural size" on its own.
-    const groups = document.querySelectorAll('.pod-group, .captain-hub-node');
-    if (!groups.length) return;
-    let minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity;
-    groups.forEach(el => {
-      const r = el.getBoundingClientRect();
-      minX = Math.min(minX, r.left); maxX = Math.max(maxX, r.right);
-      minY = Math.min(minY, r.top);  maxY = Math.max(maxY, r.bottom);
-    });
-    // The +34/+16 buffers exist for the desktop radial layout's divider
-    // lines, which run ~10-20px past a pod's edge — mobile's triangle
-    // layout skips those lines entirely (see isMobileStack in
-    // updateConnectionLines), so that margin is just unused width/height
-    // it's width-bound on a phone, so reclaiming it here is what actually
-    // buys a visibly bigger scale, not just headroom nothing uses.
-    const isMobile = window.innerWidth <= 480;
-    const naturalW = (maxX - minX) + (isMobile ? 6  : 16);
-    const naturalH = (maxY - minY) + (isMobile ? 12 : 34);
-    if (!naturalW || !naturalH) return;
-    const statRow = document.querySelector('.squad-stat-row');
-    const availH  = area.clientHeight - (statRow ? statRow.offsetHeight : 0) - (isMobile ? 8 : 16);
-    const availW  = area.clientWidth - (isMobile ? 8 : 16);
-    const scale   = Math.max(Math.min(availH / naturalH, availW / naturalW, 2.2), 0.9);
-    wrap.style.setProperty('--hub-scale', scale);
+    // Hidden for the whole reset-measure-rescale cycle below so the momentary
+    // "natural size" state (scale forced to 1 just to measure it) never
+    // actually paints. Without this, the card text would render correctly for
+    // one frame at scale 1, then the browser would fail to repaint it cleanly
+    // once --hub-scale changed again a moment later — names/years would flash
+    // and vanish on every render (and reappear-then-vanish again on every
+    // pod drag, since each drag triggers this same measure/rescale cycle).
+    // try/finally guarantees visibility is restored even on an early return.
+    wrap.style.visibility = 'hidden';
+    try {
+      wrap.style.setProperty('--hub-scale', '1');
+      // Measure the real rendered union of the pod groups + hub at scale 1 —
+      // wrap's own declared height (300px) is only a nominal approximation
+      // (pods B/C's real content actually runs a bit past it), and its width
+      // is 100% of the container (tells us nothing about the actual cluster
+      // footprint), so neither is trustworthy as a "natural size" on its own.
+      const groups = document.querySelectorAll('.pod-group, .captain-hub-node');
+      if (!groups.length) return;
+      let minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity;
+      groups.forEach(el => {
+        const r = el.getBoundingClientRect();
+        minX = Math.min(minX, r.left); maxX = Math.max(maxX, r.right);
+        minY = Math.min(minY, r.top);  maxY = Math.max(maxY, r.bottom);
+      });
+      // The +34/+16 buffers exist for the desktop radial layout's divider
+      // lines, which run ~10-20px past a pod's edge — mobile's triangle
+      // layout skips those lines entirely (see isMobileStack in
+      // updateConnectionLines), so that margin is just unused width/height
+      // it's width-bound on a phone, so reclaiming it here is what actually
+      // buys a visibly bigger scale, not just headroom nothing uses.
+      const isMobile = window.innerWidth <= 480;
+      const naturalW = (maxX - minX) + (isMobile ? 6  : 16);
+      const naturalH = (maxY - minY) + (isMobile ? 12 : 34);
+      if (!naturalW || !naturalH) return;
+      const statRow = document.querySelector('.squad-stat-row');
+      const availH  = area.clientHeight - (statRow ? statRow.offsetHeight : 0) - (isMobile ? 8 : 16);
+      const availW  = area.clientWidth - (isMobile ? 8 : 16);
+      const scale   = Math.max(Math.min(availH / naturalH, availW / naturalW, 2.2), 0.9);
+      wrap.style.setProperty('--hub-scale', scale);
+    } finally {
+      wrap.style.visibility = '';
+    }
   }
 
   // Redraws SVG connection lines after any pod state change.
@@ -1919,7 +1932,7 @@
     const draftComplete = G.picks.length === 12 && G.captain !== null;
 
     // Running Talent + Chem numbers
-    const talent = G.picks.reduce((s, p) => s + getTalentScore(p.tier), 0);
+    const talent = G.picks.reduce((s, p) => s + getTalentScore(p.tier, TALENT_SCORES), 0);
     const chem   = computeTeamChemScore(G.pods, G.captain, G.venue, CUP_RESULTS);
 
     let bottomHTML;
@@ -2555,7 +2568,7 @@
     const topAI = topScorer(allAI, aiMatchPts);
     const fmtP  = p => p % 1 === 0 ? String(p) : p.toFixed(1);
 
-    const talentTotal = G.picks.reduce((s, p) => s + getTalentScore(p.tier), 0);
+    const talentTotal = G.picks.reduce((s, p) => s + getTalentScore(p.tier, TALENT_SCORES), 0);
     const chemTotal   = computeTeamChemScore(G.pods, G.captain, G.venue, CUP_RESULTS);
     const cupPts      = r.finalScore.user;
     const perfTotal   = talentTotal + chemTotal + cupPts;

@@ -2632,23 +2632,27 @@
     },
     {
       title: 'Draft Cards',
-      body: '3 options appear each round — usually players, but a captain card can show up too. Earlier picks lean elite, later picks are more of a gamble, and a Hero card can land any round.'
+      body: '13 rounds, 3 cards each. Cards are usually players, but a captain can show up in any round too — taking one never costs you a player pick. Earlier picks lean elite, later picks are more of a gamble, and a Hero card can land any round.'
     },
     {
-      title: 'Captain Slot',
-      body: 'One of your 13 rounds fills a separate captain slot — taking a captain never costs you a player pick. Their bonus applies all week. Wait too long and round 13 forces a choice from the weaker captains left.'
+      title: 'Build Your Squad',
+      body: 'Drag each card onto one of your 3 pods (4 players each) or the captain hub in the middle — there’s no click-to-pick. Rearrange freely until you submit; dropping on a filled slot bumps that player to an open one.'
+    },
+    {
+      title: 'Chemistry',
+      body: 'Podmates build chemistry from real shared Ryder Cup history (teammates, championship years) and from matching main attributes — Power, Accurate, Short Game, or Clutch. Each card shows a green/yellow/red dot for its pod chemistry; your captain has a separate chemistry score based on venue fit, real roster overlap, and cup wins.'
     },
     {
       title: 'Pairings',
       body: 'Once all 12 player slots and your captain slot are filled, pairings are auto-assigned by chemistry and strength. Hit Re-randomize on the review screen to explore different matchups until you find a lineup you trust.'
     },
     {
-      title: 'Simulate',
-      body: 'Lock in your lineup and simulate the full Ryder Cup. Friday, Saturday, then Sunday singles — one match at a time. Running score updates after every session.'
+      title: 'Simulate & Results',
+      body: 'Lock in your lineup and simulate the full Ryder Cup — Friday, Saturday, then Sunday singles, one match at a time. At the end, your Performance Rating (Talent + Chemistry + Cup Points) and each side’s top point scorer are front and center.'
     },
     {
       title: 'Tap ? anytime',
-      body: 'The ? button in the bottom-right shows this tutorial again plus the full tier probability table so you always know your odds.'
+      body: 'The ? button shows this tutorial again plus the full tier probability table and chemistry breakdown so you always know your odds.'
     }
   ];
 
@@ -2745,15 +2749,27 @@
           <tbody>${tableRows}</tbody>
         </table>
 
+        <div class="help-section-title">Chemistry</div>
+        <p style="font-size:12px;color:var(--text-muted);margin-bottom:8px;">Each podmate (up to 3) can add up to 3 points; your captain scores separately.</p>
+        <ul class="how-to-list">
+          <li><strong>+1 Teammates</strong> — you both share the same real Ryder Cup year &amp; side</li>
+          <li><strong>+1 Champion</strong> — on top of Teammates, that year was a win</li>
+          <li><strong>+1 Same season</strong> — same year &amp; side, but one of you didn't make that real team</li>
+          <li><strong>+1 Same attribute</strong> — you share a main attribute: Power, Accurate, Short Game, or Clutch</li>
+          <li><strong>Player tiers</strong> — <span style="color:#22c55e">green</span> 8+ pts, <span style="color:#eab308">yellow</span> 5–7, <span style="color:#ef4444">red</span> under 5</li>
+          <li><strong>Captain tiers</strong> — venue match, real roster overlap, and cup wins each add points. <span style="color:#22c55e">green</span> 4+ pts, <span style="color:#eab308">yellow</span> 2–3, <span style="color:#ef4444">red</span> under 2</li>
+        </ul>
+
         <div class="help-section-title">How to Play</div>
         <ul class="how-to-list">
-          <li><strong>Captain first</strong> — pick before the draft; their bonus applies all week</li>
-          <li><strong>12 rounds</strong> — 3 players from any Ryder Cup year appear per round</li>
+          <li><strong>13 rounds</strong> — 12 player picks + 1 captain slot; captain cards can appear in any round mixed in with players, and taking one never costs you a player pick</li>
+          <li><strong>Drag to build your squad</strong> — drag each card onto a pod slot or the captain hub; no click-to-pick</li>
           <li><strong>Earlier = better</strong> — picks 1–4 lean Platinum/Gold; picks 9–12 lean Bronze</li>
-          <li><strong>Hero cards</strong> — can appear any round; special abilities shown on the card</li>
-          <li><strong>Auto-pairings</strong> — assigned after round 12; Re-randomize to try new matchups</li>
+          <li><strong>Hero cards</strong> — can appear any round</li>
+          <li><strong>Auto-pairings</strong> — assigned once all 13 rounds are filled; Re-randomize to try new matchups</li>
           <li><strong>Fatigue</strong> — players in both Foursomes and Fourball pairs get a singles penalty</li>
           <li><strong>28 points total</strong> — first to 14.5 wins the Ryder Cup</li>
+          <li><strong>Performance Rating</strong> — Talent + Chemistry + Cup Points combine into one rating at the final results screen</li>
         </ul>
 
         <div style="margin-top:18px;display:flex;gap:10px;">

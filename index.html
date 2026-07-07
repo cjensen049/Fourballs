@@ -1585,6 +1585,30 @@
     }
   }
 
+  // TEMP DIAGNOSTIC — chasing an intermittent bug report where a filled pod/captain
+  // card's name or year text goes blank a moment after render (see git history /
+  // conversation for context). Only logs when something actually looks wrong (empty
+  // text or a hidden/zero-opacity text node), so it's silent in the normal case.
+  // Remove once the root cause is found and fixed.
+  function _diagnoseCardText(label) {
+    const wrap = document.querySelector('.squad-hub-wrap');
+    const hubScale = wrap ? getComputedStyle(wrap).getPropertyValue('--hub-scale') : 'n/a';
+    document.querySelectorAll('.pod-slot.filled, .captain-hub-node.filled').forEach(el => {
+      const texts = el.querySelectorAll('text');
+      const nameEl = texts[0], yearEl = texts[1];
+      if (!nameEl || !yearEl) return;
+      const nameStyle = getComputedStyle(nameEl);
+      const yearStyle = getComputedStyle(yearEl);
+      const isBad = t => !t.textContent.trim();
+      const isHidden = s => s.opacity === '0' || s.display === 'none' || s.visibility === 'hidden';
+      if (isBad(nameEl) || isBad(yearEl) || isHidden(nameStyle) || isHidden(yearStyle)) {
+        const who = el.dataset.pod !== undefined ? `pod=${el.dataset.pod} slot=${el.dataset.slot}` : 'captain';
+        console.warn(`[card-text-bug] ${label} — ${who} nameText="${nameEl.textContent}" yearText="${yearEl.textContent}" ` +
+          `nameOpacity=${nameStyle.opacity} yearOpacity=${yearStyle.opacity} hubScale=${hubScale}`);
+      }
+    });
+  }
+
   // Redraws SVG connection lines after any pod state change.
   function updateConnectionLines() {
     const area = document.getElementById('squad-hub-area');
@@ -1998,6 +2022,10 @@
       document.getElementById('next-selection-btn').addEventListener('click', advanceToNextRound);
     }
     requestAnimationFrame(() => { fitSquadHub(); updateConnectionLines(); });
+    // TEMP DIAGNOSTIC — checked at a few delays to catch a "fine at first, then
+    // goes blank a moment later" pattern. See _diagnoseCardText.
+    _diagnoseCardText('render:0ms');
+    [300, 1000, 2500].forEach(ms => setTimeout(() => _diagnoseCardText(`render:${ms}ms`), ms));
   }
 
   // handlePick retained for Advanced Mode and any legacy code paths; pod builder

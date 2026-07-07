@@ -63,27 +63,39 @@ chemistry\_system\_spec.md # ACTIVE implementation spec for the talent/chemistry
 ## Chemistry System
 
 * Talent score: flat per-tier value from `talent\_scores.json`, looked up at calc time.
+* Player attributes: 4 total — Power, Accurate, Short Game, Clutch. (A 5th, Steady/Consistent,
+  was removed — as a `min()` of two other stats it could structurally never win the argmax, so
+  it was dead weight in `dominantStyleTag` and only ever showed as a 2nd/3rd chip on cards.)
 * Pairwise chemistry: `computeChemistry(p1, p2, _, cupResults)` → 0–3 points per pair.
   Four additive connection categories (each worth 1 pt):
   * **Teammates** — both cards share the same `year` and `nationality`, both `made\_team: true`
   * **Champion** — only with teammates; that shared year was a win (`cup\_results.json[year] === nationality`)
   * **Same season, not teammates** — same year + nationality, but at least one has `made\_team: false`
-  * **Complementary styles** — dominant style tags form one of: Power+ShortGame, Power+Accurate,
-    Power+Clutch, Accurate+Clutch, ShortGame+Clutch. Dominant tag derived from `stat\_*` fields
-    (same logic as ATTR\_META chips), not `style\_*` fields.
+  * **Same main attribute** — dominant style tags match (e.g. two Power-dominant players in the
+    same pod). Intentionally simplified from an earlier "complementary pairing" model (Power+ShortGame,
+    Accurate+Clutch, etc.) — matching your main attribute is easier for players to reason about while
+    podding, at the cost of real-world pairing logic (rewards stacking similar players over
+    diversifying skillsets). Dominant tag derived from `stat\_*` fields (same logic as ATTR\_META
+    chips), not `style\_*` fields.
 * **Player pod score**: `computePlayerChemScore(player, podmates, _, cupResults)` sums pairwise
-  pts across up to 3 podmates. Tier: green ≥4 (+11 reward), yellow 2–3 (+6), red 0–1 (+0).
+  pts across up to 3 podmates. Tier: green ≥8 (+11 reward), yellow 5–7 (+6), red 0–4 (+0).
 * **Captain score**: `computeCaptainChemScore(captain, drafted, _, venue, cupResults)` — venue
   match +1, +1 per drafted player on a real roster the captain led, +1 per cup win by that captain.
-  Tier: green ≥8 (+15), yellow 5–7 (+10), red 0–4 (+0).
+  Tier: green ≥4 (+15), yellow 2–3 (+10), red 0–1 (+0).
+  (Player and captain thresholds were deliberately swapped from an earlier player-green-≥4/
+  captain-green-≥8 split — captains rarely accumulated enough points to reach a high bar, while
+  players hit the old low bar too easily.)
 * **Player-captain connection**: `computePlayerCaptainConnection(player, captain, cupResults)` → 0–2 pts.
   +1 if player's year is in captain.years, same nationality, made_team: true. +1 if that year was a win.
-  Captains have no stat_* fields so complementary styles do NOT apply to player-captain pairs.
+  Captains have no stat_* fields so the same-attribute bonus does NOT apply to player-captain pairs.
 * **Team chem score**: `computeTeamChemScore(pods, captain, venue, cupResults)` → total number.
-  Sums (points + reward) for every player across all pods, plus captain's (points + reward). Used
-  for the live Chem counter and end-of-game Performance Rating.
+  Sums `reward` only (not raw points) for every player across all pods, plus the captain's reward.
+  Used for the live Chem counter and end-of-game Performance Rating.
 * In-match effect of rewards not yet wired — do not invent a conversion formula without design input.
-* `chemistry_system_v2.md` is the authoritative spec; `chemistry_system_spec.md` is archived.
+* Course-profile venue-attribute chemistry match (player gets a chem point if their dominant
+  attribute is one of the venue's top demand attributes) is a planned addition, not yet implemented —
+  do not assume `computePlayerChemScore` reads `venue` today.
+* `chemistry_system_spec.md` (archived) describes the pre-v2 model; this section is the current spec.
 
 ## Pod Builder (Squad Hub — active during Draft screen)
 
@@ -137,7 +149,10 @@ mapped from hidden tags — do not expose raw tag values
 * Course profile bar displayed during draft: shows venue name,
 user\_descriptors, and the top-3 demand chips (from courseProfileHTML's DEMAND\_META,
 still Power / Accurate / Short Game / Consistent / Clutch — 5 labels only) using the
-same colors as player style tag chips
+same colors as player style tag chips. Since player attributes dropped to 4 (see
+Chemistry System), the "Consistent" chip's icon lookup (`DEMAND\_TO\_ATTR` → `ATTR\_META`)
+now falls back to text-only (no icon) — a known temporary gap pending the planned
+course-profile rework (top-2 attributes, chem match) described in Chemistry System.
 * `hidden\_tags` has 7 dimensions: power\_weight, accuracy\_weight, short\_game\_weight,
 wind\_factor, pressure\_factor, putting\_weight, consistency\_weight. The last two are
 additive (added for venue-archetype mapping support) and are NOT yet wired into any
@@ -216,7 +231,7 @@ so taking the captain early never skips or repeats a row in the table below.
 style tags (1–2 chips derived from stats)
 * Do NOT show: composite score, world ranking, win count, hero bonus label (removed with hero_bonus schema)
 * Style tags derived from stats: Power (driving distance), Accurate (DA+GIR avg),
-Short Game (scrambling), Consistent (min DA/scrambling), Clutch (pressure\_index)
+Short Game (scrambling), Clutch (pressure\_index) — 4 tags total (see Chemistry System section)
 * Top tag always shown; 2nd tag shown only if within 5 pts of highest
 * Hero glow effect if Hero tier
 

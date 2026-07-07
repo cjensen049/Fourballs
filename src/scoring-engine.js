@@ -29,29 +29,24 @@ function calculateVenueFit(player, venue) {
 // See chemistry-system-v2.md for full spec.
 //
 // dominantStyleTag: mirrors ATTR_META derivation from index.html (stat-based, not style_* fields).
+// Four tags only — power/accurate/shortgame/clutch (consistent was removed: as a min()
+// of two other stats it could never actually win the argmax, so it was dead weight here).
 function dominantStyleTag(p) {
   const scores = {
     power:      p.stat_driving_distance,
     accurate:   Math.round(p.stat_driving_accuracy * 0.55 + p.stat_greens_in_regulation * 0.45),
     shortgame:  p.stat_scrambling,
-    consistent: Math.min(p.stat_driving_accuracy, p.stat_scrambling),
     clutch:     p.stat_pressure_index,
   };
   return Object.entries(scores).sort((a, b) => b[1] - a[1])[0][0];
 }
-
-// Sorted-join key for complement lookup (order-independent).
-const _COMP_PAIRS = new Set([
-  'accurate|clutch', 'accurate|power', 'clutch|power',
-  'clutch|shortgame', 'power|shortgame',
-]);
 
 // computeChemistry — pairwise connection points (0–3).
 // Categories per pair:
 //   +1 teammates:      same year, same nat, both made_team===true
 //   +1 champion:       alongside teammates AND cup won that year
 //   +1 same season:    same year, same nat, ≥1 has made_team===false (mutually exclusive with teammates)
-//   +1 complementary:  dominant style tags form a recognised pairing
+//   +1 same attribute: dominant style tags match (matching main attribute, not a complementary pairing)
 // allPlayers retained in signature for compatibility; no longer used.
 function computeChemistry(p1, p2, _allPlayers, cupResults) {
   if (!p1 || !p2 || p1.name === p2.name) return 0;
@@ -66,8 +61,7 @@ function computeChemistry(p1, p2, _allPlayers, cupResults) {
       pts += 1; // same season, not teammates
     }
   }
-  const tags = [dominantStyleTag(p1), dominantStyleTag(p2)].sort().join('|');
-  if (_COMP_PAIRS.has(tags)) pts += 1;
+  if (dominantStyleTag(p1) === dominantStyleTag(p2)) pts += 1;
   return pts; // 0–3
 }
 
@@ -96,8 +90,8 @@ function computePlayerChemScore(player, podmates, allPlayers, cupResults, captai
     total += computeChemistry(player, mate, allPlayers, cupResults);
   }
   if (captain) total += computePlayerCaptainConnection(player, captain, cupResults);
-  if (total >= 4) return { points: total, tier: 'green',  reward: 11 };
-  if (total >= 2) return { points: total, tier: 'yellow', reward:  6 };
+  if (total >= 8) return { points: total, tier: 'green',  reward: 11 };
+  if (total >= 5) return { points: total, tier: 'yellow', reward:  6 };
   return               { points: total, tier: 'red',    reward:  0 };
 }
 
@@ -125,8 +119,8 @@ function computeCaptainChemScore(captain, draftedPlayers, _allPlayers, venue, cu
     if (cr[String(y)] === captain.nationality) pts += 1;
   }
 
-  if (pts >= 8) return { points: pts, tier: 'green',  reward: 15 };
-  if (pts >= 5) return { points: pts, tier: 'yellow', reward: 10 };
+  if (pts >= 4) return { points: pts, tier: 'green',  reward: 15 };
+  if (pts >= 2) return { points: pts, tier: 'yellow', reward: 10 };
   return             { points: pts, tier: 'red',    reward:  0 };
 }
 

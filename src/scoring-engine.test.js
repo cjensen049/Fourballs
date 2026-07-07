@@ -291,54 +291,50 @@ console.log('\ncomputeChemistry — v2 point model (0–3)');
   assert('null p1 returns 0',     computeChemistry(null, teamWin1, [], CUP_RESULTS) === 0);
   assert('null p2 returns 0',     computeChemistry(teamWin1, null, [], CUP_RESULTS) === 0);
 
-  // Teammates who won together: +1 teammates, +1 champion = 2 (no comp: both power vs short → check)
-  // teamWin1 dominant=power, teamWin2 dominant=shortgame → power+shortgame IS complementary → +1
+  // Teammates who won together: +1 teammates, +1 champion = 2 (dominant tags differ: power vs shortgame)
   const twChem = computeChemistry(teamWin1, teamWin2, [], CUP_RESULTS);
-  assert('teammates+champion+comp = 3', twChem === 3);
+  assert('teammates+champion, different dominant tags = 2', twChem === 2);
 
-  // Teammates who won but no complement: two identical-stat EUR players, same year, 2018 win
+  // Teammates who won, AND share a dominant tag: two identical-stat EUR players, same year, 2018 win
   const teamWin3 = makeTestPlayer('gold', {
     id: 'tw3', name: 'Team Win 3', nationality: 'EUR', year: 2018, made_team: true,
     stat_driving_distance: 75, stat_driving_accuracy: 70, stat_greens_in_regulation: 70,
     stat_scrambling: 68, stat_birdie_rate: 70, stat_pressure_index: 65,
   });
   const tw13 = computeChemistry(teamWin1, teamWin3, [], CUP_RESULTS);
-  assert('teammates+champion, same dominant tag = 2', tw13 === 2);
+  assert('teammates+champion+same dominant tag = 3', tw13 === 3);
 
-  // Same season, not teammates (snub): +1
+  // Same season, not teammates (snub), AND both inherit playerA's stats → same dominant tag (clutch)
   const snubChem = computeChemistry(snub1, snub2, [], CUP_RESULTS);
-  assert('same season, one snubbed = 1', snubChem === 1);
+  assert('same season snub + same dominant tag = 2', snubChem === 2);
 
-  // Different years, same nat → only comp possible
+  // Different years, same nat, same dominant tag (power) → tag match only
   const diffYearComp = computeChemistry(teamWin1, diffYear, [], CUP_RESULTS);
-  // teamWin1 dominant=power, diffYear default (from playerA copy) dominant=?
-  // diffYear uses playerA base: stat_driving_distance=90 → power. Same tag, no comp.
-  assert('different years, same dominant tag = 0', diffYearComp === 0);
+  assert('different years, same dominant tag = 1', diffYearComp === 1);
 
-  // Cross-nationality: no year/nat match, only comp possible
+  // Cross-nationality: no year/nat match, only a dominant-tag match is possible
   const crossNat = computeChemistry(sharedPlayer1, playerA, [], CUP_RESULTS);
-  assert('cross-nationality has at most comp bonus (0 or 1)', crossNat <= 1);
+  assert('cross-nationality has at most a tag-match bonus (0 or 1)', crossNat <= 1);
 
-  // complementary styles alone (different years, different nat or same nat different years)
-  const compOnly = computeChemistry(powerDom, shortDom, [], {});
-  assert('complementary tags only = 1', compOnly === 1);
+  // Matching main attribute alone (different years/nats): +1
+  const samePowerTag = computeChemistry(powerDom, makeTestPlayer('silver', {
+    id: 'pd2', name: 'Power Dom2',
+    stat_driving_distance: 85, stat_driving_accuracy: 68, stat_greens_in_regulation: 70,
+    stat_scrambling: 65, stat_birdie_rate: 65, stat_pressure_index: 65,
+  }), [], {});
+  assert('same dominant tag (power+power) = 1', samePowerTag === 1);
 
-  // accurate+clutch is complementary
+  // Different dominant attributes no longer score (complementary pairing was removed)
+  const diffTagPS = computeChemistry(powerDom, shortDom, [], {});
+  assert('different dominant tags (power+shortgame) = 0', diffTagPS === 0);
+
   const clutchDom = makeTestPlayer('silver', {
     id: 'cd2', name: 'Clutch Dom2',
     stat_driving_distance: 65, stat_driving_accuracy: 68, stat_greens_in_regulation: 70,
     stat_scrambling: 65, stat_birdie_rate: 65, stat_pressure_index: 99,
   });
-  const compAC = computeChemistry(accurateDom, clutchDom, [], {});
-  assert('accurate+clutch complementary = 1', compAC === 1);
-
-  // Same dominant tag → no comp
-  const noComp = computeChemistry(powerDom, makeTestPlayer('silver', {
-    id: 'pd2', name: 'Power Dom2',
-    stat_driving_distance: 85, stat_driving_accuracy: 68, stat_greens_in_regulation: 70,
-    stat_scrambling: 65, stat_birdie_rate: 65, stat_pressure_index: 65,
-  }), [], {});
-  assert('same dominant tag = 0 comp', noComp === 0);
+  const diffTagAC = computeChemistry(accurateDom, clutchDom, [], {});
+  assert('different dominant tags (accurate+clutch) = 0', diffTagAC === 0);
 
   // Result always 0–3
   for (let i = 0; i < 10; i++) {
@@ -357,37 +353,35 @@ console.log('\ncomputePlayerChemScore');
     makeTestPlayer('gold', { id:'pod3', name:'Pod 3', nationality:'EUR', year:2018, made_team:true, stat_driving_distance:75, stat_driving_accuracy:70, stat_greens_in_regulation:70, stat_scrambling:68, stat_birdie_rate:70, stat_pressure_index:65 }),
     makeTestPlayer('gold', { id:'pod4', name:'Pod 4', nationality:'EUR', year:2018, made_team:true, stat_driving_distance:75, stat_driving_accuracy:70, stat_greens_in_regulation:70, stat_scrambling:68, stat_birdie_rate:70, stat_pressure_index:65 }),
   ];
+  // teamWin1 (power) vs teamWin2 (shortgame, diff tag): teammates+champion = 2
+  // teamWin1 vs pod3/pod4 (power, same tag as teamWin1): teammates+champion+tag = 3 each
+  // total = 2 + 3 + 3 = 8 → green (new threshold ≥8)
   const greenScore = computePlayerChemScore(teamWin1, pod2018, [], CUP_RESULTS);
-  assert('four 2018 EUR winners: player green tier (≥4pts)', greenScore.tier === 'green');
+  assert('four 2018 EUR winners: player green tier (≥8pts)', greenScore.tier === 'green');
   assert('green tier reward = 11', greenScore.reward === 11);
 
-  // Pod of strangers: different years/nats AND same dominant tag (power) as teamWin1 → 0 pts → red
+  // Pod of strangers: different years/nats, but all share teamWin1's dominant tag (power) → 1pt each = 3pts
+  // Still red under the new threshold (<5)
   const strangerPod = [
     makeTestPlayer('bronze', { id:'s1', name:'Stranger 1', nationality:'USA', year:1999, made_team:false, stat_driving_distance:85, stat_driving_accuracy:68, stat_greens_in_regulation:68, stat_scrambling:65, stat_birdie_rate:65, stat_pressure_index:65 }),
     makeTestPlayer('bronze', { id:'s2', name:'Stranger 2', nationality:'USA', year:2004, made_team:false, stat_driving_distance:85, stat_driving_accuracy:68, stat_greens_in_regulation:68, stat_scrambling:65, stat_birdie_rate:65, stat_pressure_index:65 }),
     makeTestPlayer('bronze', { id:'s3', name:'Stranger 3', nationality:'USA', year:2010, made_team:false, stat_driving_distance:85, stat_driving_accuracy:68, stat_greens_in_regulation:68, stat_scrambling:65, stat_birdie_rate:65, stat_pressure_index:65 }),
   ];
   const redScore = computePlayerChemScore(teamWin1, strangerPod, [], {});
-  assert('strangers across years/nats: red tier', redScore.tier === 'red');
+  assert('strangers across years/nats, tag-match only (3pts): red tier', redScore.tier === 'red');
   assert('red tier reward = 0', redScore.reward === 0);
 
-  // 2 podmates give 1pt each → total 2 → yellow
+  // 3 podmates each give teammates+champion (2pts, dominant tag differs from teamWin1's power) → total 6 → yellow
   const yellowPod = [
-    makeTestPlayer('silver', { id:'y1', name:'Yellow 1', nationality:'EUR', year:2021, made_team:false }),
-    makeTestPlayer('silver', { id:'y2', name:'Yellow 2', nationality:'USD', year:2015, made_team:false }),
-  ];
-  // teamWin1 (EUR, 2018) vs yellow1 (EUR, 2021 snub): diff year → only comp; power vs power = 0
-  // teamWin1 vs yellow2 (USD, 2015): cross-nat → 0 unless comp
-  // Adjust yellow1 to have shortgame dominant so comp fires
-  const yellowPod2 = [
-    makeTestPlayer('silver', { id:'yy1', name:'Yellow Y1', nationality:'USA', year:2008, made_team:false,
+    makeTestPlayer('gold', { id:'yb1', name:'Yellow B1', nationality:'EUR', year:2018, made_team:true,
       stat_driving_distance:65, stat_driving_accuracy:70, stat_greens_in_regulation:70, stat_scrambling:99, stat_birdie_rate:70, stat_pressure_index:65 }),
-    makeTestPlayer('silver', { id:'yy2', name:'Yellow Y2', nationality:'USA', year:2010, made_team:false,
+    makeTestPlayer('gold', { id:'yb2', name:'Yellow B2', nationality:'EUR', year:2018, made_team:true,
+      stat_driving_distance:65, stat_driving_accuracy:70, stat_greens_in_regulation:70, stat_scrambling:99, stat_birdie_rate:70, stat_pressure_index:65 }),
+    makeTestPlayer('gold', { id:'yb3', name:'Yellow B3', nationality:'EUR', year:2018, made_team:true,
       stat_driving_distance:65, stat_driving_accuracy:70, stat_greens_in_regulation:70, stat_scrambling:99, stat_birdie_rate:70, stat_pressure_index:65 }),
   ];
-  // teamWin1 power vs yy1 shortgame → comp: 1pt. teamWin1 power vs yy2 shortgame → comp: 1pt. total=2 → yellow
-  const yellowScore = computePlayerChemScore(teamWin1, yellowPod2, [], {});
-  assert('2 comp-only podmates: yellow tier (2pts)', yellowScore.tier === 'yellow');
+  const yellowScore = computePlayerChemScore(teamWin1, yellowPod, [], CUP_RESULTS);
+  assert('3 teammates+champion (no tag match), 6pts: yellow tier', yellowScore.tier === 'yellow');
   assert('yellow tier reward = 6', yellowScore.reward === 6);
 
   // Empty pod → 0 pts → red
@@ -413,19 +407,21 @@ console.log('\ncomputeCaptainChemScore');
   assert('1pt → red tier', baseScore.tier === 'red');
   assert('red reward = 0', baseScore.reward === 0);
 
-  // Venue match (2018): +1
+  // Venue match (2018): +1 → 2pts → yellow (new threshold ≥2)
   const venueScore = computeCaptainChemScore(eurCap, [], [], mockVenue2018, CUP_RESULTS);
   assert('venue match adds 1pt (total 2)', venueScore.points === 2);
+  assert('2pts → yellow tier', venueScore.tier === 'yellow');
+  assert('yellow reward = 10', venueScore.reward === 10);
 
   // Add 4 drafted EUR players who were on the 2018 team: +4 pts
   const squad2018 = Array.from({ length: 4 }, (_, i) => makeTestPlayer('gold', {
     id: `sq${i}`, name: `Squad ${i}`, nationality: 'EUR', year: 2018, made_team: true,
   }));
   const squadScore = computeCaptainChemScore(eurCap, squad2018, [], mockVenue2018, CUP_RESULTS);
-  // venue(1) + 4 players(4) + cup win(1) = 6 → yellow
+  // venue(1) + 4 players(4) + cup win(1) = 6 → green (new threshold ≥4)
   assert('venue + 4 players + 1 win = 6pts', squadScore.points === 6);
-  assert('6pts → yellow tier', squadScore.tier === 'yellow');
-  assert('yellow reward = 10', squadScore.reward === 10);
+  assert('6pts → green tier', squadScore.tier === 'green');
+  assert('green reward = 15', squadScore.reward === 15);
 
   // 8 drafted players on their 2018 team: venue(1) + 8(8) + cup win(1) = 10 → green
   const bigSquad = Array.from({ length: 8 }, (_, i) => makeTestPlayer('gold', {
@@ -498,9 +494,9 @@ console.log('\ncomputeTeamChemScore');
   const mockVenue2018b = { year: 2018 };
 
   const teamScore = computeTeamChemScore(pods, eurCap2018, mockVenue2018b, CUP_RESULTS);
-  // Each player: 3 pod-pair connections (some mix of 2-3 pts each) + captain connection (led+won=2)
-  // Total per player easily >= 4 → green tier → points + 11 reward
-  // Plus captain: venue(1) + 4 players(4) + 1 win(1) = 6 → yellow(10 reward) → 6+10=16
+  // Each player: 3 pod-pair connections (2-3pts each, some sharing a dominant tag) + captain
+  // connection (led+won=2) → 9pts each → green tier → 4 * 11 reward = 44
+  // Plus captain: venue(1) + 4 players(4) + 1 win(1) = 6 → green (new threshold) → 15 reward
   assert('well-connected 2018 EUR pod gives substantial score', teamScore > 40);
 
   // Empty pods + no captain: 0

@@ -219,6 +219,20 @@
     .share-card p  { font-size: 13px; margin-bottom: 5px; }
     .share-btns { display: flex; gap: 10px; margin-top: 14px; flex-wrap: wrap; }
 
+    .perf-rating-card { background: var(--surface); border: 1px solid var(--gold); border-radius: var(--radius); padding: 20px; margin: 0 14px 14px; text-align: center; }
+    .perf-rating-label { font-size: 11px; text-transform: uppercase; letter-spacing: .08em; color: var(--text-dim); margin-bottom: 4px; }
+    .perf-rating-total { font-size: 44px; font-weight: 800; color: var(--gold); line-height: 1; margin-bottom: 12px; }
+    .perf-rating-breakdown { display: flex; align-items: center; justify-content: center; gap: 10px; flex-wrap: wrap; }
+    .perf-rating-breakdown .prb-val { display: block; font-size: 18px; font-weight: 700; color: var(--text); }
+    .perf-rating-breakdown .prb-label { display: block; font-size: 10px; text-transform: uppercase; letter-spacing: .05em; color: var(--text-dim); }
+    .prb-op { color: var(--text-dim); font-size: 16px; }
+
+    .top-performers { display: flex; gap: 12px; margin: 0 14px 16px; }
+    .tp-col { flex: 1; background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 14px 10px; text-align: center; }
+    .tp-label { font-size: 10px; text-transform: uppercase; letter-spacing: .05em; color: var(--text-dim); margin-bottom: 8px; }
+    .tp-col svg { margin: 0 auto; }
+    .tp-pts { font-size: 15px; font-weight: 700; color: var(--gold); margin-top: 6px; }
+
     .dramatic-pause { text-align: center; padding: 18px; color: var(--gold); font-style: italic; font-size: 14px; animation: dpulse 1s ease-in-out infinite; }
     @keyframes dpulse { 0%,100% { opacity: .5; } 50% { opacity: 1; } }
 
@@ -2518,34 +2532,66 @@
 
     const allMy  = G.picks.filter(Boolean);
     const allAI  = G.aiPicks.filter(Boolean);
-    const bestMy = allMy.reduce((b, p) => compositeScore(p) > compositeScore(b) ? p : b, allMy[0]);
-    const bestAI = allAI.reduce((b, p) => compositeScore(p) > compositeScore(b) ? p : b, allAI[0]);
 
-    const sessions = [r.sessions.fridayAM, r.sessions.fridayPM, r.sessions.saturdayAM, r.sessions.saturdayPM];
-    const sessWins = sessions.filter(s => s.filter(m=>m.result==='win').length > s.filter(m=>m.result==='loss').length).length;
-    const summary  = w === 'user'
-      ? `Won ${sessWins} of 4 team sessions at ${G.venue.name}`
-      : w === 'ai'
-      ? `Hard fought at ${G.venue.name} — fell short on the day`
-      : `A dramatic tie at ${G.venue.name} — the Cup is shared`;
+    // Points actually scored in the match (full credit per player per match won/halved —
+    // matches real Ryder Cup individual stat convention, not split between pair partners).
+    const allMatches = [...r.sessions.fridayAM, ...r.sessions.fridayPM, ...r.sessions.saturdayAM, ...r.sessions.saturdayPM, ...r.sessions.sunday];
+    const myMatchPts = {}, aiMatchPts = {};
+    for (const m of allMatches) {
+      const oppPts = m.result === 'halve' ? 0.5 : (1 - m.points);
+      for (const n of m.myPlayers)  { if (n) myMatchPts[n] = (myMatchPts[n] || 0) + m.points; }
+      for (const n of m.oppPlayers) { if (n) aiMatchPts[n] = (aiMatchPts[n]  || 0) + oppPts; }
+    }
+    function topScorer(picks, ptsMap) {
+      return picks.reduce((best, p) => {
+        if (!best) return p;
+        const pPts = ptsMap[p.name] || 0, bPts = ptsMap[best.name] || 0;
+        if (pPts > bPts) return p;
+        if (pPts === bPts && compositeScore(p) > compositeScore(best)) return p;
+        return best;
+      }, null);
+    }
+    const topMy = topScorer(allMy, myMatchPts);
+    const topAI = topScorer(allAI, aiMatchPts);
+    const fmtP  = p => p % 1 === 0 ? String(p) : p.toFixed(1);
 
-    const shareText = `${G.side} ${r.finalScore.user} — ${oppSide} ${r.finalScore.ai} | ${G.venue.name} | Captain: ${G.captain?.name} | MVP: ${bestMy?.name} | ${summary} #Fourballs`;
+    const talentTotal = G.picks.reduce((s, p) => s + getTalentScore(p.tier), 0);
+    const chemTotal   = computeTeamChemScore(G.pods, G.captain, G.venue, CUP_RESULTS);
+    const cupPts      = r.finalScore.user;
+    const perfTotal   = talentTotal + chemTotal + cupPts;
+
+    const shareText = `${G.side} ${r.finalScore.user} — ${oppSide} ${r.finalScore.ai} | ${G.venue.name} | Performance Rating: ${perfTotal} | Top Scorer: ${topMy?.name} (${fmtP(myMatchPts[topMy?.name] || 0)} pts) #Fourballs`;
 
     body.insertAdjacentHTML('afterbegin', `
       <div class="result-banner ${bClass} fade-in" style="margin:16px 14px 0;">
         <div class="banner-title">${bTitle}</div>
         <div class="banner-sub">${bSub}</div>
       </div>
+      <div class="perf-rating-card fade-in">
+        <div class="perf-rating-label">Performance Rating</div>
+        <div class="perf-rating-total">${perfTotal}</div>
+        <div class="perf-rating-breakdown">
+          <span><span class="prb-val">${talentTotal}</span><span class="prb-label">Talent</span></span>
+          <span class="prb-op">+</span>
+          <span><span class="prb-val">${chemTotal}</span><span class="prb-label">Chem</span></span>
+          <span class="prb-op">+</span>
+          <span><span class="prb-val">${fmtP(cupPts)}</span><span class="prb-label">Cup Pts</span></span>
+        </div>
+      </div>
+      <div class="top-performers fade-in">
+        <div class="tp-col">
+          <div class="tp-label">Your Top Performer</div>
+          ${topMy ? _shieldCardSVG(topMy, false, null, 72) : ''}
+          <div class="tp-pts">${fmtP(myMatchPts[topMy?.name] || 0)} pts</div>
+        </div>
+        <div class="tp-col">
+          <div class="tp-label">Their Top Performer</div>
+          ${topAI ? _shieldCardSVG(topAI, false, null, 72) : ''}
+          <div class="tp-pts">${fmtP(aiMatchPts[topAI?.name] || 0)} pts</div>
+        </div>
+      </div>
       <div class="share-card fade-in" style="margin:0 14px 16px;">
-        <h3>Match Summary</h3>
-        <p><strong>Match Score:</strong> ${G.side} ${r.finalScore.user} — ${oppSide} ${r.finalScore.ai}</p>
-        <p><strong>Performance Rating:</strong> ${computeTeamChemScore(G.pods, G.captain, G.venue, CUP_RESULTS) + G.picks.reduce((s,p) => s + getTalentScore(p.tier), 0) + r.finalScore.user} <span style="font-size:11px;color:var(--text-dim)">(Talent + Chem + Cup pts)</span></p>
-        <p><strong>Venue:</strong> ${G.venue.name}</p>
-        <p><strong>Your Captain:</strong> ${G.captain?.name || '—'}</p>
-        <p><strong>Your Star:</strong> ${bestMy?.name} (${bestMy?.year})</p>
-        <p><strong>Their Star:</strong> ${bestAI?.name} (${bestAI?.year})</p>
-        <p style="color:var(--text-muted);font-style:italic;margin-top:6px">${summary}</p>
-        <div class="share-btns">
+        <div class="share-btns" style="margin-top:0">
           <button class="btn btn-outline" id="copy-btn">Copy Result</button>
           <button class="btn btn-outline" id="share-btn" style="display:none">Share</button>
           <button class="btn btn-red" id="newgame-btn">New Game</button>

@@ -109,9 +109,16 @@ chemistry\_system\_spec.md # ACTIVE implementation spec for the talent/chemistry
   this the same way `user_descriptors` already does (see Venue section) — each dimension is only
   compared against its own pool. Result across all 19 venues' top-2: power 11, accurate 9,
   shortgame 10, clutch 8 — no attribute dominates. `computePlayerChemScore`'s 6th param
-  (`venueAttrs`) takes this array directly: **+1 point** if the player's `dominantStyleTag` is in
-  it. This is a per-player addition (not pairwise) that stacks with the pod/captain-connection
-  points from above.
+  (`venueAttrs`) takes this array directly: **+0.5 point** (not a full point — a venue has 2 top
+  attributes, so a full point per match would let a team built entirely around the venue's
+  2-attribute combo collect a full point each; halving it still rewards matching without making
+  "draft the venue's combo" a clean full-point stack) if the player's `dominantStyleTag` is in it.
+  This is a per-player addition (not pairwise) that stacks with the pod/captain-connection points
+  from above.
+* **Cup points multiplier**: the Performance Rating's Cup Points component (see Results
+  Presentation) scales by match outcome — 3x for a win, 2.5x for a tie ("Holders retain the Cup"),
+  2x for a loss. Deliberately a cliff at 14.5 points (not a smooth curve) — winning should swing
+  the total, not just nudge it. Displayed as raw score, multiplier, scaled result, e.g. "16 (3×) 48".
 * `chemistry_system_spec.md` (archived) describes the pre-v2 model; this section is the current spec.
 
 ## Pod Builder (Squad Hub — active during Draft screen)

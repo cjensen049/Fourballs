@@ -433,9 +433,10 @@ console.log('\ncomputePlayerChemScore');
   assert('empty pod: red tier', emptyScore.tier === 'red');
   assert('empty pod points = 0', emptyScore.points === 0);
 
-  // Venue attribute match (6th param) — teamWin1's dominant tag is power (established above)
+  // Venue attribute match (6th param) — teamWin1's dominant tag is power (established above).
+  // Half a point, not a full point — see computePlayerChemScore comment for why.
   const venueMatchScore = computePlayerChemScore(teamWin1, [], [], {}, null, ['power']);
-  assert('venue attr match: +1 point', venueMatchScore.points === 1);
+  assert('venue attr match: +0.5 point', venueMatchScore.points === 0.5);
   const venueNoMatchScore = computePlayerChemScore(teamWin1, [], [], {}, null, ['shortgame']);
   assert('venue attr no match: +0 points', venueNoMatchScore.points === 0);
   const venueNullScore = computePlayerChemScore(teamWin1, [], [], {}, null, null);

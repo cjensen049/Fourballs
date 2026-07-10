@@ -102,8 +102,12 @@ function computePlayerCaptainConnection(player, captain, cupResults) {
 
 // computePlayerChemScore — total connection points for a player in their pod + captain connection
 // + venue fit. Points = within-pod pairwise (up to 3 podmates) + computePlayerCaptainConnection
-// (0–2 if captain provided) + 1 if the player's dominant attribute is one of the venue's top
+// (0–2 if captain provided) + 0.5 if the player's dominant attribute is one of the venue's top
 // attributes (venueAttrs — pass the result of venueTopAttrs(), omit/null for no venue bonus).
+// Half a point, not a full point: a venue has 2 top attributes, so a full point per match would
+// let a team built entirely around the venue's 2-attribute combo (e.g. all Power+ShortGame
+// players at a Power/ShortGame course) collect a full point each — halving it means matching
+// still helps, but doesn't turn "draft the venue's combo" into a clean full-point stacking play.
 // Returns { points, tier: 'green'|'yellow'|'red', reward }.
 function computePlayerChemScore(player, podmates, allPlayers, cupResults, captain, venueAttrs) {
   let total = 0;
@@ -111,7 +115,7 @@ function computePlayerChemScore(player, podmates, allPlayers, cupResults, captai
     total += computeChemistry(player, mate, allPlayers, cupResults);
   }
   if (captain) total += computePlayerCaptainConnection(player, captain, cupResults);
-  if (venueAttrs && venueAttrs.includes(dominantStyleTag(player))) total += 1;
+  if (venueAttrs && venueAttrs.includes(dominantStyleTag(player))) total += 0.5;
   if (total >= 8) return { points: total, tier: 'green',  reward: 11 };
   if (total >= 5) return { points: total, tier: 'yellow', reward:  6 };
   return               { points: total, tier: 'red',    reward:  0 };

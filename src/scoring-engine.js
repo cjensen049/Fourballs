@@ -41,6 +41,25 @@ function dominantStyleTag(p) {
   return Object.entries(scores).sort((a, b) => b[1] - a[1])[0][0];
 }
 
+// venueTopAttrs — a venue's top N demand attributes (power/accurate/shortgame/clutch),
+// selected by PERCENTILE RANK across the venue pool, not raw hidden_tags magnitude. Mirrors
+// the same normalization user_descriptors already uses (see venues.json) — pressure_factor
+// runs high across nearly every venue in absolute terms, so naive top-N-by-magnitude picks
+// clutch almost everywhere (18/19 venues by raw value) and short game almost nowhere (2/19).
+// Percentile rank corrects for that: each dimension is ranked only against its own pool.
+// Returns an array of attribute keys, e.g. ['power', 'clutch'] — [] if venue/allVenues missing.
+function venueTopAttrs(venue, allVenues, topN = 2) {
+  if (!venue || !allVenues || !allVenues.length) return [];
+  const DIMS = { power_weight: 'power', accuracy_weight: 'accurate', short_game_weight: 'shortgame', pressure_factor: 'clutch' };
+  const scored = Object.entries(DIMS).map(([key, attr]) => {
+    const vals = allVenues.map(v => v.hidden_tags[key]);
+    const rank = vals.filter(x => x < venue.hidden_tags[key]).length / Math.max(1, vals.length - 1);
+    return [attr, rank];
+  });
+  scored.sort((a, b) => b[1] - a[1]);
+  return scored.slice(0, topN).map(s => s[0]);
+}
+
 // computeChemistry — pairwise connection points (0–3).
 // Categories per pair:
 //   +1 teammates:      same year, same nat, both made_team===true
@@ -81,15 +100,18 @@ function computePlayerCaptainConnection(player, captain, cupResults) {
   return pts; // 0–2
 }
 
-// computePlayerChemScore — total connection points for a player in their pod + captain connection.
-// Points = within-pod pairwise (up to 3 podmates) + computePlayerCaptainConnection (0–2 if captain provided).
+// computePlayerChemScore — total connection points for a player in their pod + captain connection
+// + venue fit. Points = within-pod pairwise (up to 3 podmates) + computePlayerCaptainConnection
+// (0–2 if captain provided) + 1 if the player's dominant attribute is one of the venue's top
+// attributes (venueAttrs — pass the result of venueTopAttrs(), omit/null for no venue bonus).
 // Returns { points, tier: 'green'|'yellow'|'red', reward }.
-function computePlayerChemScore(player, podmates, allPlayers, cupResults, captain) {
+function computePlayerChemScore(player, podmates, allPlayers, cupResults, captain, venueAttrs) {
   let total = 0;
   for (const mate of (podmates || [])) {
     total += computeChemistry(player, mate, allPlayers, cupResults);
   }
   if (captain) total += computePlayerCaptainConnection(player, captain, cupResults);
+  if (venueAttrs && venueAttrs.includes(dominantStyleTag(player))) total += 1;
   if (total >= 8) return { points: total, tier: 'green',  reward: 11 };
   if (total >= 5) return { points: total, tier: 'yellow', reward:  6 };
   return               { points: total, tier: 'red',    reward:  0 };
@@ -129,15 +151,17 @@ function computeCaptainChemScore(captain, draftedPlayers, _allPlayers, venue, cu
 // every chemistry point counts toward the live score, with the tier reward as a bonus on top for
 // well-connected pods/captains, not a replacement for the raw points.
 // pods: [[p,p,p,p],[p,p,p,p],[p,p,p,p]] (null slots skipped)
-function computeTeamChemScore(pods, captain, venue, cupResults) {
+// allVenues: full venue pool, needed to rank this venue's top attributes — omit for no venue bonus.
+function computeTeamChemScore(pods, captain, venue, cupResults, allVenues) {
   if (!pods) return 0;
   const cr = cupResults || {};
+  const venueAttrs = venue && allVenues ? venueTopAttrs(venue, allVenues) : null;
   let total = 0;
   for (const pod of pods) {
     const filled = pod.filter(Boolean);
     for (const player of filled) {
       const podmates = filled.filter(p => p.name !== player.name);
-      const { points, reward } = computePlayerChemScore(player, podmates, [], cr, captain);
+      const { points, reward } = computePlayerChemScore(player, podmates, [], cr, captain, venueAttrs);
       total += points + reward;
     }
   }
@@ -478,6 +502,7 @@ if (typeof module !== 'undefined' && module.exports) {
     compositeScore,
     calculateVenueFit,
     dominantStyleTag,
+    venueTopAttrs,
     computeChemistry,
     computePlayerCaptainConnection,
     computePlayerChemScore,

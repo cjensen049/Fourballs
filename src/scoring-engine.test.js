@@ -3,6 +3,7 @@ const {
   compositeScore,
   calculateVenueFit,
   dominantStyleTag,
+  venueTopAttrs,
   computeChemistry,
   computePlayerCaptainConnection,
   computePlayerChemScore,
@@ -284,6 +285,49 @@ console.log('\ndominantStyleTag');
   assert('accurate dominant when accuracy+GIR highest',       dominantStyleTag(accurateDom) === 'accurate');
 }
 
+console.log('\nvenueTopAttrs');
+{
+  // pressure_factor (clutch) is uniformly high (80-95) across every venue in this pool, like
+  // the real data — naive top-N-by-raw-magnitude would pick clutch for every single venue
+  // since it's always the largest absolute number, even where it never actually stands out
+  // relative to its own pool. Percentile rank should pick the attribute that's genuinely
+  // unusual for THAT venue instead.
+  const pool = [
+    { hidden_tags: { power_weight: 90, accuracy_weight: 30, short_game_weight: 30, pressure_factor: 80 } }, // power stands out
+    { hidden_tags: { power_weight: 30, accuracy_weight: 90, short_game_weight: 30, pressure_factor: 85 } }, // accurate stands out
+    { hidden_tags: { power_weight: 30, accuracy_weight: 30, short_game_weight: 90, pressure_factor: 90 } }, // shortgame stands out
+    { hidden_tags: { power_weight: 20, accuracy_weight: 20, short_game_weight: 20, pressure_factor: 95 } }, // clutch genuinely stands out
+    { hidden_tags: { power_weight: 25, accuracy_weight: 25, short_game_weight: 25, pressure_factor: 82 } }, // baseline
+  ];
+
+  assert('percentile picks power for venue 0, not clutch (naive-magnitude trap)',
+    venueTopAttrs(pool[0], pool, 1)[0] === 'power');
+  assert('percentile picks accurate for venue 1', venueTopAttrs(pool[1], pool, 1)[0] === 'accurate');
+  assert('percentile picks shortgame for venue 2', venueTopAttrs(pool[2], pool, 1)[0] === 'shortgame');
+  assert('percentile picks clutch for venue 3 (genuinely highest pressure in the pool)',
+    venueTopAttrs(pool[3], pool, 1)[0] === 'clutch');
+
+  const top2 = venueTopAttrs(pool[0], pool, 2);
+  assert('top-2 returns 2 distinct attributes', top2.length === 2 && top2[0] !== top2[1]);
+
+  assert('null venue returns []',        venueTopAttrs(null, pool).length === 0);
+  assert('null allVenues returns []',    venueTopAttrs(pool[0], null).length === 0);
+  assert('empty allVenues returns []',   venueTopAttrs(pool[0], []).length === 0);
+
+  // Regression guard on the real venue pool: top-2 across all 19 venues should stay roughly
+  // balanced (no attribute dominating), which is the entire point of using percentile rank
+  // instead of raw magnitude. If this ever fails, someone edited venues.json in a way that
+  // reintroduces the naive-magnitude imbalance (clutch in ~18/19, short game in ~2/19).
+  const realVenues = require('../data/venues.json');
+  const realCounts = { power: 0, accurate: 0, shortgame: 0, clutch: 0 };
+  for (const v of realVenues) {
+    for (const attr of venueTopAttrs(v, realVenues, 2)) realCounts[attr]++;
+  }
+  const counts = Object.values(realCounts);
+  assert(`real venue pool top-2 stays balanced (got ${JSON.stringify(realCounts)})`,
+    Math.max(...counts) - Math.min(...counts) <= realVenues.length * 0.5);
+}
+
 console.log('\ncomputeChemistry — v2 point model (0–3)');
 {
   // Guard
@@ -388,6 +432,14 @@ console.log('\ncomputePlayerChemScore');
   const emptyScore = computePlayerChemScore(teamWin1, [], [], {});
   assert('empty pod: red tier', emptyScore.tier === 'red');
   assert('empty pod points = 0', emptyScore.points === 0);
+
+  // Venue attribute match (6th param) — teamWin1's dominant tag is power (established above)
+  const venueMatchScore = computePlayerChemScore(teamWin1, [], [], {}, null, ['power']);
+  assert('venue attr match: +1 point', venueMatchScore.points === 1);
+  const venueNoMatchScore = computePlayerChemScore(teamWin1, [], [], {}, null, ['shortgame']);
+  assert('venue attr no match: +0 points', venueNoMatchScore.points === 0);
+  const venueNullScore = computePlayerChemScore(teamWin1, [], [], {}, null, null);
+  assert('no venueAttrs param: unaffected (backward compat)', venueNullScore.points === 0);
 }
 
 console.log('\ncomputeCaptainChemScore');
@@ -499,6 +551,19 @@ console.log('\ncomputeTeamChemScore');
   // Plus captain: venue(1) + 4 players(4) + 1 win(1) = 6 points → green → 6 + 15 reward = 21
   // Total = 80 + 21 = 101 — points always count, reward is a bonus on top, not a replacement
   assert('team score sums points + reward, not reward alone', teamScore === 101);
+
+  // allVenues integration: teamWin1 (power) + tw4 (shortgame, from the pod above) in a pod
+  // together, venue that clearly demands power over the other three dims
+  const powerDemandVenue = { year: 2018, hidden_tags: { power_weight: 95, accuracy_weight: 30, short_game_weight: 30, pressure_factor: 40 } };
+  const otherVenues = [
+    powerDemandVenue,
+    { year: 2019, hidden_tags: { power_weight: 30, accuracy_weight: 95, short_game_weight: 30, pressure_factor: 40 } },
+    { year: 2020, hidden_tags: { power_weight: 30, accuracy_weight: 30, short_game_weight: 95, pressure_factor: 40 } },
+  ];
+  const withVenue    = computeTeamChemScore([[teamWin1, tw4, null, null], [null,null,null,null], [null,null,null,null]], null, powerDemandVenue, {}, otherVenues);
+  const withoutVenue  = computeTeamChemScore([[teamWin1, tw4, null, null], [null,null,null,null], [null,null,null,null]], null, powerDemandVenue, {});
+  assert('allVenues param adds the venue-match bonus (teamWin1 is power-dominant)', withVenue > withoutVenue);
+  assert('omitting allVenues leaves the score unaffected (backward compat)', withoutVenue === computeTeamChemScore([[teamWin1, tw4, null, null], [null,null,null,null], [null,null,null,null]], null, null, {}));
 
   // Empty pods + no captain: 0
   const emptyPods = [[null,null,null,null],[null,null,null,null],[null,null,null,null]];

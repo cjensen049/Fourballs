@@ -92,15 +92,26 @@ chemistry\_system\_spec.md # ACTIVE implementation spec for the talent/chemistry
 * **Player-captain connection**: `computePlayerCaptainConnection(player, captain, cupResults)` → 0–2 pts.
   +1 if player's year is in captain.years, same nationality, made_team: true. +1 if that year was a win.
   Captains have no stat_* fields so the same-attribute bonus does NOT apply to player-captain pairs.
-* **Team chem score**: `computeTeamChemScore(pods, captain, venue, cupResults)` → total number.
-  Sums (points + reward) for every player across all pods, plus the captain's (points + reward) —
-  every chemistry point counts toward the live score; the tier reward is a bonus on top for
-  well-connected pods/captains, not a replacement for the raw points. Used for the live Chem
-  counter and end-of-game Performance Rating.
+* **Team chem score**: `computeTeamChemScore(pods, captain, venue, cupResults, allVenues)` → total
+  number. Sums (points + reward) for every player across all pods, plus the captain's (points +
+  reward) — every chemistry point counts toward the live score; the tier reward is a bonus on top
+  for well-connected pods/captains, not a replacement for the raw points. Used for the live Chem
+  counter and end-of-game Performance Rating. `allVenues` (pass `VENUES`) is required for the venue
+  bonus below to apply — omit it and that bonus is silently skipped, everything else unaffected.
 * In-match effect of rewards not yet wired — do not invent a conversion formula without design input.
-* Course-profile venue-attribute chemistry match (player gets a chem point if their dominant
-  attribute is one of the venue's top demand attributes) is a planned addition, not yet implemented —
-  do not assume `computePlayerChemScore` reads `venue` today.
+* **Venue attribute match**: `venueTopAttrs(venue, allVenues, topN=2)` returns the venue's top-2
+  demand attributes (power/accurate/shortgame/clutch), selected by **percentile rank across the
+  venue pool** — not raw `hidden_tags` magnitude. This matters: `pressure_factor` (clutch) runs
+  high across nearly every venue in absolute terms, so naive top-N-by-magnitude picked clutch in
+  18/19 venues and short game in only 2/19 — a naive implementation would have made clutch-tagged
+  players (the rarest player attribute, ~10% of the pool) get the venue bonus almost every game
+  while short-game players (~23% of the pool) almost never would. Percentile rank corrects for
+  this the same way `user_descriptors` already does (see Venue section) — each dimension is only
+  compared against its own pool. Result across all 19 venues' top-2: power 11, accurate 9,
+  shortgame 10, clutch 8 — no attribute dominates. `computePlayerChemScore`'s 6th param
+  (`venueAttrs`) takes this array directly: **+1 point** if the player's `dominantStyleTag` is in
+  it. This is a per-player addition (not pairwise) that stacks with the pod/captain-connection
+  points from above.
 * `chemistry_system_spec.md` (archived) describes the pre-v2 model; this section is the current spec.
 
 ## Pod Builder (Squad Hub — active during Draft screen)
@@ -152,21 +163,19 @@ then clicks "Submit to Pairings" to advance
 * Course style tags are hidden from the user but drive probability calculations
 * Venue is shown with user-friendly descriptors (e.g. "Power Course", "Links Test")
 mapped from hidden tags — do not expose raw tag values
-* Course profile bar displayed during draft: shows venue name,
-user\_descriptors, and the top-3 demand chips (from courseProfileHTML's DEMAND\_META,
-still Power / Accurate / Short Game / Consistent / Clutch — 5 labels only) using the
-same colors as player style tag chips. Since player attributes dropped to 4 (see
-Chemistry System), the "Consistent" chip's icon lookup (`DEMAND\_TO\_ATTR` → `ATTR\_META`)
-now falls back to text-only (no icon) — a known temporary gap pending the planned
-course-profile rework (top-2 attributes, chem match) described in Chemistry System.
+* Course profile bar displayed during draft: shows venue name, user\_descriptors, and the
+top-2 demand chips (from `courseProfileHTML` calling `venueTopAttrs(venue, VENUES, 2)`) —
+same 4-label vocabulary as player attributes (Power / Accurate / Short Game / Clutch,
+see Chemistry System), same colors/icons as player style tag chips. These 2 chips are
+exactly the attributes `computePlayerChemScore`'s venue-match bonus checks against —
+display and mechanic are the same source, not two things that can drift apart.
 * `hidden\_tags` has 7 dimensions: power\_weight, accuracy\_weight, short\_game\_weight,
-wind\_factor, pressure\_factor, putting\_weight, consistency\_weight. The last two are
-additive (added for venue-archetype mapping support) and are NOT yet wired into any
-UI — `DEMAND\_META`'s "Consistent" chip still reuses `wind\_factor` as a proxy (a
-pre-existing simplification from before these fields existed, since the widget only
-has 5 slots for 5 player style tags). Wiring the real `consistency\_weight`/
-`putting\_weight` fields into the UI is intentionally left to whichever future pass
-needs them — do not assume they're displayed anywhere yet.
+wind\_factor, pressure\_factor, putting\_weight, consistency\_weight. Only the first four
+matching player attributes (power/accuracy/short\_game/pressure→clutch) are used by
+`venueTopAttrs` and the demand chips. `wind\_factor`, `putting\_weight`, and
+`consistency\_weight` are NOT wired into any UI — wiring them in (there's no 5th player
+attribute for them to map to since Steady/Consistent was removed) is intentionally left
+to whichever future pass needs them; do not assume they're displayed anywhere.
 * `user\_descriptors` are derived from a venue's hidden\_tags relative to the rest of the
 pool (top dimensions where the venue ranks in roughly the top 40% across all venues,
 not just its own internal top-3 — pressure\_factor in particular is high for nearly

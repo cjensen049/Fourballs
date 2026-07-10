@@ -125,8 +125,11 @@
     .pick-round-label { font-size: 11px; color: var(--text-muted); margin-bottom: 6px; text-transform: uppercase; letter-spacing: .05em; }
     /* 3 fixed-width shield columns, spread out (wide gap) rather than scrunched
        together — kept centred rather than edge-to-edge so the rightmost card
-       never sits under the fixed help button in the bottom-right corner. */
-    .pick-cards-row { display: grid; grid-template-columns: repeat(3, 60px); gap: 36px; justify-content: center; }
+       never sits under the fixed help button in the bottom-right corner.
+       100px (was 60px) -- the old size was never revisited after the pod board
+       grew via --hub-scale, leaving the cards you pick FROM noticeably smaller
+       than the slots you place them INTO. */
+    .pick-cards-row { display: grid; grid-template-columns: repeat(3, 100px); gap: 32px; justify-content: center; }
 
     /* ── PLAYER MINI (reused in pairing seats) ── */
     .player-mini { width: 100%; padding: 5px 8px; border-radius: 4px; border-left: 3px solid var(--tc, #444); background: var(--surface3); }
@@ -332,7 +335,7 @@
        space around the centered content), so scaling the element scaled
        that phantom box too and blew out the page's scrollWidth. Scaling
        the real literals instead has no such phantom box to inflate. */
-    .squad-hub-wrap { position: relative; width: 100%; height: calc(300px * var(--hub-scale, 1)); margin: 0 auto; padding: 4px 8px 6px; }
+    .squad-hub-wrap { position: relative; width: 100%; height: calc(var(--hub-height, 300px) * var(--hub-scale, 1)); margin: 0 auto; padding: 4px 8px 6px; }
     .pod-row-top { position: absolute; top: 0; left: 50%; transform: translateX(-50%); display: flex; justify-content: center; }
     .pod-row-mid { position: absolute; top: calc(171px * var(--hub-scale, 1)); left: 50%; transform: translate(-50%, -50%); display: flex; justify-content: center; }
     .pod-row-bot { position: absolute; inset: 0; pointer-events: none; }
@@ -342,6 +345,10 @@
     .pod-label { font-size: calc(8px * var(--hub-scale, 1)); font-weight: 800; text-transform: uppercase; letter-spacing: .1em; color: var(--text-dim); }
     .pod-slots { display: grid; grid-template-columns: calc(60px * var(--hub-scale, 1)) calc(60px * var(--hub-scale, 1)); gap: calc(18px * var(--hub-scale, 1)); }
     .tray-card { cursor: grab; touch-action: none; user-select: none; -webkit-user-select: none; }
+    /* Fill the grid cell rather than trusting the SVG's own inline width/height (60px, from
+       _shieldCardSVG's default size param) -- without this, bumping .pick-cards-row's column
+       size just adds empty space around a still-60px card instead of actually growing it. */
+    .tray-card svg { width: 100%; height: 100%; display: block; }
     /* Pod slot: transparent container, SVG handles all visuals */
     .pod-slot { width: calc(60px * var(--hub-scale, 1)); height: calc(60px * var(--hub-scale, 1)); position: relative; display: flex; align-items: center; justify-content: center; touch-action: none; flex-shrink: 0; }
     .pod-slot > svg { pointer-events: none; display: block; width: 100%; height: 100%; }
@@ -361,12 +368,15 @@
     .ssn-label { color: var(--text-dim); font-size: 10px; text-transform: uppercase; letter-spacing: .04em; }
     .ssn-val { color: var(--gold); font-weight: 800; font-size: 16px; }
     .ssn-total .ssn-val { color: #7dd3fc; }
-    /* Submit-to-pairings / next-selection bar. min-height matches .pick-area's natural
-       height (the tray-card row) so the pod board above doesn't grow/shrink between the
-       "picking" and "next selection"/"submit" states -- .draft-team-area is the grid's only
-       1fr row, so any difference in the bottom bar's height directly changes how much room
-       fitSquadHub() has to work with, visibly resizing the whole pod board each round. */
-    .pod-submit-bar { padding: 10px 12px 14px; background: var(--surface); border-top: 1px solid var(--border); display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 5px; min-height: 108px; box-sizing: border-box; }
+    /* Submit-to-pairings / next-selection bar. min-height tracks --pick-area-h, the LAST
+       measured height of .pick-area (the tray-card row), kept in sync by JS on every draft
+       render (see renderDraft) -- so the pod board above doesn't grow/shrink between the
+       "picking" and "next selection"/"submit" states no matter how big the tray cards get
+       tuned to be later. .draft-team-area is the grid's only 1fr row, so any difference in
+       the bottom bar's height directly changes how much room fitSquadHub() has to work with,
+       visibly resizing the whole pod board each round. 108px is just the pre-first-measurement
+       fallback, not a value that needs to stay calibrated by hand. */
+    .pod-submit-bar { padding: 10px 12px 14px; background: var(--surface); border-top: 1px solid var(--border); display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 5px; min-height: var(--pick-area-h, 108px); box-sizing: border-box; }
 
     /* ── HELP BUTTON (persistent ?) ── */
     .help-btn { position: fixed; bottom: 16px; right: 16px; z-index: 90; width: 38px; height: 38px; border-radius: 50%; background: var(--surface2); border: 1px solid var(--border); color: var(--text-muted); font-size: 17px; font-weight: 700; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: background .15s, border-color .15s; box-shadow: 0 2px 10px rgba(0,0,0,.4); }
@@ -451,18 +461,12 @@
     @media (max-width: 480px) {
       /* Draft tray: fr-based columns filling the available width (no
          artificial max-width cap anymore — the card fills whatever its grid
-         cell gives it, via the aspect-ratio + 100% svg override below), so
-         these scale up with the actual device width instead of topping out
-         at a number picked for one phone size. */
+         cell gives it, via the aspect-ratio here + the base .tray-card svg
+         100% rule above), so these scale up with the actual device width
+         instead of topping out at a number picked for one phone size. */
       .pick-cards-row { grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px; width: 88%; margin: 0 auto; justify-content: unset; }
       .tray-card { width: 100%; aspect-ratio: 1; }
-      .tray-card svg { width: 100%; height: 100%; }
       .pick-area { overflow-y: visible; padding: 14px 6px 16px; }
-      /* Mobile tray cards are fr-based (scale with viewport width) so .pick-area's natural
-         height isn't a fixed number here either -- this is calibrated at a ~375px-wide phone,
-         the common case, not a pixel-perfect match at every width. Still much closer than no
-         normalization at all. */
-      .pod-submit-bar { min-height: 165px; }
       .captain-cards { grid-template-columns: 1fr; }
       /* Anchor the pod cluster near the top of its flex row instead of
          vertical-centering it — centering left a large empty gap above AND
@@ -1588,6 +1592,12 @@
       const availH  = area.clientHeight - (statRow ? statRow.offsetHeight : 0) - (isMobile ? 8 : 16);
       const availW  = area.clientWidth - (isMobile ? 8 : 16);
       const scale   = Math.max(Math.min(availH / naturalH, availW / naturalW, 2.2), 0.9);
+      // --hub-height replaces the old hardcoded "300px" the wrap's CSS height was based on --
+      // that constant didn't actually match the real content (measured ~345px on desktop),
+      // so the flex container centered a box smaller than what really rendered, and since the
+      // real content hangs out past that box's bottom edge (absolute positioning), the leftover
+      // space collected as a big gap above the pod cluster instead of splitting evenly.
+      wrap.style.setProperty('--hub-height', naturalH + 'px');
       wrap.style.setProperty('--hub-scale', scale);
     } finally {
       wrap.style.visibility = '';
@@ -2031,7 +2041,19 @@
     } else if (G.awaitingNext) {
       document.getElementById('next-selection-btn').addEventListener('click', advanceToNextRound);
     }
-    requestAnimationFrame(() => { fitSquadHub(); updateConnectionLines(); });
+    // Remember .pick-area's real rendered height as --pick-area-h so .pod-submit-bar (the
+    // "next selection"/"submit" bar, rendered instead of .pick-area on other rounds) can
+    // reserve the same space via CSS -- keeps the pod board's available height constant
+    // across every draft-screen state without a hand-tuned pixel value to keep in sync
+    // whenever tray card sizing changes. Written to :root since .pick-area and .pod-submit-bar
+    // never coexist in the DOM (only one renders per round), so this is the only way to carry
+    // the measurement from a "picking" render forward to the next "next selection" render.
+    requestAnimationFrame(() => {
+      fitSquadHub();
+      updateConnectionLines();
+      const pickArea = document.querySelector('.pick-area');
+      if (pickArea) document.documentElement.style.setProperty('--pick-area-h', pickArea.getBoundingClientRect().height + 'px');
+    });
     // TEMP DIAGNOSTIC — checked at a few delays to catch a "fine at first, then
     // goes blank a moment later" pattern. See _diagnoseCardText.
     _diagnoseCardText('render:0ms');

@@ -81,6 +81,9 @@
     .venue-pills { display: flex; gap: 8px; justify-content: center; flex-wrap: wrap; margin-bottom: 12px; }
     .pill { background: var(--surface2); border: 1px solid var(--border); border-radius: 20px; padding: 4px 12px; font-size: 12px; color: var(--text-muted); }
     .venue-flavor { font-style: italic; color: var(--text-muted); max-width: 460px; margin-bottom: 30px; font-size: 14px; }
+    .venue-demand-row { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; justify-content: center; margin-bottom: 20px; }
+    .venue-demand-label { font-size: 11px; color: var(--text-dim); text-transform: uppercase; letter-spacing: .05em; }
+    .nat-badge { display: flex; align-items: center; gap: 6px; font-size: 12px; font-weight: 700; color: var(--text-muted); background: var(--surface2); border: 1px solid var(--border); border-radius: 20px; padding: 5px 14px; margin-bottom: 20px; }
 
     /* ── PLAYER CARDS ── */
     .player-card { background: color-mix(in srgb, var(--tc, #444) 10%, var(--surface2)); border-radius: var(--radius); border: 1px solid color-mix(in srgb, var(--tc, #444) 30%, var(--border)); border-left: 4px solid var(--tc, #444); padding: 8px; cursor: pointer; transition: transform .15s, box-shadow .15s; position: relative; aspect-ratio: 10 / 16; max-height: 240px; display: flex; flex-direction: column; overflow: hidden; }
@@ -143,6 +146,10 @@
     .captain-cards { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-top: 20px; width: 100%; max-width: 480px; margin-left: auto; margin-right: auto; }
     .captain-card  { border: 1px dashed; border-radius: var(--radius); padding: 12px 10px; cursor: pointer; transition: transform .15s, box-shadow .15s; }
     .captain-card:hover { transform: translateY(-3px); box-shadow: 0 6px 22px rgba(0,0,0,.5); }
+    .captain-modal-wrap { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); max-width: 340px; width: 100%; max-height: 88vh; overflow-y: auto; padding: 14px; }
+    .captain-modal-wrap .captain-card { cursor: default; }
+    .captain-modal-wrap .captain-card:hover { transform: none; box-shadow: none; }
+    .tray-cap-info { position: absolute; top: 2px; right: 2px; width: 16px; height: 16px; border-radius: 50%; background: rgba(0,0,0,.5); border: 1px solid rgba(255,255,255,.3); color: #fff; font-size: 10px; font-weight: 700; line-height: 1; cursor: pointer; z-index: 2; touch-action: manipulation; }
     .cap-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 7px; }
     .cap-tier-badge { font-size: 8px; font-weight: 800; text-transform: uppercase; letter-spacing: .08em; border: 1px solid; border-radius: 3px; padding: 2px 5px; }
     .cap-years { font-size: 9px; color: var(--text-muted); }
@@ -324,6 +331,18 @@
         url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg'%20viewBox%3D'0%200%20800%20420'%3E%3Cdefs%3E%3CclipPath%20id%3D'green'%3E%3Cpath%20d%3D'M110%2C229.9%20C108.5%2C214.4%20108.5%2C186.9%20120%2C167.6%20C131.4%2C148.2%20155.3%2C127.5%20178.6%2C113.9%20C201.9%2C100.4%20231.6%2C93.2%20259.7%2C86.5%20C287.7%2C79.9%20322%2C74.4%20347%2C74%20C371.9%2C73.6%20390.6%2C79.9%20409.4%2C84%20C428.1%2C88.2%20440.5%2C96.9%20459.2%2C99%20C478%2C101.1%20500.8%2C95.4%20521.6%2C96.5%20C542.4%2C97.5%20564.2%2C99.6%20584%2C105.2%20C603.7%2C110.8%20623.9%2C119.8%20640.1%2C130.2%20C656.3%2C140.6%20673%2C155.1%20681.3%2C167.6%20C689.6%2C180.1%20691.7%2C192.5%20690%2C205%20C688.3%2C217.5%20681.7%2C229.9%20671.3%2C242.4%20C660.9%2C254.9%20646.3%2C268.8%20627.6%2C279.8%20C608.9%2C290.9%20585%2C300.2%20559%2C308.5%20C533%2C316.8%20502.9%2C325.2%20471.7%2C329.7%20C440.5%2C334.3%20405.2%2C336.6%20371.9%2C336%20C338.7%2C335.3%20303.3%2C332.2%20272.2%2C326%20C241%2C319.8%20208.7%2C309.4%20184.8%2C298.5%20C160.9%2C287.7%20141.2%2C272.6%20128.7%2C261.1%20C116.2%2C249.7%20111.5%2C245.5%20110%2C229.9%20Z'%2F%3E%3C%2FclipPath%3E%3Cpattern%20id%3D'stripes'%20width%3D'40'%20height%3D'40'%20patternUnits%3D'userSpaceOnUse'%20patternTransform%3D'rotate(112)'%3E%3Crect%20width%3D'40'%20height%3D'40'%20fill%3D'%233a8446'%2F%3E%3Crect%20width%3D'20'%20height%3D'40'%20fill%3D'%23347a3f'%2F%3E%3C%2Fpattern%3E%3C%2Fdefs%3E%3Cg%20clip-path%3D'url(%23green)'%3E%3Crect%20x%3D'90'%20y%3D'60'%20width%3D'620'%20height%3D'300'%20fill%3D'url(%23stripes)'%2F%3E%3C%2Fg%3E%3Cpath%20d%3D'M110%2C229.9%20C108.5%2C214.4%20108.5%2C186.9%20120%2C167.6%20C131.4%2C148.2%20155.3%2C127.5%20178.6%2C113.9%20C201.9%2C100.4%20231.6%2C93.2%20259.7%2C86.5%20C287.7%2C79.9%20322%2C74.4%20347%2C74%20C371.9%2C73.6%20390.6%2C79.9%20409.4%2C84%20C428.1%2C88.2%20440.5%2C96.9%20459.2%2C99%20C478%2C101.1%20500.8%2C95.4%20521.6%2C96.5%20C542.4%2C97.5%20564.2%2C99.6%20584%2C105.2%20C603.7%2C110.8%20623.9%2C119.8%20640.1%2C130.2%20C656.3%2C140.6%20673%2C155.1%20681.3%2C167.6%20C689.6%2C180.1%20691.7%2C192.5%20690%2C205%20C688.3%2C217.5%20681.7%2C229.9%20671.3%2C242.4%20C660.9%2C254.9%20646.3%2C268.8%20627.6%2C279.8%20C608.9%2C290.9%20585%2C300.2%20559%2C308.5%20C533%2C316.8%20502.9%2C325.2%20471.7%2C329.7%20C440.5%2C334.3%20405.2%2C336.6%20371.9%2C336%20C338.7%2C335.3%20303.3%2C332.2%20272.2%2C326%20C241%2C319.8%20208.7%2C309.4%20184.8%2C298.5%20C160.9%2C287.7%20141.2%2C272.6%20128.7%2C261.1%20C116.2%2C249.7%20111.5%2C245.5%20110%2C229.9%20Z'%20fill%3D'none'%20stroke%3D'%23255e2e'%20stroke-width%3D'3'%2F%3E%3Cline%20x1%3D'300'%20y1%3D'120'%20x2%3D'300'%20y2%3D'160'%20stroke%3D'%23dcdcdc'%20stroke-width%3D'1.5'%2F%3E%3Cpath%20d%3D'M300%2C120%20L322%2C128%20L300%2C136%20Z'%20fill%3D'%23c0392b'%2F%3E%3C%2Fsvg%3E");
       background-size: cover;
       background-position: center;
+      /* Previously this box only hugged the pod cluster's own size, so on tall
+         viewports (mobile especially, where --hub-scale is width-capped and can't
+         grow enough to use the full height) the leftover space below sat flat and
+         empty. Stretching this box to fill draft-team-area and centering the
+         cluster inside it means that leftover space is still covered in green
+         backdrop art instead of dead space — the card cluster itself doesn't get
+         any bigger (still bound by width), it just centers in a fuller-looking box. */
+      flex: 1;
+      min-height: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
     }
     /* --hub-scale is set by fitSquadHub() (JS) to fill the leftover vertical
        space in draft-team-area instead of sitting at a fixed size in a much
@@ -344,7 +363,7 @@
     .pod-group { display: flex; flex-direction: column; align-items: center; gap: calc(3px * var(--hub-scale, 1)); pointer-events: auto; }
     .pod-label { font-size: calc(8px * var(--hub-scale, 1)); font-weight: 800; text-transform: uppercase; letter-spacing: .1em; color: var(--text-dim); }
     .pod-slots { display: grid; grid-template-columns: calc(60px * var(--hub-scale, 1)) calc(60px * var(--hub-scale, 1)); gap: calc(18px * var(--hub-scale, 1)); }
-    .tray-card { cursor: grab; touch-action: none; user-select: none; -webkit-user-select: none; }
+    .tray-card { position: relative; cursor: grab; touch-action: none; user-select: none; -webkit-user-select: none; }
     /* Fill the grid cell rather than trusting the SVG's own inline width/height (60px, from
        _shieldCardSVG's default size param) -- without this, bumping .pick-cards-row's column
        size just adds empty space around a still-60px card instead of actually growing it. */
@@ -355,8 +374,12 @@
     .pod-slot.filled { cursor: grab; }
     .pod-slot.filled:active { cursor: grabbing; }
     .pod-slot.drop-ok { filter: drop-shadow(0 0 5px #22c55e); }
-    /* Captain hub: same shield shape as draft/pod cards, sized 10% larger (see HUB_SIZE) */
-    .captain-hub-node { width: calc(66px * var(--hub-scale, 1)); height: calc(66px * var(--hub-scale, 1)); position: relative; display: flex; align-items: center; justify-content: center; flex-shrink: 0; touch-action: none; }
+    /* Captain hub: same shield shape as draft/pod cards. Previously 66px (10% bigger
+       than a 60px pod slot) — on desktop, where --hub-scale runs much higher than
+       mobile, that ratio made the hub dominate the center of the board. Now smaller
+       than a pod slot instead (see HUB_SIZE) so it reads as a secondary anchor, not
+       the largest card on screen. */
+    .captain-hub-node { width: calc(50px * var(--hub-scale, 1)); height: calc(50px * var(--hub-scale, 1)); position: relative; display: flex; align-items: center; justify-content: center; flex-shrink: 0; touch-action: none; }
     .captain-hub-node > svg { pointer-events: none; display: block; width: 100%; height: 100%; }
     .captain-hub-node.drop-ok { filter: drop-shadow(0 0 8px rgba(201,168,76,.7)); }
     /* SVG connection lines overlay */
@@ -877,6 +900,11 @@
 
   function _pairKey(p1, p2) { return [p1.id, p2.id].sort().join('|'); }
 
+  function _podIndexOf(player, pods) {
+    if (!pods) return -1;
+    return pods.findIndex(pod => pod.some(p => p && p.name === player.name));
+  }
+
   // pods optional: if provided, same-pod pairs get a +5 bonus so the exhaustive
   // matching search naturally prefers podmate pairings over equally-strong cross-pod ones.
   function _scoreMatching(matching, format, pods) {
@@ -884,8 +912,7 @@
       if (!a || !b) return s;
       let score = computeChemistry(a, b, [], CUP_RESULTS);
       if (pods) {
-        const pa = pods.findIndex(pod => pod.some(p => p && p.name === a.name));
-        const pb = pods.findIndex(pod => pod.some(p => p && p.name === b.name));
+        const pa = _podIndexOf(a, pods), pb = _podIndexOf(b, pods);
         if (pa >= 0 && pa === pb) score += 5;
       }
       return s + score;
@@ -898,8 +925,17 @@
     const both = picks.filter(p => countMap[p.id] === 2);
     const once = picks.filter(p => countMap[p.id] === 1);
 
-    // Deterministic but seed-varied shuffle of once-players
+    // Deterministic but seed-varied shuffle of once-players — grouped by pod first.
+    // The +5 same-pod bonus in _scoreMatching only helps if both podmates land in the
+    // SAME 8-player session pool to begin with; before this, that co-selection was
+    // pure luck (once-players were split into session 1 vs 2 by hash alone, with no
+    // regard for pod membership), so podmates who weren't both "plays both sessions"
+    // players often never got the chance to be paired at all. Sorting by pod index
+    // first clusters same-pod once-players adjacently, so the slice(0, need) cutoff
+    // below keeps them together far more often.
     const shuffled = [...once].sort((a, b) => {
+      const pa = _podIndexOf(a, pods), pb = _podIndexOf(b, pods);
+      if (pa !== pb) return pa - pb;
       const ha = (a.id + optionSeed).split('').reduce((h, c) => (h * 31 + c.charCodeAt(0)) | 0, 0);
       const hb = (b.id + optionSeed).split('').reduce((h, c) => (h * 31 + c.charCodeAt(0)) | 0, 0);
       return ha - hb;
@@ -1108,18 +1144,24 @@
   // pool, not raw hidden_tags magnitude — see venueTopAttrs comment for why that matters).
   const DEMAND_COLOR = { power:'#f97316', accurate:'#38bdf8', shortgame:'#4ade80', clutch:'#f59e0b' };
 
-  function courseProfileHTML(venue, captain) {
+  // Shared by the draft screen's course-profile bar and the venue reveal screen —
+  // same top-2 demand attributes, same chip markup, one source so they can't drift apart.
+  function demandChipsHTML(venue) {
     if (!venue) return '';
-    const topAttrs = venueTopAttrs(venue, VENUES, 2);
-    const chips    = topAttrs.map(attrKey => {
-      const attr = ATTR_META.find(a => a.key === attrKey);
-      const svg  = attr ? attr.svg : '';
+    return venueTopAttrs(venue, VENUES, 2).map(attrKey => {
+      const attr  = ATTR_META.find(a => a.key === attrKey);
+      const svg   = attr ? attr.svg : '';
       const label = attr ? attr.label : attrKey;
       return `<span class="cpb-icon-chip" style="color:${DEMAND_COLOR[attrKey]}">${svg}${label}</span>`;
     }).join('');
+  }
+
+  function courseProfileHTML(venue, captain) {
+    if (!venue) return '';
+    const chips    = demandChipsHTML(venue);
     const capColor = captain ? ({ legendary:'#c9a84c', hero:'#c084fc', standard:'#22c55e' }[captain.prestige] || '#22c55e') : null;
     const capHTML  = captain ? `
-      <div class="cpb-cap-mini" style="border-color:${capColor}">
+      <div class="cpb-cap-mini" style="border-color:${capColor};cursor:pointer" data-captain-detail="${captain.id}" title="View captain bonuses">
         <span class="cpb-cap-tier" style="color:${capColor}">${captain.prestige[0].toUpperCase()}</span>
         <span class="cpb-cap-name">${captain.name}</span>
       </div>` : `
@@ -1275,12 +1317,22 @@
     });
   }
 
+  // Small flag+name pill shown above the venue spinner/reveal screens so the side
+  // you just picked stays visible instead of disappearing the moment you leave
+  // the nationality screen.
+  function natBadgeHTML() {
+    const meta = { USA: { flag: '🇺🇸', name: 'USA' }, EUR: { flag: '🇪🇺', name: 'Europe' } }[G.side];
+    if (!meta) return '';
+    return `<div class="nat-badge">${meta.flag} <span>${meta.name}</span></div>`;
+  }
+
   // ─────────────────────────────────────────────────────────────────────────────
   // SCREEN: VENUE SPINNER
   // ─────────────────────────────────────────────────────────────────────────────
   function renderVenueSpinner() {
     document.getElementById('app').innerHTML = `
       <div class="spinner-screen fade-in">
+        ${natBadgeHTML()}
         <div class="spin-eyebrow">Drawing Your Venue</div>
         <div class="spin-reel" id="spin-reel">${VENUES[0].name}</div>
         <div class="spin-sub"  id="spin-sub">&nbsp;</div>
@@ -1324,11 +1376,16 @@
     const v = G.venue;
     document.getElementById('app').innerHTML = `
       <div class="venue-wrap fade-in">
+        ${natBadgeHTML()}
         <div style="font-size:11px;color:var(--text-muted);text-transform:uppercase;letter-spacing:.1em;margin-bottom:10px;">Your Venue</div>
         <div class="venue-name">${v.name}</div>
         <div class="venue-sub">${v.display_name}</div>
         <div class="venue-badge">${v.course_type}</div>
         <div class="venue-pills">${(v.user_descriptors || []).map(d => `<span class="pill">${d}</span>`).join('')}</div>
+        <div class="venue-demand-row">
+          <span class="venue-demand-label">This course rewards</span>
+          <div class="cpb-icon-row">${demandChipsHTML(v)}</div>
+        </div>
         <div class="venue-flavor">"${v.flavor_text}"</div>
         <button class="btn btn-gold" id="start-draft-btn">Start Your Draft →</button>
       </div>`;
@@ -1392,6 +1449,23 @@
       </div>`;
   }
 
+  // Tap-to-preview modal for a captain's full perk/special breakdown — wired from
+  // the draft tray info button, the course-profile-bar captain pill, and the
+  // review screen's captain summary. Reuses captainCardHTML unchanged.
+  function showCaptainModal(c) {
+    document.getElementById('captain-modal-overlay')?.remove();
+    const div = document.createElement('div');
+    div.className = 'modal-overlay';
+    div.id = 'captain-modal-overlay';
+    div.innerHTML = `<div class="captain-modal-wrap">
+      <button class="help-modal-close" id="captain-modal-close" style="float:right;margin:-4px -2px 0 0;">×</button>
+      ${captainCardHTML(c)}
+    </div>`;
+    document.body.appendChild(div);
+    document.getElementById('captain-modal-close').addEventListener('click', () => div.remove());
+    div.addEventListener('click', e => { if (e.target === div) div.remove(); });
+  }
+
   // ─────────────────────────────────────────────────────────────────────────────
   // POD BUILDER — helpers
   // ─────────────────────────────────────────────────────────────────────────────
@@ -1450,10 +1524,15 @@
   function _shieldCardSVG(entity, isCaptain, chem, size = 60) {
     const tc = TIER_COLORS[entity.tier] || (isCaptain ? '#c9a84c' : '#888');
     const parts = entity.name.split(' ');
-    const label = parts.length > 1
+    const rawLabel = parts.length > 1
       ? `${parts[0][0]}. ${parts.slice(1).join(' ').toUpperCase()}`
       : entity.name.toUpperCase();
-    const shortLabel = label.length > 12 ? label.slice(0, 11) + '…' : label;
+    // Long surnames (Schauffele, Cabrera-Bello, Maria Olazabal...) used to get cut off
+    // mid-word ("X. SCHAUFFE…"). Trim only pathological outliers (>15 chars) and let SVG's
+    // own textLength attribute compress everything else to fit intact instead of truncating.
+    const shortLabel = rawLabel.length > 15 ? rawLabel.slice(0, 14) + '…' : rawLabel;
+    const nameCompress = shortLabel.length > 11
+      ? ` textLength="47" lengthAdjust="spacingAndGlyphs"` : '';
     const yearLabel = isCaptain ? (entity.years || []).slice(0, 2).join('/') : String(entity.year);
 
     // Shirt/jacket icon is now the dominant central element (matching where the
@@ -1478,9 +1557,13 @@
         <svg x="48" y="14" width="8" height="8" viewBox="0 0 24 24" fill="none" stroke="${won ? '#c9a84c' : '#3a4a3a'}" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">${TROPHY_PATH}</svg>`;
     }
 
+    // cx was 59 with r=6, putting the right edge at 65 — 1 unit past the 64-wide
+    // viewBox, so SVG's default overflow:hidden clipped a sliver off every badge.
+    // Pulled in to 57 (right edge 63) and cy down to 7 so the top edge isn't flush
+    // against 0 either.
     const chemBadge = chem
-      ? `<circle cx="59" cy="6" r="6" fill="${CHEM_DOT_COLOR[chem.tier]}"/>
-         <text x="59" y="8.7" text-anchor="middle" font-size="7" fill="#111" font-weight="800" font-family="system-ui,sans-serif">${chem.points}</text>`
+      ? `<circle cx="57" cy="7" r="6" fill="${CHEM_DOT_COLOR[chem.tier]}"/>
+         <text x="57" y="9.7" text-anchor="middle" font-size="7" fill="#111" font-weight="800" font-family="system-ui,sans-serif">${chem.points}</text>`
       : '';
 
     return `<svg viewBox="0 0 64 64" width="${size}" height="${size}">
@@ -1489,7 +1572,7 @@
       ${bodyIcon}
       ${styleIcon}
       <rect x="7" y="35" width="50" height="11" rx="1" fill="rgba(0,0,0,.4)"/>
-      <text x="32" y="43.5" text-anchor="middle" font-size="8.5" fill="white" font-family="system-ui,sans-serif" font-weight="700">${shortLabel}</text>
+      <text x="32" y="43.5" text-anchor="middle" font-size="8.5"${nameCompress} fill="white" font-family="system-ui,sans-serif" font-weight="700">${shortLabel}</text>
       <text x="32" y="56" text-anchor="middle" font-size="7.5" fill="white" font-weight="800" font-family="system-ui,sans-serif">${yearLabel}</text>
       ${chemBadge}
     </svg>`;
@@ -1506,8 +1589,11 @@
     return `<div class="pod-slot filled" data-pod="${pi}" data-slot="${si}">${_shieldCardSVG(p, false, chem)}</div>`;
   }
 
-  // HTML for the captain hub node — same shield shape as draft/pod cards, 10% larger.
-  const HUB_SIZE = 66;
+  // HTML for the captain hub node — same shield shape as draft/pod cards, slightly
+  // smaller than a 60px pod slot (see the .captain-hub-node CSS comment). Only used
+  // as the SVG's own width/height attribute — the CSS width:100%/height:100% rule on
+  // .captain-hub-node > svg is what actually controls on-screen size via --hub-scale.
+  const HUB_SIZE = 50;
   function captainHubHTML() {
     const c = G.captain;
     if (!c) {
@@ -1942,6 +2028,7 @@
     document.addEventListener('contextmenu', e => { if (_drag) e.preventDefault(); });
     // Delegate pointerdown from body so re-renders don't break listeners.
     document.body.addEventListener('pointerdown', e => {
+      if (e.target.closest('.tray-cap-info')) return; // handled by the click delegate below, not a drag
       const trayCard = e.target.closest('.tray-card');
       const podSlot  = e.target.closest('.pod-slot.filled');
       if (trayCard) {
@@ -1953,6 +2040,17 @@
         const card = G.pods[pi]?.[si];
         if (card) _startDrag(e, card, { type: 'pod', pi, si }, podSlot);
       }
+    });
+
+    // Tap-to-preview captain bonuses — resurrects the full perk/special breakdown
+    // (captainCardHTML, orphaned since the pod-builder redesign replaced captain
+    // cards with shield SVGs) as a modal instead of a picker. No hidden effects.
+    document.body.addEventListener('click', e => {
+      const trigger = e.target.closest('.tray-cap-info, [data-captain-detail]');
+      if (!trigger) return;
+      const cid = trigger.dataset.capInfo || trigger.dataset.captainDetail;
+      const c = CAPTAINS.find(x => x.id === cid);
+      if (c) showCaptainModal(c);
     });
   })();
 
@@ -2006,7 +2104,10 @@
         const isCapt = isCaptainCard(c);
         const html   = isCapt ? _trayCaptainShieldHTML(c) : _trayShieldHTML(c);
         const attr   = isCapt ? `data-cid="${c.id}"` : `data-pid="${c.id}"`;
-        return `<div class="tray-card" ${attr}>${html}</div>`;
+        // Captain cards get a tap-to-preview info button (separate from the drag hit
+        // area) so perks/special aren't a black box before you commit the pick.
+        const infoBtn = isCapt ? `<button class="tray-cap-info" data-cap-info="${c.id}" aria-label="View captain bonuses">?</button>` : '';
+        return `<div class="tray-card" ${attr}>${html}${infoBtn}</div>`;
       }).join('');
       bottomHTML = `<div class="pick-area">
         <div class="pick-round-label">${roundLabel}</div>
@@ -2322,7 +2423,7 @@
 
     function teamColHTML(pairings, captain, title) {
       return `<div class="review-col-title">${title}</div>
-        ${captain ? `<div class="captain-summary" style="margin-bottom:12px;">
+        ${captain ? `<div class="captain-summary" style="margin-bottom:12px;cursor:pointer" data-captain-detail="${captain.id}" title="View captain bonuses">
           <div style="font-size:10px;color:var(--text-muted);text-transform:uppercase;letter-spacing:.06em;margin-bottom:3px;">Captain</div>
           <div style="font-weight:700">${captain.name}</div>
           <div style="font-size:11px;color:var(--text-muted)">${(captain.years || []).join(', ')}</div>
@@ -2366,6 +2467,17 @@
         ⚠ Roster lacks the tier depth to fill all 16 team match slots. Consider reshuffling or accepting a lighter schedule.
       </div>` : '';
 
+    // Glanceable recap of what your captain actually does — no click required, unlike
+    // the tap-to-preview modal on the captain summary card below.
+    const capBonusStrip = G.captain ? (() => {
+      const bits = [...(G.captain.perks || []).map(p => p.desc), ...(G.captain.special ? [G.captain.special.desc] : [])];
+      if (!bits.length) return '';
+      return `<div style="padding:6px 14px;background:rgba(201,168,76,.06);border-bottom:1px solid rgba(201,168,76,.18);font-size:11px;display:flex;gap:6px;flex-wrap:wrap;">
+        <span style="color:var(--gold);font-weight:700;">★ ${G.captain.name}:</span>
+        <span style="color:var(--text-muted)">${bits.join(' · ')}</span>
+      </div>`;
+    })() : '';
+
     app.innerHTML = `
       <div style="display:flex;flex-direction:column;min-height:100vh;">
         <div class="page-header">
@@ -2383,6 +2495,7 @@
             }
           </div>
         </div>
+        ${capBonusStrip}
         ${capError}
         ${fatigueWarning}
         <div class="review-layout">
@@ -2561,27 +2674,146 @@
     appendSessBlock('Sunday — Singles', 'sb-sun', 'sc-sun');
     await delay(600);
 
-    for (let i = 0; i < r.sessions.sunday.length; i++) {
-      const m          = r.sessions.sunday[i];
-      const cupDecided = uPts > 14 || aPts > 14;
-      const msDelay    = cupDecided ? 500 : 1800;
-      const isClose    = !cupDecided && i >= 8 && ((14.5 - uPts) <= 2 || (14.5 - aPts) <= 2);
+    // "Everything on the line" is capped to once per game — it's the rare, genuine
+    // coin-flip beat, and without a cap it'd repeat every match while both teams stay
+    // in reach. "Cup-deciding match" is NOT capped — it's meant to mark every match
+    // where a team could clinch outright, which can legitimately be several in a row.
+    let onTheLineShown = false;
 
-      if (isClose) {
+    for (let i = 0; i < r.sessions.sunday.length; i++) {
+      const m             = r.sessions.sunday[i];
+      const cupDecided    = uPts > 14 || aPts > 14;
+      const msDelay       = cupDecided ? 500 : 1800;
+      const remUser       = 14.5 - uPts, remAI = 14.5 - aPts;
+      const matchesLeft   = r.sessions.sunday.length - i;
+      // A team is one result away from clinching the cup outright right now.
+      const cupDeciding   = !cupDecided && (remUser <= 1 || remAI <= 1);
+      // The rarer beat: BOTH teams still have a live path to win or halve the cup —
+      // the gap between them is still closeable by however many singles matches
+      // remain (including this one). Naturally self-limits to the back half of
+      // singles, since matchesLeft shrinks as the gap needs to shrink with it.
+      const onTheLine     = !cupDecided && !onTheLineShown && i >= 7 && Math.abs(uPts - aPts) <= matchesLeft;
+
+      let dramaText = null;
+      if (onTheLine) { dramaText = `Match ${i + 1} — Everything on the line…`; onTheLineShown = true; }
+      else if (cupDeciding) { dramaText = `Match ${i + 1} — Cup-deciding match…`; }
+
+      if (dramaText) {
         const dpId = 'dp-' + i;
         document.getElementById('sc-sun')?.insertAdjacentHTML('beforeend',
-          `<div class="dramatic-pause" id="${dpId}">Match ${i + 1} — Everything on the line…</div>`);
+          `<div class="dramatic-pause" id="${dpId}">${dramaText}</div>`);
         document.getElementById(dpId)?.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
         await delay(2500);
         document.getElementById(dpId)?.remove();
       }
 
-      await revealMatch('sc-sun', m, isClose ? 0 : msDelay, i + 1);
+      await revealMatch('sc-sun', m, dramaText ? 0 : msDelay, i + 1);
     }
 
     showSessBadge('sb-sun');
     await delay(800);
     showFinalBanner(r, uPts, aPts);
+  }
+
+  // Draws the shareable result card (1200x630 — standard social preview size) to
+  // an offscreen canvas and resolves a PNG blob. Hand-drawn with canvas primitives
+  // rather than a DOM-to-image library so it stays a self-contained, no-dependency
+  // file, same as the rest of the app.
+  function buildResultImage(d) {
+    const c = document.createElement('canvas');
+    c.width = 1200; c.height = 630;
+    const ctx = c.getContext('2d');
+
+    const bg = '#080f08', gold = '#c9a84c', text = '#ddeedd', dim = '#6a8f6a',
+          win = '#4caf50', loss = '#e53935', surface = '#142014', border = '#1e341e';
+
+    const bgGrad = ctx.createRadialGradient(600, 160, 80, 600, 315, 900);
+    bgGrad.addColorStop(0, '#0f2a0f');
+    bgGrad.addColorStop(1, bg);
+    ctx.fillStyle = bgGrad;
+    ctx.fillRect(0, 0, 1200, 630);
+
+    ctx.textBaseline = 'alphabetic';
+
+    // Wordmark + venue
+    ctx.fillStyle = gold;
+    ctx.font = '800 34px system-ui, sans-serif';
+    ctx.textAlign = 'left';
+    ctx.fillText('FOURBALLS', 60, 70);
+    ctx.fillStyle = dim;
+    ctx.font = '600 20px system-ui, sans-serif';
+    ctx.textAlign = 'right';
+    ctx.fillText(d.venue, 1140, 68);
+
+    // Score line
+    const won   = d.finalScore.user > d.finalScore.ai;
+    const tied  = d.finalScore.user === d.finalScore.ai;
+    const myClr  = tied ? gold : (won ? win : text);
+    const oppClr = tied ? gold : (won ? text : loss);
+    ctx.textAlign = 'center';
+    ctx.font = '800 100px system-ui, sans-serif';
+    ctx.fillStyle = myClr;
+    ctx.fillText(String(d.finalScore.user), 480, 220);
+    ctx.fillStyle = dim;
+    ctx.font = '700 40px system-ui, sans-serif';
+    ctx.fillText('—', 600, 205);
+    ctx.fillStyle = oppClr;
+    ctx.font = '800 100px system-ui, sans-serif';
+    ctx.fillText(String(d.finalScore.ai), 720, 220);
+
+    ctx.font = '700 26px system-ui, sans-serif';
+    ctx.fillStyle = dim;
+    ctx.fillText(d.side, 480, 260);
+    ctx.fillText(d.oppSide, 720, 260);
+
+    ctx.font = '800 32px system-ui, sans-serif';
+    ctx.fillStyle = gold;
+    ctx.fillText(d.bTitle, 600, 320);
+
+    // Performance Rating panel
+    function roundRect(x, y, w, h, r) {
+      ctx.beginPath();
+      ctx.moveTo(x + r, y);
+      ctx.arcTo(x + w, y,     x + w, y + h, r);
+      ctx.arcTo(x + w, y + h, x,     y + h, r);
+      ctx.arcTo(x,     y + h, x,     y,     r);
+      ctx.arcTo(x,     y,     x + w, y,     r);
+      ctx.closePath();
+    }
+    roundRect(300, 360, 600, 130, 12);
+    ctx.fillStyle = surface;
+    ctx.fill();
+    ctx.strokeStyle = border;
+    ctx.lineWidth = 1.5;
+    ctx.stroke();
+
+    ctx.font = '700 14px system-ui, sans-serif';
+    ctx.fillStyle = dim;
+    ctx.fillText('PERFORMANCE RATING', 600, 388);
+    ctx.font = '800 52px system-ui, sans-serif';
+    ctx.fillStyle = gold;
+    ctx.fillText(String(d.perfTotal), 600, 445);
+
+    ctx.font = '600 16px system-ui, sans-serif';
+    ctx.fillStyle = text;
+    const breakdown = `${d.talentTotal} Talent  +  ${d.chemTotal} Chem  +  ${d.fmtP(d.cupPts)} (${d.fmtP(d.cupMultiplier)}×) ${d.fmtP(d.cupPtsScaled)} Cup Pts`;
+    ctx.fillText(breakdown, 600, 473);
+
+    // Top performer
+    if (d.topName) {
+      ctx.font = '600 15px system-ui, sans-serif';
+      ctx.fillStyle = dim;
+      ctx.fillText('TOP PERFORMER', 600, 530);
+      ctx.font = '700 24px system-ui, sans-serif';
+      ctx.fillStyle = text;
+      ctx.fillText(`${d.topName} — ${d.topPts} pts`, 600, 560);
+    }
+
+    ctx.font = '600 16px system-ui, sans-serif';
+    ctx.fillStyle = dim;
+    ctx.fillText('#Fourballs', 600, 605);
+
+    return new Promise(resolve => c.toBlob(resolve, 'image/png'));
   }
 
   function showFinalBanner(r, uPts, aPts) {
@@ -2644,6 +2876,11 @@
     const perfTotal    = talentTotal + chemTotal + cupPtsScaled;
 
     const shareText = `${G.side} ${r.finalScore.user} — ${oppSide} ${r.finalScore.ai} | ${G.venue.name} | Performance Rating: ${perfTotal} | Top Scorer: ${topMy?.name} (${fmtP(myMatchPts[topMy?.name] || 0)} pts) #Fourballs`;
+    const shareImageBlob = () => buildResultImage({
+      side: G.side, oppSide, finalScore: r.finalScore, bTitle, venue: G.venue.name,
+      perfTotal, talentTotal, chemTotal, cupPts, cupMultiplier, cupPtsScaled, fmtP,
+      topName: topMy?.name, topPts: fmtP(myMatchPts[topMy?.name] || 0)
+    });
 
     body.insertAdjacentHTML('afterbegin', `
       <div class="result-banner ${bClass} fade-in" style="margin:16px 14px 0;">
@@ -2675,8 +2912,8 @@
       </div>
       <div class="share-card fade-in" style="margin:0 14px 16px;">
         <div class="share-btns" style="margin-top:0">
-          <button class="btn btn-outline" id="copy-btn">Copy Result</button>
-          <button class="btn btn-outline" id="share-btn" style="display:none">Share</button>
+          <button class="btn btn-gold" id="share-img-btn">Share Result Card ↓</button>
+          <button class="btn btn-outline" id="copy-btn">Copy Text</button>
           <button class="btn btn-red" id="newgame-btn">New Game</button>
         </div>
       </div>`);
@@ -2687,11 +2924,32 @@
         .catch(() => { prompt('Copy this:', shareText); });
     });
 
-    if (navigator.share) {
-      const sb = document.getElementById('share-btn');
-      sb.style.display = '';
-      sb.addEventListener('click', () => navigator.share({ title: 'Fourballs', text: shareText }).catch(()=>{}));
-    }
+    // Renders a real 1200x630 result card (score, headline, Performance Rating
+    // breakdown, top performer) as a PNG — shares as an actual image via the Web
+    // Share API where files are supported (Twitter/iMessage/Discord all preview an
+    // image far better than plain text), falling back to a direct download.
+    document.getElementById('share-img-btn').addEventListener('click', async () => {
+      const btn = document.getElementById('share-img-btn');
+      const original = btn.textContent;
+      btn.textContent = 'Rendering…';
+      try {
+        const blob = await shareImageBlob();
+        const file = new File([blob], 'fourballs-result.png', { type: 'image/png' });
+        if (navigator.canShare && navigator.canShare({ files: [file] })) {
+          await navigator.share({ files: [file], title: 'Fourballs', text: shareText });
+        } else {
+          const url = URL.createObjectURL(blob);
+          const a = document.createElement('a');
+          a.href = url; a.download = 'fourballs-result.png';
+          document.body.appendChild(a); a.click(); a.remove();
+          setTimeout(() => URL.revokeObjectURL(url), 2000);
+        }
+      } catch (e) {
+        if (e.name !== 'AbortError') prompt('Copy this:', shareText);
+      } finally {
+        btn.textContent = original;
+      }
+    });
 
     document.getElementById('newgame-btn').addEventListener('click', () => {
       localStorage.removeItem(STORAGE_KEY);

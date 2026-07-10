@@ -176,6 +176,12 @@ same 4-label vocabulary as player attributes (Power / Accurate / Short Game / Cl
 see Chemistry System), same colors/icons as player style tag chips. These 2 chips are
 exactly the attributes `computePlayerChemScore`'s venue-match bonus checks against —
 display and mechanic are the same source, not two things that can drift apart.
+* The venue reveal screen shows the same top-2 demand chips (`demandChipsHTML`, shared
+with the course profile bar so the two can't drift) under a "This course rewards" label —
+gives the player a preview of what to draft for before the draft starts, not just at the
+top of the draft screen. Both the venue spinner and venue reveal screens also show a small
+flag+name pill (`natBadgeHTML`) for the side just picked, since it's otherwise not visible
+again until the draft screen's header.
 * `hidden\_tags` has 7 dimensions: power\_weight, accuracy\_weight, short\_game\_weight,
 wind\_factor, pressure\_factor, putting\_weight, consistency\_weight. Only the first four
 matching player attributes (power/accuracy/short\_game/pressure→clutch) are used by
@@ -214,7 +220,18 @@ captain by draft's end; waiting costs a weaker captain, never a player slot.
 list the way players are (see uniqueness rule below) — the captain pool is small
 (4–9 per tier per side) and would be exhausted before round 13 if treated the same.
 * Each captain card shows name, year(s) captained, and full bonus breakdown.
-Bonuses are clearly communicated — no hidden captain effects.
+Bonuses are clearly communicated — no hidden captain effects. In the pod-builder shield
+cards (draft tray, course-profile-bar captain pill, review screen captain summary), this
+is a tap-to-preview modal (`showCaptainModal`, index.html) rather than shown inline — the
+tray card's small "i" info button opens it without triggering the drag-to-pick gesture
+(separate pointerdown early-return, not full click interception). Reuses `captainCardHTML`
+unchanged, which was orphaned dead code from the pre-pod-builder standalone captain screen
+until this wiring — perks/special were always fully applied in simulation
+(`captainPerkBoost`, factor 5 below) even while this display path was disconnected.
+* The review/pairings screen also shows a captain bonus strip at the top ("★ Name:
+perk descs joined by ·") for the human captain, no click required — the tap-to-preview
+modal above is for the draft-tray "?" info button and the course-profile-bar/captain-
+summary pills, where space doesn't allow the full text inline.
 * Captain affinity with specific players is applied during simulation.
 * **The AI drafts its own captain through this exact same mechanism, in parallel.**
 There is no separate one-shot AI captain draw. Every human round triggers one AI
@@ -310,13 +327,20 @@ tier probabilities are naturally weighted higher without manual adjustment.
 
 ### Session Structure (4 unique pair sets)
 
-Each format generates two independent sets of 4 pairs — no pair repeats between AM and PM.
+Matches the real Ryder Cup rotation — each day carries one Foursomes session and one
+Fourball session, not "all Foursomes on Friday, all Fourball on Saturday":
 
-* Foursomes AM: best 8 by composite, paired 1+2, 3+4, 5+6, 7+8
-* Foursomes PM: top 4 cross-paired with bottom 4: 1+9, 2+10, 3+11, 4+12
-* Fourball AM: best 8 by aggression+birdie, same structure
-* Fourball PM: same cross-pair structure
-Total: 16 unique team matches. Players 1–4 (best composite) appear in both AM and PM = 4 team matches = fatigued.
+* Friday AM — Foursomes, Friday PM — Fourball
+* Saturday AM — Foursomes, Saturday PM — Fourball
+
+Per player, `_assignMatchCounts` (index.html) sets a tier-based total appearance count
+(2–4 of the 4 sessions) and `_splitFormatCounts` divides that between the two formats
+by `format_fit`. `_generateFormatSessions` then builds each format's AM/PM pair sets via
+exhaustive search over all 105 perfect matchings of the session's 8 players, maximizing
+`_scoreMatching` (chemistry + the pod bonus below) — not a fixed composite/aggression
+ranking. No pair repeats within a format's AM/PM (falls back to allowing a repeat only if
+no non-repeating matching exists). Total: 16 unique team matches. Players with 4+
+appearances across all 4 sessions are fatigued.
 
 ### Fatigue
 
@@ -336,10 +360,19 @@ Total: 16 unique team matches. Players 1–4 (best composite) appear in both AM 
 
 ### Pairing Logic (Auto-assigned)
 
-* Foursomes pairs: ranked by composite score — best players paired together
-* Fourball pairs: ranked by aggression + birdie\_rate
-* Same pairs play both AM and PM within their format
-* AI pairings follow same logic
+* Pairs are chosen by exhaustive search to maximize pairwise chemistry (see Session
+  Structure above) — not a fixed composite/aggression ranking.
+* **Pod bonus**: for the human team only, `_scoreMatching` adds +5 to a pair's score when
+  both players share a pod (`G.pods`), so the search naturally prefers podmate pairings
+  over equally-strong cross-pod ones — realizing the intent that guys you group together
+  for chemistry should actually end up playing together. This only helps if both podmates
+  land in the same 8-player session pool to begin with, so once-per-format players
+  (`_generateFormatSessions`'s "once" group, as opposed to players who appear in both of a
+  format's sessions) are sorted by pod index before the AM/PM split — same-pod players
+  cluster adjacently so the split keeps them together far more often than the old
+  pod-blind hash shuffle did. Not a hard guarantee (captain strategy/appearance-count
+  balancing can still separate podmates), but a strong bias. AI pairings use the same
+  matching search with `pods = null` (no pod screen for the AI).
 
 ### Win Probability Model
 
@@ -360,14 +393,29 @@ Adjustment factors (applied in order, total cap ±25%):
 
 ## Results Presentation
 
-* Friday AM: Reveal all 4 Foursomes morning matches 1 by 1
-* Friday PM: Reveal all 4 Foursomes afternoon matches 1 by 1
-* Saturday AM: Reveal all 4 Fourball morning matches 1 by 1
-* Saturday PM: Reveal all 4 Fourball afternoon matches 1 by 1
-* Sunday Singles: Reveal one match at a time, in order
-* Running score shown after each session
-* Singles matchups shown as they resolve — W / H / L appended inline, no list recreation
-* "Reveal Next" button advances through singles; all team-format sessions appear in full
+* Friday AM (Foursomes), Friday PM (Fourball), Saturday AM (Foursomes), Saturday PM
+  (Fourball): each session's matches reveal 1 by 1, bottom-up (newest on top), with an
+  "After Friday — X · Y" / "After Saturday — X · Y" checkpoint divider between days.
+* Sunday Singles: reveal one match at a time, in order, fully automatic (no manual
+  "Reveal Next" step — the whole sequence plays out with delays between matches).
+* Running score shown after each session.
+* Singles matchups shown as they resolve — W / H / L appended inline, no list recreation.
+* **Drama-pause text**, two tiers, evaluated every singles match (not gated to a single
+  moment): "Cup-deciding match…" fires on **every** match where either team is within 1
+  point of clinching outright (`14.5 - pts <= 1`) — can legitimately hit several matches
+  in a row as a lead closes in. "Everything on the line…" is rarer and capped to once per
+  game — it's reserved for when *both* teams still have a live path to win or halve the
+  cup: the score gap is still closeable by however many singles matches remain (`|uPts -
+  aPts| <= matchesLeft`, gated to i ≥ 7). When both conditions are true for the same
+  match, "Everything on the line" wins (checked first). A one-sided runaway only ever
+  gets "Cup-deciding match" (or nothing), since the trailing side is already
+  mathematically out of reach of the gap condition.
+* End screen: Performance Rating (Talent + Chem + scaled Cup Points), each side's top
+  point scorer, and a **Share Result Card** button — renders a real 1200×630 PNG (score,
+  headline, Performance Rating breakdown, top performer) via hand-drawn canvas primitives
+  (`buildResultImage`, index.html) and shares it through the Web Share API's file support
+  where available, falling back to a direct download. A secondary "Copy Text" button keeps
+  the older plain-text summary for pasting into places that don't render images well.
 
 ## UI Principles
 

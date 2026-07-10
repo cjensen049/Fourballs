@@ -434,6 +434,14 @@
     .tut-dot.active { background: var(--gold); }
     .tut-actions { display: flex; gap: 10px; }
     .tut-actions .btn { flex: 1; font-size: 14px; padding: 10px; }
+    .tut-card-visual { display: flex; align-items: center; gap: 16px; margin-bottom: 18px; }
+    .tut-card-sample { flex-shrink: 0; }
+    .tut-legend { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 8px; }
+    .tut-legend li { font-size: 12px; color: var(--text); line-height: 1.4; display: flex; align-items: flex-start; gap: 7px; }
+    .tut-legend-swatch { width: 9px; height: 9px; border-radius: 50%; flex-shrink: 0; margin-top: 3px; }
+    @media (max-width: 480px) {
+      .tut-card-visual { flex-direction: column; align-items: center; text-align: left; }
+    }
 
     /* ── RESPONSIVE ── */
     /* Placed last on purpose: at equal specificity CSS resolves ties by source
@@ -2684,6 +2692,11 @@
       body: '13 rounds, 3 cards each. Cards are usually players, but a captain can show up in any round too — taking one never costs you a player pick. Earlier picks lean elite, later picks are more of a gamble, and a Hero card can land any round.'
     },
     {
+      title: 'Reading a Card',
+      body: 'Every card packs the same info. Here’s what each piece means:',
+      visual: 'card-legend'
+    },
+    {
       title: 'Build Your Squad',
       body: 'Drag each card onto one of your 3 pods (4 players each) or the captain hub in the middle — there’s no click-to-pick. Rearrange freely until you submit; dropping on a filled slot bumps that player to an open one.'
     },
@@ -2712,6 +2725,30 @@
     _renderTutorial();
   }
 
+  // Mock card for the "Reading a Card" tutorial step — deliberately made_team:true with
+  // a won year and a clear dominant stat, so every icon on the legend below points at a
+  // lit-up state rather than a blank/dim one.
+  const _TUTORIAL_MOCK_CARD = {
+    id: 'tutorial_mock', name: 'Sample Player', tier: 'platinum', year: 2016,
+    nationality: 'USA', made_team: true,
+    stat_driving_distance: 95, stat_driving_accuracy: 70, stat_greens_in_regulation: 70,
+    stat_scrambling: 65, stat_birdie_rate: 70, stat_pressure_index: 68,
+  };
+
+  function _cardLegendHTML() {
+    return `
+      <div class="tut-card-visual">
+        <div class="tut-card-sample">${_shieldCardSVG(_TUTORIAL_MOCK_CARD, false, { points: 6, tier: 'yellow' }, 130)}</div>
+        <ul class="tut-legend">
+          <li><span class="tut-legend-swatch" style="background:#7dd3fc"></span> Flag — played in a real Ryder Cup that year</li>
+          <li><span class="tut-legend-swatch" style="background:#c9a84c"></span> Trophy — gold if that Cup was won, dim gray if not</li>
+          <li><span class="tut-legend-swatch" style="background:#f97316"></span> Shirt icon — dominant attribute: Power, Accurate, Short Game, or Clutch</li>
+          <li><span class="tut-legend-swatch" style="background:#c084fc"></span> Border color — tier rarity, bronze through hero</li>
+          <li><span class="tut-legend-swatch" style="background:#eab308"></span> Corner dot — pod chemistry once placed (green/yellow/red)</li>
+        </ul>
+      </div>`;
+  }
+
   function _renderTutorial() {
     document.getElementById('tutorial-overlay')?.remove();
     const step   = TUTORIAL_STEPS[_tutStep];
@@ -2729,6 +2766,7 @@
         <div class="tut-eyebrow">Step ${_tutStep + 1} of ${total}</div>
         <div class="tut-title">${step.title}</div>
         <div class="tut-body">${step.body}</div>
+        ${step.visual === 'card-legend' ? _cardLegendHTML() : ''}
         <div class="tut-dots">${dots}</div>
         <div class="tut-actions">
           <button class="btn btn-outline" id="tut-skip">Skip</button>

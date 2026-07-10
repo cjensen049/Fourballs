@@ -2283,10 +2283,10 @@
         if (!p1 && !p2) return `<div class="chem-pair" style="opacity:.4"><span class="cp-names">Pair ${i+1} — empty</span></div>`;
         if (p1 && p2) {
           const score = computeChemistry(p1, p2, PLAYERS, CUP_RESULTS);
-          return `<div class="chem-pair">
+          return `<div class="chem-pair" title="Pair chemistry (0-3): +1 real Ryder Cup teammates, +1 more if that year was a win, +1 for matching main attribute (Power/Accurate/Short Game/Clutch)">
             <span class="chem-dot ${chemClass(score)}"></span>
             <span class="cp-names">${p1.name} + ${p2.name}</span>
-            <span style="font-size:13px;color:var(--text-muted)">${score}</span>
+            <span class="cp-chem-score"><span style="color:var(--text)">${score}</span><span style="color:var(--text-dim)">/3 chem</span></span>
           </div>`;
         }
         const only = p1 || p2;

@@ -2157,20 +2157,24 @@
               ${picks.map(p => {
                 const isPartner   = partner && partner.id === p.id;
                 const isCurrent   = current && current.id === p.id;
+                // Already occupying some OTHER slot in this exact session (a different pair,
+                // or the partner slot of this pair) -- a player can't play two matches in the
+                // same session, so this is a hard block, not just the "Tired" cosmetic warning.
+                const alreadySess = !isCurrent && slots[sess].some(([a,b]) => (a&&a.id===p.id)||(b&&b.id===p.id));
+                const blocked     = isPartner || alreadySess;
                 const chem        = partner ? computeChemistry(partner, p, PLAYERS, CUP_RESULTS) : null;
                 const chemCls     = chem !== null ? chemClass(chem) : '';
                 const sessCount   = playerSessions(p);
-                const alreadySess = slots[sess].some(([a,b]) => (a&&a.id===p.id)||(b&&b.id===p.id));
                 const wouldTire   = !isCurrent && !alreadySess && sessCount + 1 >= 4;
                 return `<div class="adv-pick-card" data-pid="${p.id}"
-                             style="${isPartner ? 'opacity:.3;pointer-events:none;' : ''}${isCurrent ? 'border-color:var(--gold);background:rgba(201,168,76,.12);' : ''}">
+                             style="${blocked ? 'opacity:.3;pointer-events:none;' : ''}${isCurrent ? 'border-color:var(--gold);background:rgba(201,168,76,.12);' : ''}">
                   <div style="font-size:12px;font-weight:700;color:var(--text);">${p.name}</div>
                   <div style="font-size:10px;color:var(--text-muted);margin-bottom:4px;">${p.year}</div>
                   ${chem!==null ? `<div style="display:flex;align-items:center;justify-content:center;gap:4px;">
                     <span class="chem-dot ${chemCls}" style="width:7px;height:7px;flex-shrink:0;"></span>
                     <span style="font-size:13px;color:var(--text-muted);">${chem}</span>
                   </div>` : ''}
-                  ${wouldTire ? '<div style="font-size:9px;color:var(--gold);margin-top:3px;">⚡ Tired</div>' : ''}
+                  ${alreadySess ? '<div style="font-size:9px;color:var(--text-dim);margin-top:3px;">Already this session</div>' : wouldTire ? '<div style="font-size:9px;color:var(--gold);margin-top:3px;">⚡ Tired</div>' : ''}
                 </div>`;
               }).join('')}
             </div>
